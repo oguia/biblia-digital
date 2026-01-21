@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { ChevronLeft, ChevronRight, Highlighter, Trash2, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { getMockChapterData } from "@/lib/mockBibleData";
+import { DailyVerse } from "@/components/DailyVerse";
 
 interface Verse {
   number: number;
@@ -434,7 +435,9 @@ export default function BibleReader() {
           </div>
 
           {/* Sidebar - Highlights */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
+            <DailyVerse />
+
             <Card className="p-4 sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto">
               <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                 <Highlighter className="h-5 w-5" />
