@@ -1,0 +1,7 @@
+<FilesMatch "\.(sql|log)$">
+    Require all denied
+</FilesMatch>
+
+<Files "config.php">
+    Require all denied
+</Files>
