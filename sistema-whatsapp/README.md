@@ -1,48 +1,45 @@
-# Sistema de Atendimento WhatsApp (PHP + MySQL)
+# Sistema WhatsApp Multi-Instância (Node.js + PHP)
 
-Este é um sistema simples de atendimento via WhatsApp utilizando a API Oficial da Meta (Cloud API).
-Ele foi projetado para rodar em hospedagens compartilhadas (cPanel, Hostgator, Hostinger, etc).
+Este projeto permite gerenciar múltiplos números de WhatsApp utilizando a tecnologia de leitura de QR Code.
 
-## Requisitos da Hospedagem
-- PHP 7.4 ou superior.
-- Banco de Dados MySQL.
-- Suporte a HTTPS (SSL) - Obrigatório para o Webhook do WhatsApp.
+## Arquitetura
+- **Server (Backend):** Node.js + Baileys. Conecta ao WhatsApp e salva mensagens.
+- **Public (Frontend):** PHP. Painel de gerenciamento.
 
-## Configuração do WhatsApp (Meta)
-1. Crie uma conta em [developers.facebook.com](https://developers.facebook.com/).
-2. Crie um aplicativo do tipo "Empresa" (Business).
-3. Adicione o produto "WhatsApp".
-4. Configure um número de telefone (pode usar um de teste inicialmente).
-5. Obtenha o **Token de Acesso Permanente** (ou temporário para testes) e o **ID do Número de Telefone**.
+## Segurança
+- O sistema usa um Token de API (`minha_senha_secreta_api`) para proteger a comunicação entre PHP e Node.js.
+- **MUITO IMPORTANTE:** Altere esse token em `server/server.js` e `public/config.php` antes de usar em produção.
 
-## Instalação
-1. **Banco de Dados:**
-   - Crie um banco de dados na sua hospedagem.
-   - Importe o arquivo `database.sql` (via PHPMyAdmin).
+## Instalação no cPanel (Hospedagem Compartilhada)
 
-2. **Arquivos:**
-   - Faça upload de todos os arquivos desta pasta para sua hospedagem (ex: pasta `public_html/whatsapp`).
+### 1. Banco de Dados
+1. Crie um banco de dados MySQL.
+2. Importe o arquivo `database.sql`.
+3. Edite `server/server.js` e `public/config.php` com os dados de conexão.
 
-3. **Configuração:**
-   - Edite o arquivo `config.php`:
-     - Coloque os dados do banco de dados (Host, User, Pass, DB Name).
-     - Coloque o Token do WhatsApp e o ID do Telefone.
-     - Defina uma senha para o painel administrativo.
-     - Defina um `WEBHOOK_VERIFY_TOKEN` (uma senha que você inventar, ex: `minha_senha_segura`).
+### 2. Node.js
+Você tem duas opções para rodar o Node.js:
 
-4. **Conectar Webhook:**
-   - No painel da Meta (Facebook Developers), vá em WhatsApp > Configuração.
-   - Em "URL de retorno de chamada" (Webhook), coloque o link do seu site:
-     `https://seusite.com/whatsapp/webhook.php`
-   - Em "Token de verificação", coloque a senha que você definiu no `config.php`.
-   - Clique em verificar.
-   - Em "Campos do Webhook", inscreva-se em: `messages`.
+**Opção A: "Setup Node.js App" (Recomendado se disponível)**
+Esta opção mantém o sistema rodando 24h automaticamente.
+1. No cPanel, vá em **Setup Node.js App**.
+2. Crie app apontando para `server/server.js`.
+3. Instale as dependências (`npm install`) via terminal.
+4. Clique em **Start App**.
+5. *Nota:* Se usar essa opção, ignore os arquivos `start_server.php` e `stop_server.php`.
 
-## Como Usar
-- Acesse `https://seusite.com/whatsapp/` para entrar no painel.
-- Faça login com o usuário e senha definidos no banco de dados (tabela `admins`).
-- Quando um cliente enviar mensagem, aparecerá na lista.
+**Opção B: Cronjobs (Gambiarra para Economia)**
+Use esta opção se o seu host derruba processos ou se você quer que o sistema funcione apenas em horário comercial.
+1. Configure um Cronjob para rodar `start_server.php` de manhã (ex: 08:00).
+   `php /caminho/para/sistema-whatsapp/start_server.php`
+2. Configure um Cronjob para rodar `stop_server.php` à noite (ex: 18:00).
+   `php /caminho/para/sistema-whatsapp/stop_server.php`
 
-## Cronjob (Lembretes)
-Para que o sistema verifique conversas paradas, configure um Cronjob no seu cPanel:
-`*/5 * * * * php /home/seu_usuario/public_html/whatsapp/cron.php`
+### 3. Lembretes de Atraso
+Para receber emails quando um cliente fica sem resposta, configure um Cronjob a cada 10 minutos:
+`*/10 * * * * php /caminho/para/sistema-whatsapp/cron_reminders.php`
+
+## Uso
+1. Acesse `seusite.com/sistema-whatsapp/public/`.
+2. Login: `admin@admin.com` / `123456`.
+3. Crie uma Instância e escaneie o QR Code.

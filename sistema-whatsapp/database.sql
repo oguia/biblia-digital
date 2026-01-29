@@ -3,6 +3,21 @@ START TRANSACTION;
 SET time_zone = "+00:00";
 
 --
+-- Table structure for table `instances` (Representa um número de WhatsApp)
+--
+
+CREATE TABLE `instances` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL, -- Ex: "Vendas", "Suporte"
+  `session_name` varchar(50) NOT NULL, -- Identificador interno para o arquivo de sessão
+  `status` enum('disconnected','connecting','connected') DEFAULT 'disconnected',
+  `qrcode` text DEFAULT NULL, -- Armazena o último QR code gerado
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `session_name` (`session_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
 -- Table structure for table `admins`
 --
 
@@ -12,39 +27,12 @@ CREATE TABLE `admins` (
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `phone` varchar(20) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  `instance_id` int(11) DEFAULT NULL, -- NULL = Super Admin (vê tudo). ID = Acesso restrito àquela instância.
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `instance_id` (`instance_id`),
+  CONSTRAINT `fk_admin_instance` FOREIGN KEY (`instance_id`) REFERENCES `instances` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
--- Dumping data for table `admins`
---
--- Default user: admin@admin.com / 123456
-INSERT INTO `admins` (`id`, `name`, `email`, `password`, `phone`) VALUES
-(1, 'Administrador', 'admin@admin.com', '$2y$10$WTHVajetkixyGhQ0casn/e/yPORm/rB2KIOWqNTqURqLgA7y5A/3C', NULL);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `departments`
---
-
-CREATE TABLE `departments` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  `description` text,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
--- Dumping data for table `departments`
---
-
-INSERT INTO `departments` (`id`, `name`, `description`) VALUES
-(1, 'Comercial', 'Equipe de Vendas'),
-(2, 'Suporte', 'Suporte Técnico'),
-(3, 'Financeiro', 'Dúvidas Financeiras');
-
--- --------------------------------------------------------
 
 --
 -- Table structure for table `contacts`
@@ -52,18 +40,18 @@ INSERT INTO `departments` (`id`, `name`, `description`) VALUES
 
 CREATE TABLE `contacts` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `phone` varchar(20) NOT NULL,
+  `instance_id` int(11) NOT NULL, -- A qual número esse contato pertence
+  `phone` varchar(50) NOT NULL, -- ID do contato no WhatsApp (ex: 55119999@s.whatsapp.net)
   `name` varchar(100) DEFAULT NULL,
-  `status` enum('NEW','WAITING_OPTION','OPEN','CLOSED') DEFAULT 'NEW',
-  `department_id` int(11) DEFAULT NULL,
+  `profile_pic_url` text DEFAULT NULL,
+  `status` enum('open','closed') DEFAULT 'open',
+  `unread_count` int(11) DEFAULT 0,
   `last_activity` datetime DEFAULT CURRENT_TIMESTAMP,
-  `last_alert` datetime DEFAULT NULL,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `phone` (`phone`)
+  UNIQUE KEY `instance_phone` (`instance_id`, `phone`),
+  CONSTRAINT `fk_contact_instance` FOREIGN KEY (`instance_id`) REFERENCES `instances` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
 
 --
 -- Table structure for table `messages`
@@ -72,12 +60,21 @@ CREATE TABLE `contacts` (
 CREATE TABLE `messages` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `contact_id` int(11) NOT NULL,
-  `type` enum('in','out') NOT NULL,
+  `remote_jid` varchar(50) NOT NULL, -- O ID do whatsapp (redundancia útil)
+  `from_me` tinyint(1) NOT NULL, -- 1 = enviada por mim, 0 = recebida
+  `type` varchar(20) DEFAULT 'text',
   `body` text,
   `media_url` text,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `contact_id` (`contact_id`)
+  KEY `contact_id` (`contact_id`),
+  CONSTRAINT `fk_message_contact` FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Default Super Admin
+-- User: admin@admin.com / Pass: 123456
+INSERT INTO `admins` (`id`, `name`, `email`, `password`, `instance_id`) VALUES
+(1, 'Super Admin', 'admin@admin.com', '$2y$10$WTHVajetkixyGhQ0casn/e/yPORm/rB2KIOWqNTqURqLgA7y5A/3C', NULL);
 
 COMMIT;
