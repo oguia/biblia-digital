@@ -30,6 +30,7 @@ export default function Dashboard() {
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [category, setCategory] = useState('');
   const [status, setStatus] = useState<'paid' | 'pending'>('paid');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -66,7 +67,7 @@ export default function Dashboard() {
         amount: parseFloat(amount),
         type,
         category: category || 'Geral',
-        date: new Date().toISOString().split('T')[0],
+        date,
         status
       });
 
@@ -206,6 +207,16 @@ export default function Dashboard() {
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <h2 className="text-lg font-semibold mb-4">Novo Lançamento</h2>
               <form onSubmit={handleAddTransaction} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Data</label>
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={e => setDate(e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                    required
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Descrição</label>
                   <input
