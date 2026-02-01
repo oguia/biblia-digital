@@ -32,13 +32,28 @@ export default function Dashboard() {
   const [status, setStatus] = useState<'paid' | 'pending'>('paid');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
+  // Suggestions
+  const [suggestedDescriptions, setSuggestedDescriptions] = useState<string[]>([]);
+  const [suggestedCategories, setSuggestedCategories] = useState<string[]>([]);
+
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
       setUser(JSON.parse(userData));
     }
     loadTransactions();
+    loadSuggestions();
   }, [selectedMonth, selectedYear]); // Reload when month/year changes
+
+  const loadSuggestions = async () => {
+    try {
+      const data = await api.request('/transactions/suggestions.php');
+      setSuggestedDescriptions(data.descriptions || []);
+      setSuggestedCategories(data.categories || []);
+    } catch (error) {
+      console.error('Error loading suggestions', error);
+    }
+  };
 
   const loadTransactions = async () => {
     try {
@@ -221,11 +236,18 @@ export default function Dashboard() {
                   <label className="block text-sm font-medium text-gray-700">Descrição</label>
                   <input
                     type="text"
+                    list="desc-suggestions"
                     value={description}
                     onChange={e => setDescription(e.target.value)}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                     required
+                    autoComplete="off"
                   />
+                  <datalist id="desc-suggestions">
+                    {suggestedDescriptions.map((desc, i) => (
+                      <option key={i} value={desc} />
+                    ))}
+                  </datalist>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -280,11 +302,18 @@ export default function Dashboard() {
                   <label className="block text-sm font-medium text-gray-700">Categoria</label>
                   <input
                     type="text"
+                    list="cat-suggestions"
                     value={category}
                     onChange={e => setCategory(e.target.value)}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                     placeholder="Ex: Alimentação"
+                    autoComplete="off"
                   />
+                  <datalist id="cat-suggestions">
+                    {suggestedCategories.map((cat, i) => (
+                      <option key={i} value={cat} />
+                    ))}
+                  </datalist>
                 </div>
                 <button
                   type="submit"
