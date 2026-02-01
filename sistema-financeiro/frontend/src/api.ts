@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.DEV ? 'http://localhost:8000/sistema-financeiro/api' : '/api';
+// Em produção, usa 'api' relativo (funciona em subdir). Em dev, usa caminho completo.
+const API_BASE = import.meta.env.DEV ? 'http://localhost:8000/sistema-financeiro/api' : 'api';
 
 export const api = {
   async request(endpoint: string, method: string = 'GET', body: any = null) {

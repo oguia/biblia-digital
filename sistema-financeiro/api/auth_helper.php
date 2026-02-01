@@ -1,6 +1,5 @@
 <?php
-// Segredo para assinar os tokens (IMPORTANTE: Mude isso na produção)
-define('JWT_SECRET', 'SuaChaveSecretaSuperSegura123');
+// O segredo JWT_SECRET deve estar definido em config.php
 
 function base64UrlEncode($data) {
     return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
@@ -37,7 +36,14 @@ function verifyJWT($token) {
         return false;
     }
 
-    return json_decode(base64UrlDecode($payload), true);
+    $payloadDecoded = json_decode(base64UrlDecode($payload), true);
+
+    // Verificar expiração
+    if (isset($payloadDecoded['exp']) && $payloadDecoded['exp'] < time()) {
+        return false;
+    }
+
+    return $payloadDecoded;
 }
 
 function getUserIdFromToken() {

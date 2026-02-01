@@ -5,6 +5,9 @@ define('DB_NAME', 'u123456789_financeiro'); // Exemplo Hostinger
 define('DB_USER', 'u123456789_admin');      // Exemplo Hostinger
 define('DB_PASS', 'SuaSenhaForte123!');
 
+// Chave Secreta para o JWT (Mude para algo aleatório)
+define('JWT_SECRET', 'SuaChaveSecretaSuperSegura123');
+
 function getDB() {
     try {
         $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
