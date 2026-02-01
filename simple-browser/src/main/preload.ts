@@ -22,5 +22,7 @@ contextBridge.exposeInMainWorld('browserAPI', {
   },
   onRequestNewTab: (callback: (url: string) => void) => {
     ipcRenderer.on('request-new-tab', (_, url) => callback(url));
-  }
+  },
+  getSettings: () => ipcRenderer.invoke('get-settings'),
+  saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings)
 });

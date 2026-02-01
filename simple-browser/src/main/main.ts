@@ -1,5 +1,17 @@
 import { app, BrowserWindow, BrowserView, ipcMain, session } from 'electron';
 import path from 'path';
+// @ts-ignore
+import Store from 'electron-store';
+
+interface StoreType {
+  homePage: string;
+}
+
+const store: any = new Store({
+  defaults: {
+    homePage: 'https://www.google.com'
+  }
+});
 
 let mainWindow: BrowserWindow | null = null;
 const tabs = new Map<string, BrowserView>();
@@ -67,9 +79,10 @@ function updateActiveViewBounds() {
   }
 }
 
-ipcMain.handle('create-tab', async (_, url: string = 'https://duckduckgo.com') => {
+ipcMain.handle('create-tab', async (_, url?: string) => {
   if (!mainWindow) return;
 
+  const targetUrl = url || store.get('homePage');
   const id = Math.random().toString(36).substring(7);
   const view = new BrowserView({
     webPreferences: {
@@ -89,6 +102,13 @@ ipcMain.handle('create-tab', async (_, url: string = 'https://duckduckgo.com') =
     mainWindow?.webContents.send('loading-change', id, true);
   });
   view.webContents.on('did-finish-load', () => {
+    // Hide "Download Chrome" banners on Google
+    view.webContents.insertCSS(`
+      div[aria-label="Fazer o download do Chrome"],
+      .gb_Fa,
+      #gb .gb_ld { display: none !important; }
+    `);
+
     mainWindow?.webContents.send('loading-change', id, false);
     mainWindow?.webContents.send('title-change', id, view.webContents.getTitle());
     mainWindow?.webContents.send('url-change', id, view.webContents.getURL());
@@ -105,8 +125,22 @@ ipcMain.handle('create-tab', async (_, url: string = 'https://duckduckgo.com') =
     return { action: 'deny' };
   });
 
-  await view.webContents.loadURL(url);
+  // Ensure targetUrl is a string
+  const urlToLoad = typeof targetUrl === 'string' ? targetUrl : 'https://www.google.com';
+  await view.webContents.loadURL(urlToLoad);
   return id;
+});
+
+ipcMain.handle('get-settings', () => {
+  return {
+    homePage: store.get('homePage')
+  };
+});
+
+ipcMain.handle('save-settings', (_, settings: Partial<StoreType>) => {
+  if (settings.homePage) {
+    store.set('homePage', settings.homePage);
+  }
 });
 
 ipcMain.handle('switch-tab', (_, id: string) => {

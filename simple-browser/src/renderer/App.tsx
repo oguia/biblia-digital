@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { ArrowLeft, ArrowRight, RotateCw, X, Plus, Star } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RotateCw, X, Plus, Star, Settings } from 'lucide-react';
 
 // Type definitions for the exposed Electron API
 interface BrowserAPI {
@@ -15,6 +15,8 @@ interface BrowserAPI {
   onFaviconChange: (cb: (id: string, fav: string) => void) => void;
   onLoading: (cb: (id: string, isLoading: boolean) => void) => void;
   onRequestNewTab: (cb: (url: string) => void) => void;
+  getSettings: () => Promise<{ homePage: string }>;
+  saveSettings: (settings: { homePage: string }) => Promise<void>;
 }
 
 declare global {
@@ -34,6 +36,8 @@ function App() {
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
+  const [homePageUrl, setHomePageUrl] = useState('');
   const initialized = useRef(false);
 
   // Ref to access current activeTabId inside callbacks
@@ -67,8 +71,19 @@ function App() {
       window.browserAPI.onRequestNewTab((url) => {
         handleCreateTab(url);
       });
+
+      // Load Settings
+      window.browserAPI.getSettings().then(settings => {
+        setHomePageUrl(settings.homePage);
+      });
     }
   }, []);
+
+  const saveSettings = async () => {
+    if (!window.browserAPI) return;
+    await window.browserAPI.saveSettings({ homePage: homePageUrl });
+    setShowSettings(false);
+  };
 
   // Update url input when switching tabs
   useEffect(() => {
@@ -170,8 +185,40 @@ function App() {
           <button className="nav-button">
             <Star size={16} />
           </button>
+
+          <div style={{ width: '1px', height: '20px', backgroundColor: '#ccc', margin: '0 8px' }}></div>
+
+          <button className="nav-button" onClick={() => setShowSettings(!showSettings)}>
+            <Settings size={16} />
+          </button>
         </div>
       </div>
+
+      {showSettings && (
+        <div style={{
+          position: 'absolute',
+          top: '80px',
+          right: '10px',
+          backgroundColor: 'white',
+          border: '1px solid #ccc',
+          borderRadius: '8px',
+          padding: '16px',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+          zIndex: 1000
+        }}>
+          <h3 style={{ marginTop: 0, fontSize: '16px' }}>Configurações</h3>
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Página Inicial</label>
+            <input
+              type="text"
+              value={homePageUrl}
+              onChange={(e) => setHomePageUrl(e.target.value)}
+              style={{ width: '200px', padding: '4px' }}
+            />
+          </div>
+          <button onClick={saveSettings} style={{ padding: '6px 12px', cursor: 'pointer' }}>Salvar</button>
+        </div>
+      )}
     </div>
   );
 }
