@@ -79,6 +79,9 @@ ipcMain.handle('create-tab', async (_, url: string = 'https://duckduckgo.com') =
     }
   });
 
+  // Set User Agent to avoid "Download App" banners and improve compatibility
+  view.webContents.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+
   tabs.set(id, view);
 
   // Setup events
