@@ -64,6 +64,7 @@ Antes de enviar os arquivos, você precisa "compilar" a parte visual (Frontend) 
         ```sql
         ALTER TABLE transactions ADD COLUMN status ENUM('paid', 'pending') DEFAULT 'paid';
         ```
+    *   **Método Automático (Recomendado):** Após enviar os novos arquivos, acesse `https://seusite.com/financeiro/api/migration.php`. Isso vai tentar criar a coluna automaticamente para você.
 
 ### 3. Configuração do Backend (API PHP)
 
