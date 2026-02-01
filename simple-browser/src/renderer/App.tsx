@@ -54,7 +54,8 @@ function App() {
 
     // Create initial tab
     if (window.browserAPI) {
-      handleCreateTab();
+      // Don't auto-create tab here, let the main process decide (restore or home)
+      // handleCreateTab();
 
       // Listeners
       window.browserAPI.onUrlChange((id, url) => {
