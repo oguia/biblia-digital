@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     description VARCHAR(255) NOT NULL,
     category VARCHAR(100),
     date DATE NOT NULL,
+    status ENUM('paid', 'pending') DEFAULT 'paid',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

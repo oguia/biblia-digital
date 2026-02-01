@@ -60,6 +60,10 @@ Antes de enviar os arquivos, você precisa "compilar" a parte visual (Frontend) 
 5.  Selecione o banco criado na esquerda.
 6.  Clique na aba **Importar**.
 7.  Selecione o arquivo `sistema-financeiro/database.sql` do seu computador e execute.
+    *   **Nota:** Se você já tinha o sistema instalado, precisará atualizar o banco de dados. O jeito mais fácil é apagar as tabelas `transactions` e `users` e importar o novo `database.sql` (cuidado, isso apaga os dados!), ou rodar manualmente este comando SQL na aba SQL:
+        ```sql
+        ALTER TABLE transactions ADD COLUMN status ENUM('paid', 'pending') DEFAULT 'paid';
+        ```
 
 ### 3. Configuração do Backend (API PHP)
 

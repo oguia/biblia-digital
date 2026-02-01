@@ -11,9 +11,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 $userId = requireAuth();
 $pdo = getDB();
 
-// Filtros opcionais (mes/ano) podem ser adicionados via $_GET
-$stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT 100");
-$stmt->execute([$userId]);
+$month = $_GET['month'] ?? date('m');
+$year = $_GET['year'] ?? date('Y');
+
+// Filtro por mês e ano
+$stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = ? AND MONTH(date) = ? AND YEAR(date) = ? ORDER BY date DESC, created_at DESC");
+$stmt->execute([$userId, $month, $year]);
 $transactions = $stmt->fetchAll();
 
 echo json_encode($transactions);

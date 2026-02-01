@@ -11,6 +11,7 @@ type Transaction = {
   description: string;
   category: string;
   date: string;
+  status: 'paid' | 'pending';
 };
 
 export default function Dashboard() {
@@ -19,11 +20,16 @@ export default function Dashboard() {
   const [user, setUser] = useState<{name: string} | null>(null);
   const navigate = useNavigate();
 
+  // Filters
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
   // Form states
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [category, setCategory] = useState('');
+  const [status, setStatus] = useState<'paid' | 'pending'>('paid');
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -31,11 +37,11 @@ export default function Dashboard() {
       setUser(JSON.parse(userData));
     }
     loadTransactions();
-  }, []);
+  }, [selectedMonth, selectedYear]); // Reload when month/year changes
 
   const loadTransactions = async () => {
     try {
-      const data = await api.request('/transactions/list.php');
+      const data = await api.request(`/transactions/list.php?month=${selectedMonth}&year=${selectedYear}`);
       setTransactions(data);
     } catch (error) {
       console.error(error);
@@ -60,13 +66,15 @@ export default function Dashboard() {
         amount: parseFloat(amount),
         type,
         category: category || 'Geral',
-        date: new Date().toISOString().split('T')[0]
+        date: new Date().toISOString().split('T')[0],
+        status
       });
 
       // Reset form and reload
       setDescription('');
       setAmount('');
       setCategory('');
+      setStatus('paid');
       loadTransactions();
     } catch (error) {
       alert('Erro ao adicionar');
@@ -80,6 +88,22 @@ export default function Dashboard() {
       setTransactions(transactions.filter(t => t.id !== id));
     } catch (error) {
       alert('Erro ao deletar');
+    }
+  };
+
+  const handleToggleStatus = async (transaction: Transaction) => {
+    const newStatus = transaction.status === 'paid' ? 'pending' : 'paid';
+    try {
+      await api.request('/transactions/update.php', 'PUT', {
+        id: transaction.id,
+        status: newStatus
+      });
+      // Atualiza localmente
+      setTransactions(transactions.map(t =>
+        t.id === transaction.id ? { ...t, status: newStatus } : t
+      ));
+    } catch (error) {
+      alert('Erro ao atualizar status');
     }
   };
 
@@ -111,8 +135,30 @@ export default function Dashboard() {
             <Wallet className="text-blue-600" /> Finanças
           </h1>
           <div className="flex items-center gap-4">
-            <span className="text-gray-600">Olá, {user?.name}</span>
-            <button onClick={handleLogout} className="text-red-500 hover:text-red-700">
+            {/* Seletor de Mês e Ano */}
+            <div className="flex gap-2">
+              <select
+                value={selectedMonth}
+                onChange={e => setSelectedMonth(Number(e.target.value))}
+                className="border rounded p-1"
+              >
+                {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                  <option key={m} value={m}>{new Date(0, m - 1).toLocaleString('pt-BR', { month: 'long' })}</option>
+                ))}
+              </select>
+              <select
+                value={selectedYear}
+                onChange={e => setSelectedYear(Number(e.target.value))}
+                className="border rounded p-1"
+              >
+                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+
+            <span className="text-gray-600 ml-4 hidden md:inline">Olá, {user?.name}</span>
+            <button onClick={handleLogout} className="text-red-500 hover:text-red-700 ml-2">
               <LogOut size={20} />
             </button>
           </div>
@@ -195,6 +241,31 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-700">Status Inicial</label>
+                  <div className="flex gap-4 mt-2">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        value="paid"
+                        checked={status === 'paid'}
+                        onChange={() => setStatus('paid')}
+                        className="form-radio h-4 w-4 text-blue-600"
+                      />
+                      <span className="ml-2">Pago / Recebido</span>
+                    </label>
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        value="pending"
+                        checked={status === 'pending'}
+                        onChange={() => setStatus('pending')}
+                        className="form-radio h-4 w-4 text-orange-600"
+                      />
+                      <span className="ml-2">Pendente</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700">Categoria</label>
                   <input
                     type="text"
@@ -250,6 +321,7 @@ export default function Dashboard() {
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
@@ -260,6 +332,18 @@ export default function Dashboard() {
                     <tr key={t.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{t.description}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{t.category}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <button
+                          onClick={() => handleToggleStatus(t)}
+                          className={`px-2 py-1 rounded text-xs font-bold ${
+                            t.status === 'paid'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-orange-100 text-orange-800'
+                          }`}
+                        >
+                          {t.status === 'paid' ? 'Pago' : 'Pendente'}
+                        </button>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(t.date).toLocaleDateString('pt-BR')}
                       </td>
