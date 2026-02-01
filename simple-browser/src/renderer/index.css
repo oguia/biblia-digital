@@ -19,7 +19,7 @@ body {
   display: flex;
   flex-direction: column;
   border-bottom: 1px solid #ccc;
-  -webkit-app-region: drag; /* Allow dragging the window */
+  /* -webkit-app-region: drag; Removed to fix interaction issues */
 }
 
 .tabs-container {
@@ -28,7 +28,7 @@ body {
   align-items: flex-end;
   padding: 0 10px;
   overflow-x: auto;
-  -webkit-app-region: no-drag; /* Allow clicking on tabs */
+  /* -webkit-app-region: no-drag; Removed to fix interaction issues */
 }
 
 .tab {
@@ -71,7 +71,7 @@ body {
   display: flex;
   align-items: center;
   padding: 0 10px;
-  -webkit-app-region: no-drag; /* Allow clicking inside address bar */
+  /* -webkit-app-region: no-drag; Removed to fix interaction issues */
 }
 
 .nav-button {
