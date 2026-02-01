@@ -188,7 +188,14 @@ function App() {
 
           <div style={{ width: '1px', height: '20px', backgroundColor: '#ccc', margin: '0 8px' }}></div>
 
-          <button className="nav-button" onClick={() => setShowSettings(!showSettings)}>
+          <button
+            className="nav-button"
+            onClick={() => {
+              console.log('Settings clicked!');
+              setShowSettings(prev => !prev);
+            }}
+            style={{ zIndex: 1000, position: 'relative' }}
+          >
             <Settings size={16} />
           </button>
         </div>
