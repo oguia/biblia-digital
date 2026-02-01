@@ -190,49 +190,48 @@ function App() {
             <RotateCw size={16} className={activeTab?.loading ? 'animate-spin' : ''} />
           </button>
 
-          <form onSubmit={handleNavigate} style={{ flex: 1, display: 'flex' }}>
-            <input
-              className="url-input"
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              placeholder="Enter URL..."
-              onFocus={(e) => e.target.select()}
-              // @ts-ignore
-              style={{ WebkitAppRegion: 'no-drag' }}
-            />
-          </form>
-
-          <button className="nav-button">
-            <Star size={16} />
-          </button>
+          {showSettings ? (
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Página Inicial:</span>
+              <input
+                className="url-input"
+                value={homePageUrl}
+                onChange={(e) => setHomePageUrl(e.target.value)}
+                placeholder="Ex: https://google.com"
+                // @ts-ignore
+                style={{ WebkitAppRegion: 'no-drag' }}
+              />
+              <button
+                onClick={saveSettings}
+                style={{
+                  padding: '6px 12px',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  // @ts-ignore
+                  WebkitAppRegion: 'no-drag'
+                }}
+              >
+                Salvar
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleNavigate} style={{ flex: 1, display: 'flex' }}>
+              <input
+                className="url-input"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                placeholder="Enter URL..."
+                onFocus={(e) => e.target.select()}
+                // @ts-ignore
+                style={{ WebkitAppRegion: 'no-drag' }}
+              />
+            </form>
+          )}
         </div>
       </div>
-
-      {showSettings && (
-        <div style={{
-          position: 'absolute',
-          top: '80px',
-          left: '10px',
-          backgroundColor: 'white',
-          border: '1px solid #ccc',
-          borderRadius: '8px',
-          padding: '16px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-          zIndex: 1000
-        }}>
-          <h3 style={{ marginTop: 0, fontSize: '16px' }}>Configurações</h3>
-          <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Página Inicial</label>
-            <input
-              type="text"
-              value={homePageUrl}
-              onChange={(e) => setHomePageUrl(e.target.value)}
-              style={{ width: '200px', padding: '4px' }}
-            />
-          </div>
-          <button onClick={saveSettings} style={{ padding: '6px 12px', cursor: 'pointer' }}>Salvar</button>
-        </div>
-      )}
     </div>
   );
 }
