@@ -162,6 +162,24 @@ function App() {
 
         {/* Address Bar */}
         <div className="address-bar-container">
+          <button
+            className="nav-button"
+            onClick={() => setShowSettings(prev => !prev)}
+            style={{
+              zIndex: 1000,
+              // @ts-ignore
+              WebkitAppRegion: 'no-drag',
+              cursor: 'pointer',
+              padding: '8px',
+              backgroundColor: showSettings ? '#e0e0e0' : 'transparent',
+              borderRadius: '50%',
+              marginRight: '8px'
+            }}
+            title="Configurações"
+          >
+            <Settings size={20} />
+          </button>
+
           <button className="nav-button" onClick={() => activeTabId && window.browserAPI.goBack(activeTabId)}>
             <ArrowLeft size={16} />
           </button>
@@ -187,29 +205,6 @@ function App() {
           <button className="nav-button">
             <Star size={16} />
           </button>
-
-          <div style={{ width: '1px', height: '20px', backgroundColor: '#ccc', margin: '0 8px' }}></div>
-
-          <button
-            className="nav-button"
-            onClick={() => {
-              console.log('Settings clicked!');
-              setShowSettings(prev => !prev);
-            }}
-            style={{
-              zIndex: 1000,
-              position: 'relative',
-              // @ts-ignore
-              WebkitAppRegion: 'no-drag',
-              cursor: 'pointer',
-              padding: '8px',
-              backgroundColor: showSettings ? '#e0e0e0' : 'transparent',
-              borderRadius: '50%'
-            }}
-            title="Configurações"
-          >
-            <Settings size={20} />
-          </button>
         </div>
       </div>
 
@@ -217,7 +212,7 @@ function App() {
         <div style={{
           position: 'absolute',
           top: '80px',
-          right: '10px',
+          left: '10px',
           backgroundColor: 'white',
           border: '1px solid #ccc',
           borderRadius: '8px',
