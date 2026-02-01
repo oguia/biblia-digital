@@ -1,13 +1,12 @@
 import { app, BrowserWindow, BrowserView, ipcMain, session } from 'electron';
 import path from 'path';
-// @ts-ignore
 import Store from 'electron-store';
 
 interface StoreType {
   homePage: string;
 }
 
-const store: any = new Store({
+const store = new Store<StoreType>({
   defaults: {
     homePage: 'https://www.google.com'
   }
