@@ -1,14 +1,18 @@
-import { app, BrowserWindow, BrowserView, ipcMain, session } from 'electron';
+import { app, BrowserWindow, BrowserView, ipcMain, session, Menu, MenuItem } from 'electron';
 import path from 'path';
 import Store from 'electron-store';
 
 interface StoreType {
   homePage: string;
+  restoreSession: boolean;
+  lastSessionTabs: string[];
 }
 
 const store = new Store<StoreType>({
   defaults: {
-    homePage: 'https://www.google.com'
+    homePage: 'https://www.google.com',
+    restoreSession: false,
+    lastSessionTabs: []
   }
 });
 
@@ -63,6 +67,29 @@ function createMainWindow() {
 
   setupAdBlocker(session.defaultSession);
 
+  // Restore Session or Open Home Page
+  mainWindow.webContents.once('did-finish-load', async () => {
+    if (store.get('restoreSession')) {
+      const lastTabs = store.get('lastSessionTabs');
+      if (lastTabs && lastTabs.length > 0) {
+        // Create tab for each saved URL
+        // We need to wait a bit or just loop
+        for (const url of lastTabs) {
+          // Use our internal handler via a mock event or just call logic
+          // But create-tab is an IPC handle. We can call the logic directly if we extract it,
+          // or we can simulate it by calling the implementation.
+          // Better: Extract tab creation logic or just use the IPC handler from here?
+          // Actually, we can't call ipcMain.handle directly easily.
+          // Let's refactor createTab logic to a function.
+          await createTabInternal(url);
+        }
+        return;
+      }
+    }
+    // Default behavior if no session to restore
+    createTabInternal(store.get('homePage'));
+  });
+
   mainWindow.on('resize', updateActiveViewBounds);
   mainWindow.on('maximize', updateActiveViewBounds);
   mainWindow.on('unmaximize', updateActiveViewBounds);
@@ -78,7 +105,7 @@ function updateActiveViewBounds() {
   }
 }
 
-ipcMain.handle('create-tab', async (_, url?: string) => {
+async function createTabInternal(url?: string) {
   if (!mainWindow) return;
 
   const targetUrl = url || store.get('homePage');
@@ -100,6 +127,30 @@ ipcMain.handle('create-tab', async (_, url?: string) => {
   view.webContents.on('did-start-loading', () => {
     mainWindow?.webContents.send('loading-change', id, true);
   });
+
+  // Context Menu for Translation
+  view.webContents.on('context-menu', (event, params) => {
+    const menu = new Menu();
+
+    menu.append(new MenuItem({
+      label: 'Traduzir para Português',
+      click: () => {
+        const currentUrl = view.webContents.getURL();
+        if (currentUrl && !currentUrl.includes('translate.google')) {
+          const translateUrl = `https://translate.google.com/translate?sl=auto&tl=pt&u=${encodeURIComponent(currentUrl)}`;
+          view.webContents.loadURL(translateUrl);
+        }
+      }
+    }));
+
+    menu.append(new MenuItem({ type: 'separator' }));
+    menu.append(new MenuItem({ role: 'copy', label: 'Copiar' }));
+    menu.append(new MenuItem({ role: 'cut', label: 'Recortar' }));
+    menu.append(new MenuItem({ role: 'paste', label: 'Colar' }));
+
+    menu.popup();
+  });
+
   view.webContents.on('did-finish-load', () => {
     // Hide "Download Chrome" banners on Google
     view.webContents.insertCSS(`
@@ -127,18 +178,30 @@ ipcMain.handle('create-tab', async (_, url?: string) => {
   // Ensure targetUrl is a string
   const urlToLoad = typeof targetUrl === 'string' ? targetUrl : 'https://www.google.com';
   await view.webContents.loadURL(urlToLoad);
+
+  // Notify Renderer that a tab was created (crucial for initial load restoration)
+  mainWindow.webContents.send('tab-created', { id, url: urlToLoad });
+
   return id;
+}
+
+ipcMain.handle('create-tab', async (_, url?: string) => {
+  return await createTabInternal(url);
 });
 
 ipcMain.handle('get-settings', () => {
   return {
-    homePage: store.get('homePage')
+    homePage: store.get('homePage'),
+    restoreSession: store.get('restoreSession')
   };
 });
 
 ipcMain.handle('save-settings', (_, settings: Partial<StoreType>) => {
-  if (settings.homePage) {
+  if (settings.homePage !== undefined) {
     store.set('homePage', settings.homePage);
+  }
+  if (settings.restoreSession !== undefined) {
+    store.set('restoreSession', settings.restoreSession);
   }
 });
 
@@ -208,8 +271,22 @@ app.on('window-all-closed', () => {
 // Security: Clear data on exit
 app.on('before-quit', async (e) => {
   e.preventDefault();
+
+  // Save Session if enabled
+  if (store.get('restoreSession')) {
+    const urls: string[] = [];
+    tabs.forEach((view) => {
+      urls.push(view.webContents.getURL());
+    });
+    store.set('lastSessionTabs', urls);
+    console.log('Session saved:', urls);
+  } else {
+    store.set('lastSessionTabs', []);
+  }
+
   if (mainWindow) {
     console.log('Clearing session data...');
+    // We clear cookies/cache for security, but we kept the URLs to restore them
     await session.defaultSession.clearStorageData();
     console.log('Session data cleared.');
   }

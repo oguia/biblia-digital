@@ -24,5 +24,8 @@ contextBridge.exposeInMainWorld('browserAPI', {
     ipcRenderer.on('request-new-tab', (_, url) => callback(url));
   },
   getSettings: () => ipcRenderer.invoke('get-settings'),
-  saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings)
+  saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings),
+  onTabCreated: (callback: (tab: { id: string, url: string }) => void) => {
+    ipcRenderer.on('tab-created', (_, tab) => callback(tab));
+  }
 });

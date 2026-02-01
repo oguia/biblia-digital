@@ -15,8 +15,9 @@ interface BrowserAPI {
   onFaviconChange: (cb: (id: string, fav: string) => void) => void;
   onLoading: (cb: (id: string, isLoading: boolean) => void) => void;
   onRequestNewTab: (cb: (url: string) => void) => void;
-  getSettings: () => Promise<{ homePage: string }>;
-  saveSettings: (settings: { homePage: string }) => Promise<void>;
+  getSettings: () => Promise<{ homePage: string, restoreSession: boolean }>;
+  saveSettings: (settings: { homePage?: string, restoreSession?: boolean }) => Promise<void>;
+  onTabCreated: (cb: (tab: { id: string, url: string }) => void) => void;
 }
 
 declare global {
@@ -38,6 +39,7 @@ function App() {
   const [urlInput, setUrlInput] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [homePageUrl, setHomePageUrl] = useState('');
+  const [restoreSession, setRestoreSession] = useState(false);
   const initialized = useRef(false);
 
   // Ref to access current activeTabId inside callbacks
@@ -75,13 +77,32 @@ function App() {
       // Load Settings
       window.browserAPI.getSettings().then(settings => {
         setHomePageUrl(settings.homePage);
+        setRestoreSession(settings.restoreSession);
       });
+
+      // Handle restored tabs from main process
+      if (window.browserAPI.onTabCreated) {
+        window.browserAPI.onTabCreated(({ id, url }) => {
+           setTabs(prev => {
+             // Avoid duplicates if needed, but for now just add
+             if (prev.find(t => t.id === id)) return prev;
+             return [...prev, { id, title: 'New Tab', url, loading: true }];
+           });
+           // If it's the first tab or we don't have an active one, switch to it
+           if (!activeTabIdRef.current) {
+             handleSwitchTab(id);
+           }
+        });
+      }
     }
   }, []);
 
   const saveSettings = async () => {
     if (!window.browserAPI) return;
-    await window.browserAPI.saveSettings({ homePage: homePageUrl });
+    await window.browserAPI.saveSettings({
+      homePage: homePageUrl,
+      restoreSession
+    });
     setShowSettings(false);
   };
 
@@ -201,6 +222,18 @@ function App() {
                 // @ts-ignore
                 style={{ WebkitAppRegion: 'no-drag' }}
               />
+
+              <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                <input
+                  type="checkbox"
+                  checked={restoreSession}
+                  onChange={(e) => setRestoreSession(e.target.checked)}
+                  // @ts-ignore
+                  style={{ WebkitAppRegion: 'no-drag' }}
+                />
+                Restaurar abas
+              </label>
+
               <button
                 onClick={saveSettings}
                 style={{
