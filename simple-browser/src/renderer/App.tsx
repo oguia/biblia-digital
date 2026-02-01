@@ -179,6 +179,8 @@ function App() {
               onChange={(e) => setUrlInput(e.target.value)}
               placeholder="Enter URL..."
               onFocus={(e) => e.target.select()}
+              // @ts-ignore
+              style={{ WebkitAppRegion: 'no-drag' }}
             />
           </form>
 
@@ -194,9 +196,19 @@ function App() {
               console.log('Settings clicked!');
               setShowSettings(prev => !prev);
             }}
-            style={{ zIndex: 1000, position: 'relative' }}
+            style={{
+              zIndex: 1000,
+              position: 'relative',
+              // @ts-ignore
+              WebkitAppRegion: 'no-drag',
+              cursor: 'pointer',
+              padding: '8px',
+              backgroundColor: showSettings ? '#e0e0e0' : 'transparent',
+              borderRadius: '50%'
+            }}
+            title="Configurações"
           >
-            <Settings size={16} />
+            <Settings size={20} />
           </button>
         </div>
       </div>
