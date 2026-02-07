@@ -11,13 +11,14 @@ if (!isPremium()) {
     exit;
 }
 
-$artist = isset($_GET['artist']) ? $_GET['artist'] : '';
-$song = isset($_GET['song']) ? $_GET['song'] : '';
+$artistSlug = isset($_GET['artist']) ? $_GET['artist'] : '';
+$songSlug = isset($_GET['song']) ? $_GET['song'] : '';
 $error = '';
 $data = null;
 
-if ($artist && $song) {
-    $data = getChord($artist, $song);
+if ($artistSlug && $songSlug) {
+    // getChord now accepts slugs directly
+    $data = getChord($artistSlug, $songSlug);
     if (!$data['success']) {
         $error = $data['message'];
     }
@@ -88,11 +89,30 @@ if ($artist && $song) {
             font-weight: bold;
         }
 
+        /* Anti-Copy Scripts */
+        body {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
         @media print {
             header, footer, .back-btn { display: none; }
             .chord-content { box-shadow: none; padding: 0; }
         }
     </style>
+    <script>
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) { return false; } // F12
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { return false; } // Ctrl+Shift+I
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { return false; } // Ctrl+Shift+C
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { return false; } // Ctrl+Shift+J
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { return false; } // Ctrl+U
+            if(e.ctrlKey && e.keyCode == 'S'.charCodeAt(0)) { return false; } // Ctrl+S
+        }
+    </script>
 </head>
 <body>
 
@@ -111,7 +131,7 @@ if ($artist && $song) {
         <div class="error-container">
             <h2>Ops!</h2>
             <p><?php echo $error; ?></p>
-            <p>Tente verificar se o nome do artista e da música estão corretos.</p>
+            <p>Tente verificar se a cifra está disponível.</p>
             <a href="search.php" class="btn-cta">Tentar Novamente</a>
         </div>
     <?php else: ?>

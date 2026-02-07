@@ -72,17 +72,12 @@ if (!isPremium()) {
 <div class="container">
     <div class="search-container">
         <h1 class="text-center mb-4">Buscar Cifra</h1>
-        <p class="text-center mb-4">Encontre qualquer música para tocar.</p>
+        <p class="text-center mb-4">Encontre músicas para tocar.</p>
 
-        <form action="view_song.php" method="GET">
+        <form action="results.php" method="GET">
             <div class="form-group">
-                <label for="artist">Nome do Artista / Banda</label>
-                <input type="text" id="artist" name="artist" placeholder="Ex: Aline Barros" required>
-            </div>
-
-            <div class="form-group">
-                <label for="song">Nome da Música</label>
-                <input type="text" id="song" name="song" placeholder="Ex: Ressuscita-me" required>
+                <label for="q">O que você quer tocar hoje?</label>
+                <input type="text" id="q" name="q" placeholder="Ex: Aline Barros Ressuscita-me" required>
             </div>
 
             <button type="submit" class="btn-search">Buscar Cifra</button>
@@ -90,7 +85,7 @@ if (!isPremium()) {
 
         <p class="helper-text">
             * Buscamos diretamente de grandes portais de cifras.<br>
-            * Digite o nome corretamente para garantir o resultado.
+            * Digite o nome do Artista, da Música ou ambos.
         </p>
     </div>
 </div>
