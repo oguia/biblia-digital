@@ -48,8 +48,6 @@ function fetchUrl($url) {
 
 function searchSongs($query) {
     // Strategy: Scrape Bing Search Results
-    // Bing (HTML version) is often easier to scrape and less restrictive than Google/DDG on shared hosting IPs.
-
     $searchUrl = "https://www.bing.com/search?q=site:cifraclub.com.br+" . urlencode($query . " cifra");
     $html = fetchUrl($searchUrl);
 
@@ -59,7 +57,6 @@ function searchSongs($query) {
         $html = fetchUrl($searchUrl);
     }
 
-    // If all scraping fails, try Direct Guess
     if (!$html) {
         return tryDirectGuess($query);
     }
@@ -74,18 +71,18 @@ function searchSongs($query) {
     $results = [];
     $unique = [];
 
-    // Bing results are typically in <li class="b_algo"><h2><a href="...">...</a></h2></li>
-    // DuckDuckGo Lite are in <a class="result-link" href="...">...</a>
-    // We'll search for all links to be safe
     $nodes = $xpath->query("//a");
 
     foreach ($nodes as $node) {
         $href = $node->getAttribute('href');
         $href = urldecode($href);
 
+        // Normalize URL (handle m.cifraclub.com.br)
+        $href = str_replace('m.cifraclub.com.br', 'www.cifraclub.com.br', $href);
+
         // Filter for valid Cifra Club song URLs
         // Pattern: https://www.cifraclub.com.br/ARTIST/SONG/
-        if (preg_match('#cifraclub\.com\.br/([^/]+)/([^/]+)/$#', $href, $matches)) {
+        if (preg_match('#cifraclub\.com\.br/([^/]+)/([^/]+)/?#', $href, $matches)) {
             $artistSlug = $matches[1];
             $songSlug = $matches[2];
 
@@ -95,35 +92,30 @@ function searchSongs($query) {
             // Extract title from the link text
             $titleText = trim($node->textContent);
 
-            // Clean up title (remove site branding)
-            // Bing often puts " ... " or " | Cifra Club"
+            // Clean up title
             $titleText = preg_replace('/ - Cifra Club.*/i', '', $titleText);
             $titleText = preg_replace('/ \| Cifra Club.*/i', '', $titleText);
             $titleText = str_ireplace(['Cifra Club - ', '...'], '', $titleText);
 
-            // Basic Formatter from slugs if title seems bad or generic
             $formattedTitle = ucwords(str_replace('-', ' ', $songSlug));
             $formattedArtist = ucwords(str_replace('-', ' ', $artistSlug));
 
-            // Heuristic: If title looks like a URL or is too short
+            // Heuristic to clean up title
             if (strlen($titleText) < 5 || stripos($titleText, 'http') !== false) {
                $displayTitle = "$formattedTitle - $formattedArtist";
             } else {
                $displayTitle = $titleText;
             }
 
-            // Remove "Cifra de" prefix if present
             $displayTitle = str_ireplace('Cifra de ', '', $displayTitle);
             $displayTitle = str_ireplace('Cifras de ', '', $displayTitle);
 
-            // Try to split by " - " to get distinct Artist/Song for UI
+            // Try to split by " - "
             if (strpos($displayTitle, ' - ') !== false) {
                 $parts = explode(' - ', $displayTitle);
-                // Usually Song - Artist on Cifra Club titles in search engines
                 $displaySong = trim($parts[0]);
                 $displayArtist = trim($parts[1]);
             } else {
-                // Fallback
                 $displaySong = $formattedTitle;
                 $displayArtist = $formattedArtist;
             }
@@ -145,25 +137,28 @@ function searchSongs($query) {
         }
     }
 
+    // If no results via scraping, AND the query looks simple, return empty message
+    // If query contains hyphen, try direct guess
     if (empty($results)) {
-        return tryDirectGuess($query);
+        if (strpos($query, '-') !== false) {
+            return tryDirectGuess($query);
+        }
+        return ['success' => false, 'message' => 'Nenhuma cifra encontrada para "' . htmlspecialchars($query) . '". Tente adicionar o nome do artista.'];
     }
 
     return ['success' => true, 'results' => $results];
 }
 
 function tryDirectGuess($query) {
-    // If user typed "Artist - Song", we can try to guess
     if (strpos($query, '-') !== false) {
         list($artist, $song) = explode('-', $query, 2);
         $artistSlug = slugify($artist);
         $songSlug = slugify($song);
 
         $url = "https://www.cifraclub.com.br/{$artistSlug}/{$songSlug}/";
-        // We verify if it exists by fetching headers only (faster)
 
         $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_NOBODY, true); // HEAD request
+        curl_setopt($ch, CURLOPT_NOBODY, true);
         curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0");
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_exec($ch);
@@ -181,7 +176,7 @@ function tryDirectGuess($query) {
         }
     }
 
-    return ['success' => false, 'message' => 'Nenhuma cifra encontrada. Tente digitar "Artista - Música" para ajudar.'];
+    return ['success' => false, 'message' => 'Não encontramos resultados exatos.'];
 }
 
 function getChord($artistSlug, $songSlug) {
@@ -200,11 +195,11 @@ function getChord($artistSlug, $songSlug) {
 
     $xpath = new DOMXPath($dom);
 
-    // Extract Title (h1.t1)
+    // Extract Title
     $titleNode = $xpath->query("//h1[@class='t1']");
     $title = $titleNode->length > 0 ? $titleNode->item(0)->textContent : ucwords(str_replace('-', ' ', $songSlug));
 
-    // Extract Artist (h2.t3)
+    // Extract Artist
     $artistNode = $xpath->query("//h2[@class='t3']");
     $artistName = $artistNode->length > 0 ? $artistNode->item(0)->textContent : ucwords(str_replace('-', ' ', $artistSlug));
 
