@@ -17,7 +17,6 @@ $error = '';
 $data = null;
 
 if ($artistSlug && $songSlug) {
-    // getChord now accepts slugs directly
     $data = getChord($artistSlug, $songSlug);
     if (!$data['success']) {
         $error = $data['message'];
@@ -42,6 +41,7 @@ if ($artistSlug && $songSlug) {
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             text-align: center;
+            position: relative;
         }
         .chord-header h1 { margin: 0; color: var(--primary-red); }
         .chord-header h2 { margin: 0.5rem 0 0; color: #666; font-weight: normal; }
@@ -60,57 +60,76 @@ if ($artistSlug && $songSlug) {
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             overflow-x: auto;
-            font-size: 16px; /* Adjustable? */
+            font-size: 16px;
+            line-height: 1.5;
         }
 
         pre {
             font-family: 'Courier New', Courier, monospace;
             white-space: pre;
             margin: 0;
-            line-height: 1.5;
         }
 
-        /* Cifra Club specific styling overrides */
         pre b {
             color: var(--primary-red);
             font-weight: bold;
         }
 
-        .error-container {
-            text-align: center;
-            padding: 4rem 2rem;
-        }
+        .error-container { text-align: center; padding: 4rem 2rem; }
+        .back-btn { display: inline-block; margin-top: 1rem; color: var(--primary-red); text-decoration: none; font-weight: bold; }
 
-        .back-btn {
-            display: inline-block;
-            margin-top: 1rem;
-            color: var(--primary-red);
-            text-decoration: none;
-            font-weight: bold;
+        /* Floating Tools */
+        .tools-bar {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
         }
-
-        /* Anti-Copy Scripts */
-        body {
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
+        .tool-btn {
+            background: var(--secondary-dark);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
         }
+        .tool-btn:hover { transform: scale(1.1); background: var(--primary-red); }
+        .tool-tooltip {
+            position: absolute;
+            right: 60px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+        .tool-btn:hover + .tool-tooltip { opacity: 1; }
 
         @media print {
-            header, footer, .back-btn { display: none; }
+            header, footer, .back-btn, .tools-bar { display: none; }
             .chord-content { box-shadow: none; padding: 0; }
+            body { background: white; }
         }
     </style>
     <script>
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
-            if(e.keyCode == 123) { return false; } // F12
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { return false; } // Ctrl+Shift+I
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { return false; } // Ctrl+Shift+C
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { return false; } // Ctrl+Shift+J
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { return false; } // Ctrl+U
-            if(e.ctrlKey && e.keyCode == 'S'.charCodeAt(0)) { return false; } // Ctrl+S
+            if(e.keyCode == 123) { return false; }
+            if(e.ctrlKey && (e.key === 'u' || e.key === 's')) { return false; }
         }
     </script>
 </head>
@@ -139,14 +158,34 @@ if ($artistSlug && $songSlug) {
             <h1><?php echo htmlspecialchars($data['title']); ?></h1>
             <h2><?php echo htmlspecialchars($data['artist']); ?></h2>
             <?php if (!empty($data['tone'])): ?>
-                <div class="tone">Tom: <?php echo htmlspecialchars($data['tone']); ?></div>
+                <div class="tone">Tom: <span id="key"><?php echo htmlspecialchars($data['tone']); ?></span></div>
             <?php endif; ?>
             <br>
             <a href="search.php" class="back-btn">&larr; Buscar outra música</a>
         </div>
 
         <div class="chord-content">
-            <pre><?php echo $data['content']; ?></pre>
+            <pre id="chord-text"><?php echo $data['content']; ?></pre>
+        </div>
+
+        <!-- Floating Tools for Premium Users -->
+        <div class="tools-bar">
+            <div>
+                <button class="tool-btn" id="btn-transpose-up" title="Aumentar Tom">♯</button>
+                <span class="tool-tooltip">Aumentar meio tom</span>
+            </div>
+            <div>
+                <button class="tool-btn" id="btn-transpose-down" title="Diminuir Tom">♭</button>
+                <span class="tool-tooltip">Diminuir meio tom</span>
+            </div>
+            <div>
+                <button class="tool-btn" id="btn-autoscroll" title="Auto Rolagem">⬇</button>
+                <span class="tool-tooltip">Auto Rolagem</span>
+            </div>
+            <div>
+                <button class="tool-btn" onclick="window.print()" title="Imprimir / PDF">🖨️</button>
+                <span class="tool-tooltip">Salvar PDF / Imprimir</span>
+            </div>
         </div>
     <?php endif; ?>
 </div>
@@ -157,5 +196,6 @@ if ($artistSlug && $songSlug) {
     </div>
 </footer>
 
+<script src="js/transpose.js"></script>
 </body>
 </html>

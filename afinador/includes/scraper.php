@@ -21,6 +21,17 @@ function slugify($text) {
     return $text;
 }
 
+// Helper to clean string encoding
+function cleanString($str) {
+    // If double encoded, decode
+    // Sometimes scraped content comes as weird UTF-8 sequences
+    // Try to detect if it's UTF-8 but treated as Latin1
+    if (mb_detect_encoding($str, 'UTF-8', true) === false) {
+        $str = utf8_encode($str);
+    }
+    return html_entity_decode($str, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+}
+
 // Helper function to execute curl requests
 function fetchUrl($url) {
     $ch = curl_init();
@@ -47,10 +58,6 @@ function fetchUrl($url) {
 }
 
 function searchSongs($query) {
-    // Strategy 1: Direct Artist Lookup
-    // If the user types "Aline Barros", we check cifraclub.com.br/aline-barros/
-    // This is the most reliable way to get a list of songs without being blocked by Google/Bing.
-
     $artistSlug = slugify($query);
     $results = tryScrapeArtistPage($artistSlug);
 
@@ -58,8 +65,6 @@ function searchSongs($query) {
         return ['success' => true, 'results' => $results];
     }
 
-    // Strategy 2: Scrape Bing Search Results (Fallback)
-    // If direct artist lookup fails (e.g. user typed a song name or misspelled artist), try search engine.
     $searchUrl = "https://www.bing.com/search?q=site:cifraclub.com.br+" . urlencode($query . " cifra");
     $html = fetchUrl($searchUrl);
 
@@ -71,7 +76,7 @@ function searchSongs($query) {
     if ($html) {
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
-        @$dom->loadHTML($html);
+        @$dom->loadHTML('<?xml encoding="UTF-8">' . $html); // Hack to force UTF-8
         libxml_clear_errors();
 
         $xpath = new DOMXPath($dom);
@@ -89,7 +94,7 @@ function searchSongs($query) {
 
                 if (in_array($aSlug, ['admin', 'app', 'letra', 'top', 'estilos', 'listas', 'blog', 'backend'])) continue;
 
-                $titleText = trim($node->textContent);
+                $titleText = cleanString(trim($node->textContent));
                 $titleText = preg_replace('/ - Cifra Club.*/i', '', $titleText);
                 $titleText = str_ireplace(['Cifra Club - ', '...'], '', $titleText);
 
@@ -144,14 +149,10 @@ function tryScrapeArtistPage($artistSlug) {
 
     $dom = new DOMDocument();
     libxml_use_internal_errors(true);
-    @$dom->loadHTML($html);
+    @$dom->loadHTML('<?xml encoding="UTF-8">' . $html);
     libxml_clear_errors();
 
     $xpath = new DOMXPath($dom);
-
-    // Look for song links in the "Top Músicas" or "Todas as Músicas" list
-    // Usually <ul class="list-songs"> or <ol id="top-songs">
-    // Structure: <a href="/artist/song/" class="song-link"> <span class="song-name">Title</span> </a>
 
     $results = [];
     $nodes = $xpath->query("//a[contains(@href, '/{$artistSlug}/')]");
@@ -159,18 +160,12 @@ function tryScrapeArtistPage($artistSlug) {
     foreach ($nodes as $node) {
         $href = $node->getAttribute('href');
 
-        // Extract song slug from /artist/song/
         if (preg_match("#/{$artistSlug}/([^/]+)/#", $href, $matches)) {
             $songSlug = $matches[1];
 
-            // Skip utility links
             if (in_array($songSlug, ['letra', 'discografia', 'fotos', 'video', 'biografia'])) continue;
 
-            // Get Song Title
-            // Often inside a span, or just text content
-            $title = trim($node->textContent);
-
-            // Clean up title (sometimes has numbering like "1. Song")
+            $title = cleanString(trim($node->textContent));
             $title = preg_replace('/^\d+\.\s*/', '', $title);
 
             if (empty($title)) $title = ucwords(str_replace('-', ' ', $songSlug));
@@ -201,25 +196,26 @@ function getChord($artistSlug, $songSlug) {
 
     $dom = new DOMDocument();
     libxml_use_internal_errors(true);
-    @$dom->loadHTML($html);
+    // Force UTF-8 processing
+    @$dom->loadHTML('<?xml encoding="UTF-8">' . $html);
     libxml_clear_errors();
 
     $xpath = new DOMXPath($dom);
 
     // Extract Title
     $titleNode = $xpath->query("//h1[@class='t1']");
-    $title = $titleNode->length > 0 ? $titleNode->item(0)->textContent : ucwords(str_replace('-', ' ', $songSlug));
+    $title = $titleNode->length > 0 ? cleanString($titleNode->item(0)->textContent) : ucwords(str_replace('-', ' ', $songSlug));
 
     // Extract Artist
     $artistNode = $xpath->query("//h2[@class='t3']");
-    $artistName = $artistNode->length > 0 ? $artistNode->item(0)->textContent : ucwords(str_replace('-', ' ', $artistSlug));
+    $artistName = $artistNode->length > 0 ? cleanString($artistNode->item(0)->textContent) : ucwords(str_replace('-', ' ', $artistSlug));
 
     // Extract Tone
     $toneNode = $xpath->query("//span[@id='cifra_tom']/a");
     if ($toneNode->length === 0) {
          $toneNode = $xpath->query("//span[@id='cifra_tom']");
     }
-    $tone = $toneNode->length > 0 ? $toneNode->item(0)->textContent : '';
+    $tone = $toneNode->length > 0 ? cleanString($toneNode->item(0)->textContent) : '';
 
     // Extract Pre content (The chords)
     $preNode = $xpath->query("//pre");
@@ -230,15 +226,17 @@ function getChord($artistSlug, $songSlug) {
         foreach ($pre->childNodes as $child) {
             $content .= $dom->saveHTML($child);
         }
+        // Basic cleanup of strange char sequences if any remain in HTML
+        // $content = cleanString($content); // Careful not to break HTML tags
     } else {
         return ['success' => false, 'message' => 'Conteúdo da cifra não encontrado nesta página.'];
     }
 
     return [
         'success' => true,
-        'title' => trim($title),
-        'artist' => trim($artistName),
-        'tone' => trim($tone),
+        'title' => $title,
+        'artist' => $artistName,
+        'tone' => $tone,
         'content' => $content,
         'url' => $url
     ];
