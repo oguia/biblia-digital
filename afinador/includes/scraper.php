@@ -29,9 +29,9 @@ function fetchUrl($url) {
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    // Use a standard browser UA to avoid blocks
-    curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-    curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+    // Use a mobile UA to get simpler HTML if possible, or desktop
+    curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
     $html = curl_exec($ch);
@@ -45,20 +45,22 @@ function fetchUrl($url) {
 }
 
 function searchSongs($query) {
-    // 1. Try DuckDuckGo Lite (HTML only) - often easier to scrape than Google
-    // Format: https://lite.duckduckgo.com/lite/?q=site:cifraclub.com.br+QUERY
+    // 1. Try DuckDuckGo HTML version (often best for scraping)
+    // https://html.duckduckgo.com/html/?q=site:cifraclub.com.br+QUERY
 
-    $searchUrl = "https://lite.duckduckgo.com/lite/?q=site:cifraclub.com.br+" . urlencode($query . " cifra");
+    $searchUrl = "https://html.duckduckgo.com/html/?q=site:cifraclub.com.br+" . urlencode($query . " cifra");
     $html = fetchUrl($searchUrl);
 
-    if (!$html) {
-        // Fallback to Google if DDG fails
-        $searchUrl = "https://www.google.com/search?q=site:cifraclub.com.br+" . urlencode($query . " cifra");
+    // 2. Fallback: Try Bing if DDG fails or returns captcha
+    if (!$html || strpos($html, 'captcha') !== false) {
+        $searchUrl = "https://www.bing.com/search?q=site:cifraclub.com.br+" . urlencode($query . " cifra");
         $html = fetchUrl($searchUrl);
     }
 
+    // 3. Last Resort Fallback: Direct URL Guess (if query looks like "Artist Song")
+    // This handles cases where search engines block us entirely.
     if (!$html) {
-        return ['success' => false, 'message' => 'Erro ao realizar a busca. Tente novamente mais tarde.'];
+        return tryDirectGuess($query);
     }
 
     $dom = new DOMDocument();
@@ -76,20 +78,6 @@ function searchSongs($query) {
 
     foreach ($nodes as $node) {
         $href = $node->getAttribute('href');
-
-        // Handle redirect URL formats
-        if (strpos($href, '/url?q=') !== false) {
-            $parts = parse_url($href);
-            parse_str($parts['query'], $queryParts);
-            $href = $queryParts['q'] ?? '';
-        } elseif (strpos($href, '//duckduckgo.com/l/?uddg=') !== false) {
-             // Handle DDG redirect
-             $parts = parse_url($href);
-             parse_str($parts['query'], $queryParts);
-             $href = $queryParts['uddg'] ?? '';
-        }
-
-        // Decode URL
         $href = urldecode($href);
 
         // Filter for valid Cifra Club song URLs
@@ -105,30 +93,30 @@ function searchSongs($query) {
             $titleText = trim($node->textContent);
 
             // Clean up title (remove site branding)
-            $titleText = str_ireplace([' - Cifra Club', ' | Cifra Club', 'Cifra Club - '], '', $titleText);
+            $titleText = str_ireplace([' - Cifra Club', ' | Cifra Club', 'Cifra Club - ', '...'], '', $titleText);
 
-            // If the title is too short or generic (like "Translate this page"), construct it from slugs
-            // Often search engines show "Cifra de Ressuscita-me - Aline Barros"
-
-            // Basic Formatter from slugs if title seems bad
+            // Basic Formatter from slugs if title seems bad or generic
             $formattedTitle = ucwords(str_replace('-', ' ', $songSlug));
             $formattedArtist = ucwords(str_replace('-', ' ', $artistSlug));
 
-            // Heuristic: If title doesn't contain the song name, use the formatted one
-            if (stripos($titleText, str_replace('-', ' ', $songSlug)) === false) {
+            // Heuristic: If title doesn't look like a song title, use the formatted one
+            if (strlen($titleText) < 5 || stripos($titleText, 'http') !== false) {
                $displayTitle = "$formattedTitle - $formattedArtist";
             } else {
                $displayTitle = $titleText;
             }
 
-            // Separate Song and Artist for display if possible
-            // Usually "Song - Artist"
-            $parts = explode(' - ', $displayTitle);
-            if (count($parts) >= 2) {
-                // Heuristic: usually Song comes first in title, but let's trust the slug
-                $displaySong = $formattedTitle;
-                $displayArtist = $formattedArtist;
+            // Separate Song and Artist for display
+            // Usually "Song - Artist" or "Cifra de Song - Artist"
+            $displayTitle = str_ireplace('Cifra de ', '', $displayTitle);
+
+            // Try to split by " - " or " por "
+            if (strpos($displayTitle, ' - ') !== false) {
+                $parts = explode(' - ', $displayTitle);
+                $displaySong = trim($parts[0]);
+                $displayArtist = trim($parts[1]);
             } else {
+                // Fallback to slugs
                 $displaySong = $formattedTitle;
                 $displayArtist = $formattedArtist;
             }
@@ -151,10 +139,48 @@ function searchSongs($query) {
     }
 
     if (empty($results)) {
-        return ['success' => false, 'message' => 'Nenhuma cifra encontrada. Tente ser mais específico.'];
+        // If scraping returned nothing (maybe blocked?), try guessing directly
+        return tryDirectGuess($query);
     }
 
     return ['success' => true, 'results' => $results];
+}
+
+function tryDirectGuess($query) {
+    // Try to split query into artist/song
+    // This is a "shot in the dark" for when search engines fail
+    $parts = preg_split('/\s+/', trim($query));
+    if (count($parts) < 2) {
+        return ['success' => false, 'message' => 'Nenhuma cifra encontrada. Tente ser mais específico.'];
+    }
+
+    // We can't know which part is artist or song, so let's try a common pattern
+    // Usually people type "Artist Song" or "Song Artist"
+    // Let's assume the query IS the song if it's long, or try to find an artist match
+
+    // Actually, let's just try to create a slug from the whole query as a song? No.
+    // Let's try to assume the first word is artist? No.
+
+    // Let's just return a generic error asking for more details or try one specific guess if it looks like "Artist - Song"
+    if (strpos($query, '-') !== false) {
+        list($artist, $song) = explode('-', $query, 2);
+        $artistSlug = slugify($artist);
+        $songSlug = slugify($song);
+
+        $url = "https://www.cifraclub.com.br/{$artistSlug}/{$songSlug}/";
+        $html = fetchUrl($url);
+        if ($html && strpos($html, 't1') !== false) { // Basic check for success
+             return ['success' => true, 'results' => [[
+                'artist_slug' => $artistSlug,
+                'song_slug' => $songSlug,
+                'display_title' => ucwords($song),
+                'display_artist' => ucwords($artist),
+                'url' => $url
+            ]]];
+        }
+    }
+
+    return ['success' => false, 'message' => 'Não conseguimos encontrar. Tente digitar "Artista - Música" (com o traço) para ajudar.'];
 }
 
 function getChord($artistSlug, $songSlug) {
