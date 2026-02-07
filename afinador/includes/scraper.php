@@ -29,7 +29,8 @@ function fetchUrl($url) {
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+    // Use a standard browser UA to avoid blocks
+    curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
     curl_setopt($ch, CURLOPT_TIMEOUT, 15);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
@@ -44,9 +45,17 @@ function fetchUrl($url) {
 }
 
 function searchSongs($query) {
-    // Use Google Search restricted to cifraclub.com.br
-    $searchUrl = "https://www.google.com/search?q=site:cifraclub.com.br+" . urlencode($query . " cifra");
+    // 1. Try DuckDuckGo Lite (HTML only) - often easier to scrape than Google
+    // Format: https://lite.duckduckgo.com/lite/?q=site:cifraclub.com.br+QUERY
+
+    $searchUrl = "https://lite.duckduckgo.com/lite/?q=site:cifraclub.com.br+" . urlencode($query . " cifra");
     $html = fetchUrl($searchUrl);
+
+    if (!$html) {
+        // Fallback to Google if DDG fails
+        $searchUrl = "https://www.google.com/search?q=site:cifraclub.com.br+" . urlencode($query . " cifra");
+        $html = fetchUrl($searchUrl);
+    }
 
     if (!$html) {
         return ['success' => false, 'message' => 'Erro ao realizar a busca. Tente novamente mais tarde.'];
@@ -59,21 +68,29 @@ function searchSongs($query) {
 
     $xpath = new DOMXPath($dom);
 
-    // Google results are often in <a> tags.
-    // The structure changes often, but the href attribute is constant.
-
     $results = [];
+    $unique = [];
+
+    // Look for all links
     $nodes = $xpath->query("//a");
 
     foreach ($nodes as $node) {
         $href = $node->getAttribute('href');
 
-        // Handle Google redirect URL format (/url?q=...)
+        // Handle redirect URL formats
         if (strpos($href, '/url?q=') !== false) {
             $parts = parse_url($href);
             parse_str($parts['query'], $queryParts);
             $href = $queryParts['q'] ?? '';
+        } elseif (strpos($href, '//duckduckgo.com/l/?uddg=') !== false) {
+             // Handle DDG redirect
+             $parts = parse_url($href);
+             parse_str($parts['query'], $queryParts);
+             $href = $queryParts['uddg'] ?? '';
         }
+
+        // Decode URL
+        $href = urldecode($href);
 
         // Filter for valid Cifra Club song URLs
         // Pattern: https://www.cifraclub.com.br/ARTIST/SONG/
@@ -82,18 +99,38 @@ function searchSongs($query) {
             $songSlug = $matches[2];
 
             // Skip non-song pages
-            if (in_array($artistSlug, ['admin', 'app', 'letra', 'top', 'estilos', 'listas'])) continue;
+            if (in_array($artistSlug, ['admin', 'app', 'letra', 'top', 'estilos', 'listas', 'blog'])) continue;
 
-            // Extract title from the link text or construct it
-            // Google usually puts the title in <h3> inside the <a>, or just the text
-            $titleText = $node->textContent;
+            // Extract title from the link text
+            $titleText = trim($node->textContent);
 
-            // Clean up title
-            $titleText = str_ireplace([' - Cifra Club', 'Cifra Club - ', ' | Cifra Club'], '', $titleText);
+            // Clean up title (remove site branding)
+            $titleText = str_ireplace([' - Cifra Club', ' | Cifra Club', 'Cifra Club - '], '', $titleText);
 
-            // If text is empty or junk, format slugs
-            if (strlen(trim($titleText)) < 3) {
-                $titleText = ucwords(str_replace('-', ' ', $artistSlug)) . ' - ' . ucwords(str_replace('-', ' ', $songSlug));
+            // If the title is too short or generic (like "Translate this page"), construct it from slugs
+            // Often search engines show "Cifra de Ressuscita-me - Aline Barros"
+
+            // Basic Formatter from slugs if title seems bad
+            $formattedTitle = ucwords(str_replace('-', ' ', $songSlug));
+            $formattedArtist = ucwords(str_replace('-', ' ', $artistSlug));
+
+            // Heuristic: If title doesn't contain the song name, use the formatted one
+            if (stripos($titleText, str_replace('-', ' ', $songSlug)) === false) {
+               $displayTitle = "$formattedTitle - $formattedArtist";
+            } else {
+               $displayTitle = $titleText;
+            }
+
+            // Separate Song and Artist for display if possible
+            // Usually "Song - Artist"
+            $parts = explode(' - ', $displayTitle);
+            if (count($parts) >= 2) {
+                // Heuristic: usually Song comes first in title, but let's trust the slug
+                $displaySong = $formattedTitle;
+                $displayArtist = $formattedArtist;
+            } else {
+                $displaySong = $formattedTitle;
+                $displayArtist = $formattedArtist;
             }
 
             // Avoid duplicates
@@ -102,7 +139,8 @@ function searchSongs($query) {
                 $results[] = [
                     'artist_slug' => $artistSlug,
                     'song_slug' => $songSlug,
-                    'display_title' => trim($titleText),
+                    'display_title' => $displaySong,
+                    'display_artist' => $displayArtist,
                     'url' => $href
                 ];
                 $unique[$key] = true;
@@ -160,7 +198,9 @@ function getChord($artistSlug, $songSlug) {
             $content .= $dom->saveHTML($child);
         }
     } else {
-        return ['success' => false, 'message' => 'Conteúdo da cifra não encontrado nesta página.'];
+        // Try alternate selector for tabs/lyrics if pre is missing
+        $content = "Conteúdo protegido ou formato não suportado.";
+        return ['success' => false, 'message' => 'Conteúdo da cifra não encontrado. Pode ser uma página protegida.'];
     }
 
     return [

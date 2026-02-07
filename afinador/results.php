@@ -80,25 +80,10 @@ if ($query) {
             text-decoration: none;
             font-weight: bold;
         }
-
-        /* Anti-Copy Scripts */
-        body {
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
     </style>
     <script>
+        // Disable context menu
         document.addEventListener('contextmenu', event => event.preventDefault());
-        document.onkeydown = function(e) {
-            if(e.keyCode == 123) { return false; } // F12
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { return false; } // Ctrl+Shift+I
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { return false; } // Ctrl+Shift+C
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { return false; } // Ctrl+Shift+J
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { return false; } // Ctrl+U
-            if(e.ctrlKey && e.keyCode == 'S'.charCodeAt(0)) { return false; } // Ctrl+S
-        }
     </script>
 </head>
 <body>
@@ -130,8 +115,8 @@ if ($query) {
             <div class="results-list">
                 <?php foreach ($results as $item): ?>
                     <a href="view_song.php?artist=<?php echo urlencode($item['artist_slug']); ?>&song=<?php echo urlencode($item['song_slug']); ?>" class="result-item">
-                        <div class="result-title"><?php echo $item['display_title']; ?></div>
-                        <div class="result-artist">Toque para abrir a cifra</div>
+                        <div class="result-title"><?php echo htmlspecialchars($item['display_title']); ?></div>
+                        <div class="result-artist">Artista: <?php echo htmlspecialchars($item['display_artist']); ?></div>
                     </a>
                 <?php endforeach; ?>
             </div>
