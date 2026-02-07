@@ -13,6 +13,19 @@ $is_premium = isPremium();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Afinador de Violão Online - Mais Deus</title>
     <link rel="stylesheet" href="css/style.css">
+
+    <!-- Anti-Copy Scripts -->
+    <script>
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) { return false; } // F12
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { return false; } // Ctrl+Shift+I
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { return false; } // Ctrl+Shift+C
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { return false; } // Ctrl+Shift+J
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { return false; } // Ctrl+U
+            if(e.ctrlKey && e.keyCode == 'S'.charCodeAt(0)) { return false; } // Ctrl+S
+        }
+    </script>
 </head>
 <body>
 

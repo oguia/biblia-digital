@@ -16,6 +16,20 @@ body {
     margin: 0;
     padding: 0;
     line-height: 1.6;
+
+    /* Anti-Copy CSS */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Allow text selection in inputs only */
+input, textarea {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
 }
 
 /* Header */
