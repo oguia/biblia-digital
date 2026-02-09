@@ -5,9 +5,80 @@ import { TimelineSlider } from '@/components/MaisDeus/TimelineSlider';
 import { LivingMap } from '@/components/MaisDeus/LivingMap';
 import { ApplicationCard } from '@/components/MaisDeus/ApplicationCard';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, History, Map as MapIcon, BookOpen, Loader2 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { toast } from 'sonner';
+
+const VERSIONS = ["nvi", "ra", "acf", "kjv", "aa", "cnt", "nabil", "msg", "ntlh", "kja", "ara", "arc", "nvt"]; // Add other versions as needed
+const BOOKS = [
+  { name: "Gênesis", abbrev: "gn" },
+  { name: "Êxodo", abbrev: "ex" },
+  { name: "Levítico", abbrev: "lv" },
+  { name: "Números", abbrev: "nm" },
+  { name: "Deuteronômio", abbrev: "dt" },
+  { name: "Josué", abbrev: "js" },
+  { name: "Juízes", abbrev: "jz" },
+  { name: "Rute", abbrev: "rt" },
+  { name: "1 Samuel", abbrev: "1sm" },
+  { name: "2 Samuel", abbrev: "2sm" },
+  { name: "1 Reis", abbrev: "1rs" },
+  { name: "2 Reis", abbrev: "2rs" },
+  { name: "1 Crônicas", abbrev: "1cr" },
+  { name: "2 Crônicas", abbrev: "2cr" },
+  { name: "Esdras", abbrev: "esd" },
+  { name: "Neemias", abbrev: "ne" },
+  { name: "Ester", abbrev: "et" },
+  { name: "Jó", abbrev: "jó" },
+  { name: "Salmos", abbrev: "sl" },
+  { name: "Provérbios", abbrev: "pv" },
+  { name: "Eclesiastes", abbrev: "ec" },
+  { name: "Cântico dos Cânticos", abbrev: "ct" },
+  { name: "Isaías", abbrev: "is" },
+  { name: "Jeremias", abbrev: "jr" },
+  { name: "Lamentações", abbrev: "lm" },
+  { name: "Ezequiel", abbrev: "ez" },
+  { name: "Daniel", abbrev: "dn" },
+  { name: "Oséias", abbrev: "os" },
+  { name: "Joel", abbrev: "jl" },
+  { name: "Amós", abbrev: "am" },
+  { name: "Obadias", abbrev: "ob" },
+  { name: "Jonas", abbrev: "jn" },
+  { name: "Miquéias", abbrev: "mq" },
+  { name: "Naum", abbrev: "na" },
+  { name: "Habacuque", abbrev: "hc" },
+  { name: "Sofonias", abbrev: "sf" },
+  { name: "Ageu", abbrev: "ag" },
+  { name: "Zacarias", abbrev: "zc" },
+  { name: "Malaquias", abbrev: "ml" },
+  { name: "Mateus", abbrev: "mt" },
+  { name: "Marcos", abbrev: "mc" },
+  { name: "Lucas", abbrev: "lc" },
+  { name: "João", abbrev: "jo" },
+  { name: "Atos", abbrev: "at" },
+  { name: "Romanos", abbrev: "rm" },
+  { name: "1 Coríntios", abbrev: "1co" },
+  { name: "2 Coríntios", abbrev: "2co" },
+  { name: "Gálatas", abbrev: "gl" },
+  { name: "Efésios", abbrev: "ef" },
+  { name: "Filipenses", abbrev: "fp" },
+  { name: "Colossenses", abbrev: "cl" },
+  { name: "1 Tessalonicenses", abbrev: "1ts" },
+  { name: "2 Tessalonicenses", abbrev: "2ts" },
+  { name: "1 Timóteo", abbrev: "1tm" },
+  { name: "2 Timóteo", abbrev: "2tm" },
+  { name: "Tito", abbrev: "tt" },
+  { name: "Filemom", abbrev: "fm" },
+  { name: "Hebreus", abbrev: "hb" },
+  { name: "Tiago", abbrev: "tg" },
+  { name: "1 Pedro", abbrev: "1pd" },
+  { name: "2 Pedro", abbrev: "2pd" },
+  { name: "1 João", abbrev: "1jo" },
+  { name: "2 João", abbrev: "2jo" },
+  { name: "3 João", abbrev: "3jo" },
+  { name: "Judas", abbrev: "jd" },
+  { name: "Apocalipse", abbrev: "ap" },
+];
 
 export default function BibleHappeningNow() {
   const [bibleData, setBibleData] = useState<BibleResponse | null>(null);
@@ -116,21 +187,65 @@ export default function BibleHappeningNow() {
         {/* Left Column: Bible Text */}
         <div className="lg:col-span-8 space-y-8">
 
-          {/* Chapter Header */}
-          <div className="flex items-center justify-between border-b pb-4">
+          {/* Chapter Header & Controls */}
+          <div className="space-y-4 border-b pb-4">
+            {/* Version & Navigation Controls */}
+            <div className="flex flex-col md:flex-row gap-2 items-center justify-between bg-muted/30 p-2 rounded-lg">
+              <div className="flex gap-2 w-full md:w-auto">
+                {/* Version Selector */}
+                <Select value={version} onValueChange={setVersion}>
+                  <SelectTrigger className="w-[80px] md:w-[100px]">
+                    <SelectValue placeholder="Ver" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VERSIONS.map((v) => (
+                      <SelectItem key={v} value={v}>{v.toUpperCase()}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Book Selector */}
+                <Select value={book} onValueChange={(val) => { setBook(val); setChapter(1); }}>
+                  <SelectTrigger className="flex-1 md:w-[180px]">
+                    <SelectValue placeholder="Livro" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {BOOKS.map((b) => (
+                      <SelectItem key={b.abbrev} value={b.abbrev}>{b.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Chapter Selector */}
+                <Select value={chapter.toString()} onValueChange={(val) => setChapter(parseInt(val))}>
+                  <SelectTrigger className="w-[70px] md:w-[80px]">
+                    <SelectValue placeholder="Cap" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {Array.from({ length: bibleData.chapter.total }, (_, i) => i + 1).map((c) => (
+                      <SelectItem key={c} value={c.toString()}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Prev/Next Buttons */}
+              <div className="flex gap-1 w-full md:w-auto justify-end">
+                 <Button variant="outline" size="icon" disabled={chapter <= 1} onClick={() => setChapter(c => c - 1)}>
+                   <ChevronLeft className="w-4 h-4" />
+                 </Button>
+                 <Button variant="outline" size="icon" disabled={chapter >= bibleData.chapter.total} onClick={() => setChapter(c => c + 1)}>
+                   <ChevronRight className="w-4 h-4" />
+                 </Button>
+              </div>
+            </div>
+
+            {/* Title & Era */}
             <div>
               <h2 className="text-3xl font-extrabold text-foreground">{bibleData.book.name} {bibleData.chapter.number}</h2>
               <p className="text-muted-foreground text-sm uppercase tracking-wide font-medium mt-1">
                 {enrichment.timeline[0]?.era || 'Antigo Testamento'} • {enrichment.timeline[0]?.year < 0 ? `${Math.abs(enrichment.timeline[0]?.year)} a.C.` : `${enrichment.timeline[0]?.year} d.C.`}
               </p>
-            </div>
-            <div className="flex gap-2">
-               <Button variant="outline" size="icon" disabled={chapter <= 1} onClick={() => setChapter(c => c - 1)}>
-                 <ChevronLeft className="w-4 h-4" />
-               </Button>
-               <Button variant="outline" size="icon" disabled={chapter >= bibleData.chapter.total} onClick={() => setChapter(c => c + 1)}>
-                 <ChevronRight className="w-4 h-4" />
-               </Button>
             </div>
           </div>
 
