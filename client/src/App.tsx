@@ -5,12 +5,14 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import BibleReader from "./pages/BibleReader";
+import BibleHappeningNow from "./pages/BibleHappeningNow";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path="/" component={BibleReader} />
+      <Route path="/" component={BibleHappeningNow} />
+      <Route path="/classic" component={BibleReader} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -40,4 +42,3 @@ function App() {
 }
 
 export default App;
-
