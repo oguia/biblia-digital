@@ -3,38 +3,20 @@ INSTRUÇÕES DE INSTALAÇÃO - MAISDEUS.COM (Bíblia Acontecendo Agora)
 
 1. PREPARAÇÃO DO BANCO DE DADOS
    - Acesse o painel da Hostinger -> Banco de Dados -> Criar Novo Banco de Dados MySQL.
-   - Nome do Banco: (ex: u123456789_biblia)
-   - Usuário: (ex: u123456789_admin)
-   - Senha: (Crie uma senha forte)
+   - Anote: Nome do Banco, Usuário e Senha.
 
-2. IMPORTAÇÃO DOS DADOS
-   - Acesse o phpMyAdmin da Hostinger.
-   - Selecione o banco de dados criado.
-   - Vá na aba "Importar".
+2. IMPORTAÇÃO DOS DADOS (phpMyAdmin)
+   - Vá na aba "Importar" e envie os arquivos NA SEGUINTE ORDEM:
+     1º: database.sql (Cria a estrutura)
+     2º: O SEU ARQUIVO DE VERSÕES (biblia_13V.sql)
+     3º: api/seed_enrichment.sql (Dados de demonstração para Gênesis e Êxodo)
 
-   IMPORTANTE - Siga esta ordem exata:
+3. CONFIGURAÇÃO (api/db.php)
+   - Abra a pasta `api` e edite o arquivo `db.php`.
+   - Coloque os dados do banco que você criou no passo 1.
 
-   PASSO A: Importe o arquivo `database.sql` (Estrutura do banco).
-   PASSO B: Importe o SEU arquivo `biblia_13V.sql` (As 13 versões da Bíblia que você já possui).
-   PASSO C: Importe o arquivo `api/seed_enrichment.sql` (Dados iniciais de Contexto, Mapa e Timeline para Gênesis e Êxodo).
+4. UPLOAD
+   - Suba TODOS os arquivos e pastas deste ZIP para dentro da pasta `public_html` na Hostinger.
+   - O arquivo `index.html` deve ficar direto dentro de `public_html`.
 
-3. CONFIGURAÇÃO DO SITE
-   - Abra o arquivo `api/db.php` (se não existir, crie ou renomeie config.example.php).
-   - Edite com os dados do banco criado no passo 1:
-     $host = 'localhost';
-     $db   = 'u123456789_biblia';
-     $user = 'u123456789_admin';
-     $pass = 'SuaSenhaAqui';
-
-4. UPLOAD DOS ARQUIVOS
-   - Suba TODOS os arquivos desta pasta para a pasta `public_html` (ou subdomínio) na Hostinger.
-   - A estrutura deve ficar assim:
-     /public_html/index.html
-     /public_html/assets/...
-     /public_html/api/bible.php
-     /public_html/api/enrichment.php
-     ...
-
-5. ACESSE O SITE
-   - Abra seu navegador e acesse o site.
-   - Teste navegando para Gênesis 1 ou Êxodo 14 para ver a "Bíblia Acontecendo Agora" em ação!
+PRONTO! O site deve abrir com as 13 versões listadas e a funcionalidade "Bíblia Acontecendo Agora" ativa em Gênesis 1.
