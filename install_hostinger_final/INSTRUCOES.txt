@@ -1,22 +1,33 @@
-INSTRUÇÕES DE INSTALAÇÃO - MAISDEUS.COM (Bíblia Acontecendo Agora)
-================================================================
+INSTRUÇÕES DE INSTALAÇÃO - MAISDEUS.COM
 
-1. PREPARAÇÃO DO BANCO DE DADOS
-   - Acesse o painel da Hostinger -> Banco de Dados -> Criar Novo Banco de Dados MySQL.
-   - Anote: Nome do Banco, Usuário e Senha.
+1. BANCO DE DADOS
+   - Crie um banco de dados MySQL no painel da Hostinger.
+   - Importe os arquivos SQL na seguinte ordem:
+     1. database.sql (Estrutura base)
+     2. biblia_13V.sql (Versões da Bíblia - Você deve ter este arquivo)
+     3. seed_enrichment.sql (Dados de enriquecimento: mapas, timeline, etc)
 
-2. IMPORTAÇÃO DOS DADOS (phpMyAdmin)
-   - Vá na aba "Importar" e envie os arquivos NA SEGUINTE ORDEM:
-     1º: database.sql (Cria a estrutura)
-     2º: O SEU ARQUIVO DE VERSÕES (biblia_13V.sql)
-     3º: api/seed_enrichment.sql (Dados de demonstração para Gênesis e Êxodo)
+2. ARQUIVOS
+   - Faça upload do conteúdo da pasta "install_hostinger_final" para a pasta "public_html" (ou subpasta desejada).
+   - A estrutura deve ficar assim:
+     /public_html
+       /api
+       /assets
+       index.html
+       .htaccess
+       ...arquivos sql...
 
-3. CONFIGURAÇÃO (api/db.php)
-   - Abra a pasta `api` e edite o arquivo `db.php`.
-   - Coloque os dados do banco que você criou no passo 1.
+3. CONFIGURAÇÃO
+   - Abra o arquivo `api/index.php`.
+   - Localize a seção de conexão com o banco de dados (logo no início).
+   - Preencha com seus dados da Hostinger:
+     $host = 'localhost';
+     $db   = 'seu_nome_do_banco';
+     $user = 'seu_usuario';
+     $pass = 'sua_senha';
 
-4. UPLOAD
-   - Suba TODOS os arquivos e pastas deste ZIP para dentro da pasta `public_html` na Hostinger.
-   - O arquivo `index.html` deve ficar direto dentro de `public_html`.
+4. TESTE
+   - Acesse o site.
+   - Teste a leitura de Gênesis 1.
 
-PRONTO! O site deve abrir com as 13 versões listadas e a funcionalidade "Bíblia Acontecendo Agora" ativa em Gênesis 1.
+OBS: O arquivo .htaccess é OBRIGATÓRIO para o funcionamento das rotas.
