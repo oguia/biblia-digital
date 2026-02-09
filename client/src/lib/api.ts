@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const USE_MOCK = true; // Set to true for development environment without PHP server
+const USE_MOCK = false; // Set to false for production to use real PHP backend
 
 export interface Verse {
   number: number;

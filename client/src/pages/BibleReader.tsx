@@ -31,7 +31,7 @@ interface HighlightedVerse {
   version: string;
 }
 
-const VERSIONS = ["nvi", "ra", "acf", "kjv"];
+const VERSIONS = ["nvi", "ra", "acf", "kjv", "aa", "cnt", "nabil", "msg", "ntlh", "kja", "ara", "arc", "nvt"];
 const BOOKS = [
   { name: "Gênesis", abbrev: "gn" },
   { name: "Êxodo", abbrev: "ex" },
