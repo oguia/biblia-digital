@@ -30,7 +30,7 @@
                 <?php if (count($versiculos) > 0): ?>
                     <?php foreach ($versiculos as $v): ?>
                         <p class="mb-4">
-                            <sup class="text-xs text-primary font-bold mr-1 select-none"><?= $v['ver_numero'] ?></sup>
+                            <sup class="text-xs text-primary font-bold mr-1 select-none"><?= $v['ver_versiculo'] ?></sup>
                             <?= $v['ver_texto'] ?>
                         </p>
                     <?php endforeach; ?>

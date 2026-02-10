@@ -21,12 +21,13 @@ class BibliaModel {
     }
 
     public function getVersiculos($liv_id, $capitulo, $vrs_id) {
-        $sql = "SELECT ver_numero, ver_texto
+        // Trocando ver_numero por ver_versiculo, assumindo que seja o nome correto
+        $sql = "SELECT ver_versiculo, ver_texto
                 FROM versiculos
                 WHERE ver_liv_id = :liv_id
                   AND ver_capitulo = :capitulo
                   AND ver_vrs_id = :vrs_id
-                ORDER BY ver_numero ASC";
+                ORDER BY ver_versiculo ASC";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
