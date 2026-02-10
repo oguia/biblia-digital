@@ -1,0 +1,16 @@
+Oi!
+
+O arquivo que você procura está aqui sim!
+
+O nome dele é:
+-->  BIBLIA_EM_CONTEXTO_V5_FINAL.zip  <--
+
+Ele está na RAIZ do projeto, junto com o arquivo `package.json` e `vite.config.ts`.
+Tamanho aproximado: 1.2MB.
+
+Se você não está vendo ele, por favor tente:
+1. Atualizar a página do GitHub/GitLab se estiver visualizando online.
+2. Fazer um `git pull origin jules/biblia-em-contexto-final-v5` se estiver usando git no terminal.
+3. Procurar na pasta principal (raiz) do repositório.
+
+Qualquer dúvida, me avise!

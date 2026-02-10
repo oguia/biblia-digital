@@ -1,0 +1,33 @@
+INSTRUÇÕES DE INSTALAÇÃO - MAISDEUS.COM
+
+1. BANCO DE DADOS
+   - Crie um banco de dados MySQL no painel da Hostinger.
+   - Importe os arquivos SQL na seguinte ordem:
+     1. database.sql (Estrutura base)
+     2. biblia_13V.sql (Versões da Bíblia - Você deve ter este arquivo)
+     3. seed_enrichment.sql (Dados de enriquecimento: mapas, timeline, etc)
+
+2. ARQUIVOS
+   - Faça upload do conteúdo da pasta "install_hostinger_final" para a pasta "public_html" (ou subpasta desejada).
+   - A estrutura deve ficar assim:
+     /public_html
+       /api
+       /assets
+       index.html
+       .htaccess
+       ...arquivos sql...
+
+3. CONFIGURAÇÃO
+   - Abra o arquivo `api/index.php`.
+   - Localize a seção de conexão com o banco de dados (logo no início).
+   - Preencha com seus dados da Hostinger:
+     $host = 'localhost';
+     $db   = 'seu_nome_do_banco';
+     $user = 'seu_usuario';
+     $pass = 'sua_senha';
+
+4. TESTE
+   - Acesse o site.
+   - Teste a leitura de Gênesis 1.
+
+OBS: O arquivo .htaccess é OBRIGATÓRIO para o funcionamento das rotas.
