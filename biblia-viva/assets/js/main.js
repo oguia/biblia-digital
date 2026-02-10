@@ -40,7 +40,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabContexto = document.getElementById('tab-content-contexto');
 
     if (btnTexto && btnContexto && tabTexto && tabContexto) {
-        btnTexto.addEventListener('click', () => {
+        console.log("Abas mobile encontradas e inicializadas.");
+
+        btnTexto.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log("Aba Texto clicada");
+
             // Mostrar Texto
             tabTexto.classList.remove('hidden');
             tabContexto.classList.add('hidden');
@@ -56,7 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
-        btnContexto.addEventListener('click', () => {
+        btnContexto.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log("Aba Contexto clicada");
+
             // Mostrar Contexto
             tabTexto.classList.add('hidden');
             tabContexto.classList.remove('hidden');
@@ -71,6 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Ajustar Mapa
             if (typeof map !== 'undefined' && map) {
+                console.log("Redimensionando mapa...");
+                map.invalidateSize();
                 setTimeout(() => {
                     map.invalidateSize();
                 }, 200);
@@ -78,6 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
+    } else {
+        console.warn("Elementos das abas mobile não encontrados.");
     }
 
     // 5. Carregar contexto via AJAX ao navegar (Exemplo para navegação de capítulos)

@@ -80,7 +80,7 @@ $tituloPagina = "{$livroAtual['liv_nome']} {$capitulo} - Bíblia Viva";
 
             <!-- Navegação Rápida -->
             <div class="flex items-center gap-4">
-                <select id="versaoSelect" class="bg-gray-100 border-none text-sm rounded-md px-3 py-2 focus:ring-2 focus:ring-primary">
+                <select id="versaoSelect" class="bg-gray-100 border-none text-sm rounded-md px-3 py-2 focus:ring-2 focus:ring-primary max-w-[120px] md:max-w-xs truncate">
                     <?php foreach ($versoes as $v): ?>
                         <option value="<?= $v['vrs_id'] ?>" <?= $v['vrs_id'] == $versaoId ? 'selected' : '' ?>>
                             <?= htmlspecialchars($v['vrs_nome']) ?>
@@ -139,6 +139,6 @@ $tituloPagina = "{$livroAtual['liv_nome']} {$capitulo} - Bíblia Viva";
         window.bibliaLocais = <?= json_encode($contextoGeo) ?>;
         const versoesId = <?= $versaoId ?>;
     </script>
-    <script src="assets/js/main.js"></script>
+    <script src="assets/js/main.js?v=2.0"></script>
 </body>
 </html>
