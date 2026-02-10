@@ -10,7 +10,8 @@ class BibliaModel {
     }
 
     public function getLivros() {
-        $stmt = $this->pdo->query("SELECT liv_id, liv_nome, liv_abreviacao, liv_tes_id FROM livros ORDER BY liv_id ASC");
+        // Removido liv_abreviacao temporariamente pois causava erro 1054 em alguns ambientes
+        $stmt = $this->pdo->query("SELECT liv_id, liv_nome, liv_tes_id FROM livros ORDER BY liv_id ASC");
         return $stmt->fetchAll();
     }
 
@@ -85,7 +86,7 @@ class BibliaModel {
     }
 
     public function getBookById($liv_id) {
-        $stmt = $this->pdo->prepare("SELECT liv_nome, liv_abreviacao FROM livros WHERE liv_id = :liv_id");
+        $stmt = $this->pdo->prepare("SELECT liv_nome FROM livros WHERE liv_id = :liv_id");
         $stmt->execute([':liv_id' => $liv_id]);
         return $stmt->fetch();
     }
