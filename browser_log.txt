@@ -1,0 +1,19 @@
+
+> simple-browser@1.0.0 dev /app/simple-browser
+> vite
+
+
+  VITE v4.5.14  ready in 641 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+2:46:10 AM [vite] hmr update /App.tsx
+3:23:20 AM [vite] hmr update /index.css
+3:32:15 AM [vite] hmr update /index.css
+3:50:19 AM [vite] hmr update /App.tsx
+4:01:32 AM [vite] hmr update /App.tsx
+4:01:38 AM [vite] hmr update /App.tsx
+4:11:34 AM [vite] hmr update /App.tsx
+4:32:13 AM [vite] hmr update /App.tsx
+4:56:26 AM [vite] hmr update /App.tsx
+5:22:35 AM [vite] hmr update /App.tsx
