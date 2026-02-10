@@ -1,5 +1,5 @@
         <!-- Coluna Direita: Contexto -->
-        <aside class="lg:w-1/3 space-y-6">
+        <aside id="tab-content-contexto" class="lg:w-1/3 w-full space-y-6 hidden lg:block">
 
             <!-- Mapa -->
             <div id="map-container" class="<?= count($contextoGeo) > 0 ? '' : 'hidden' ?> bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

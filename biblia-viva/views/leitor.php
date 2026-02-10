@@ -1,5 +1,5 @@
         <!-- Coluna Esquerda: Texto Bíblico -->
-        <section class="lg:w-2/3">
+        <section id="tab-content-texto" class="lg:w-2/3 w-full block">
 
             <!-- Navegação Livro/Capítulo -->
             <div class="bg-white p-4 rounded-xl shadow-sm mb-6 flex flex-wrap gap-4 items-center justify-between border border-gray-100">
@@ -26,7 +26,7 @@
             </div>
 
             <!-- Texto -->
-            <div class="bg-white p-6 md:p-10 rounded-xl shadow-sm border border-gray-100 bible-text text-gray-800 text-lg">
+            <div class="bg-white p-6 md:p-10 rounded-xl shadow-sm border border-gray-100 bible-text text-gray-800 text-lg break-words">
                 <?php if (count($versiculos) > 0): ?>
                     <?php foreach ($versiculos as $v): ?>
                         <p class="mb-4">

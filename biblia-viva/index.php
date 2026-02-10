@@ -65,7 +65,7 @@ $tituloPagina = "{$livroAtual['liv_nome']} {$capitulo} - Bíblia Viva";
         .leaflet-container { height: 400px; width: 100%; border-radius: 0.5rem; z-index: 10; }
     </style>
 </head>
-<body class="bg-gray-50 text-secondary">
+<body class="bg-gray-50 text-secondary overflow-x-hidden">
 
     <!-- Header -->
     <header class="bg-white shadow-sm sticky top-0 z-50">
@@ -104,6 +104,16 @@ $tituloPagina = "{$livroAtual['liv_nome']} {$capitulo} - Bíblia Viva";
             </div>
         </div>
     </header>
+
+    <!-- Mobile Tabs (Sticky) -->
+    <div class="lg:hidden bg-white border-b border-gray-200 sticky top-[64px] z-40 flex shadow-sm">
+        <button id="tab-btn-texto" class="flex-1 py-3 text-center text-sm font-bold border-b-2 border-primary text-primary transition focus:outline-none">
+            Texto
+        </button>
+        <button id="tab-btn-contexto" class="flex-1 py-3 text-center text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-secondary transition focus:outline-none">
+            Contexto
+        </button>
+    </div>
 
     <!-- Conteúdo Principal -->
     <main class="container mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">

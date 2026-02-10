@@ -33,7 +33,54 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. Carregar contexto via AJAX ao navegar (Exemplo para navegação de capítulos)
+    // 4. Tabs Mobile
+    const btnTexto = document.getElementById('tab-btn-texto');
+    const btnContexto = document.getElementById('tab-btn-contexto');
+    const tabTexto = document.getElementById('tab-content-texto');
+    const tabContexto = document.getElementById('tab-content-contexto');
+
+    if (btnTexto && btnContexto && tabTexto && tabContexto) {
+        btnTexto.addEventListener('click', () => {
+            // Mostrar Texto
+            tabTexto.classList.remove('hidden');
+            tabContexto.classList.add('hidden');
+
+            // Estilo Botão Ativo
+            btnTexto.classList.add('border-primary', 'text-primary', 'font-bold');
+            btnTexto.classList.remove('border-transparent', 'text-gray-500', 'font-medium');
+
+            // Estilo Botão Inativo
+            btnContexto.classList.remove('border-primary', 'text-primary', 'font-bold');
+            btnContexto.classList.add('border-transparent', 'text-gray-500', 'font-medium');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        btnContexto.addEventListener('click', () => {
+            // Mostrar Contexto
+            tabTexto.classList.add('hidden');
+            tabContexto.classList.remove('hidden');
+
+            // Estilo Botão Ativo
+            btnContexto.classList.add('border-primary', 'text-primary', 'font-bold');
+            btnContexto.classList.remove('border-transparent', 'text-gray-500', 'font-medium');
+
+            // Estilo Botão Inativo
+            btnTexto.classList.remove('border-primary', 'text-primary', 'font-bold');
+            btnTexto.classList.add('border-transparent', 'text-gray-500', 'font-medium');
+
+            // Ajustar Mapa
+            if (typeof map !== 'undefined' && map) {
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 200);
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    // 5. Carregar contexto via AJAX ao navegar (Exemplo para navegação de capítulos)
     // Para simplificar, vamos manter a navegação padrão por recarregamento
     // mas expor a função loadContext para uso futuro ou integração
 });
