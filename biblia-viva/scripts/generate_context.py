@@ -1,7 +1,21 @@
-import mysql.connector
 import json
 import time
-import google.generativeai as genai
+import sys
+import subprocess
+
+# Tenta importar as bibliotecas e avisa se faltarem
+try:
+    import mysql.connector
+    import google.generativeai as genai
+except ImportError as e:
+    print("\n[ERRO] Faltam bibliotecas necessárias!")
+    print(f"Detalhe: {e}")
+    print("\nPARA RESOLVER:")
+    print("1. Abra seu terminal/CMD (não o Python).")
+    print("2. Digite o seguinte comando e aperte Enter:")
+    print("\n   pip install mysql-connector-python google-generativeai\n")
+    print("3. Tente rodar este script novamente.\n")
+    sys.exit(1)
 
 # ==============================================================================
 # CONFIGURAÇÕES (PREENCHA AQUI)
