@@ -1,124 +1,248 @@
 import mysql.connector
 import json
 import time
+import google.generativeai as genai
 
-# Configuração da API do Gemini (Exemplo - Instalar: pip install google-generativeai)
-# import google.generativeai as genai
-# genai.configure(api_key="SUA_API_KEY_AQUI")
+# ==============================================================================
+# CONFIGURAÇÕES (PREENCHA AQUI)
+# ==============================================================================
 
-# Configuração do Banco de Dados
-db_config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': '',
-    'database': 'biblia'
+# 1. Sua Chave de API do Google Gemini (Obtenha em https://aistudio.google.com/)
+GEMINI_API_KEY = "SUA_CHAVE_API_AQUI"
+
+# 2. Configurações do Banco de Dados (Hostinger)
+DB_CONFIG = {
+    'host': 'localhost',      # Na Hostinger geralmente é 'localhost' ou o IP
+    'user': 'seu_usuario',
+    'password': 'sua_senha',
+    'database': 'seu_banco',
+    'raise_on_warnings': True
 }
 
+# 3. ID da Versão da Bíblia para leitura (Ex: 6 = NVI, 5 = Almeida, etc)
+VERSAO_ID_LEITURA = 6
+
+# ==============================================================================
+# CONFIGURAÇÃO DO MODELO AI
+# ==============================================================================
+genai.configure(api_key=GEMINI_API_KEY)
+
+# Configuração de segurança e geração para garantir JSON
+generation_config = {
+  "temperature": 0.2, # Baixa criatividade para ser mais factual
+  "top_p": 0.95,
+  "top_k": 64,
+  "max_output_tokens": 8192,
+  "response_mime_type": "application/json",
+}
+
+model = genai.GenerativeModel(
+  model_name="gemini-1.5-flash", # Modelo rápido e econômico
+  generation_config=generation_config,
+)
+
+# ==============================================================================
+# FUNÇÕES DE BANCO DE DADOS
+# ==============================================================================
+
+def get_db_connection():
+    return mysql.connector.connect(**DB_CONFIG)
+
+def get_livros(cursor):
+    """Retorna lista de livros (id, nome)"""
+    cursor.execute("SELECT liv_id, liv_nome FROM livros ORDER BY liv_id ASC")
+    return cursor.fetchall()
+
+def get_total_capitulos(cursor, liv_id):
+    """Retorna o número total de capítulos de um livro"""
+    query = "SELECT MAX(ver_capitulo) FROM versiculos WHERE ver_liv_id = %s"
+    cursor.execute(query, (liv_id,))
+    result = cursor.fetchone()
+    return result[0] if result and result[0] else 0
+
 def get_texto_capitulo(cursor, liv_id, capitulo):
-    """
-    Busca o texto completo de um capítulo para enviar ao LLM.
-    """
-    # Ajuste o nome das colunas conforme seu banco real (vrs_id=5 é NVI, por exemplo)
+    """Busca o texto completo do capítulo na versão especificada"""
     query = """
-    SELECT ver_texto FROM versiculos
-    WHERE ver_liv_id = %s AND ver_capitulo = %s AND ver_vrs_id = 5
+    SELECT ver_versiculo, ver_texto
+    FROM versiculos
+    WHERE ver_liv_id = %s AND ver_capitulo = %s AND ver_vrs_id = %s
     ORDER BY ver_versiculo ASC
     """
-    cursor.execute(query, (liv_id, capitulo))
-    versiculos = cursor.fetchall()
-    texto_completo = " ".join([v[0] for v in versiculos])
+    cursor.execute(query, (liv_id, capitulo, VERSAO_ID_LEITURA))
+    rows = cursor.fetchall()
+
+    if not rows:
+        return None
+
+    texto_completo = ""
+    for row in rows:
+        texto_completo += f"{row[0]}. {row[1]} "
+
     return texto_completo
 
-def gerar_contexto_ia(livro_nome, capitulo, texto_biblico):
-    """
-    Simula a chamada ao Gemini para gerar o JSON de contexto.
-    """
-    prompt = f"""
-    Você é um teólogo e historiador bíblico especialista.
-    Analise o texto de {livro_nome} {capitulo}:
-    "{texto_biblico[:500]}..." (texto truncado para exemplo)
+def check_contexto_existe(cursor, liv_id, capitulo):
+    """Verifica se já existe contexto para não duplicar (opcional)"""
+    cursor.execute("SELECT id FROM cronologia WHERE liv_id = %s AND capitulo = %s", (liv_id, capitulo))
+    return cursor.fetchone() is not None
 
-    Gere um JSON estrito com os seguintes campos:
-    1. "geo": Lista de locais geográficos mencionados (nome, latitude, longitude, descricao_curta).
-    2. "crono": Objeto com (ano_estimado, periodo_historico, personagens_chave, eventos_mundiais_paralelos, conexao_com_jesus).
-    3. "app": Objeto com (verdade_central, alerta_espiritual, acao_pratica).
+def salvar_dados(cursor, liv_id, capitulo, dados):
+    """Salva os dados gerados nas 3 tabelas"""
 
-    Regras:
-    - Latitude/Longitude devem ser reais e precisas.
-    - Conexão com Jesus deve mostrar como esse texto aponta para Cristo (tipologia ou profecia).
-    - Ação Prática deve ser aplicável hoje.
-    """
-
-    # AQUI VOCÊ CHAMARIA O MODELO REAL:
-    # model = genai.GenerativeModel('gemini-pro')
-    # response = model.generate_content(prompt)
-    # return response.text
-
-    print(f"--- Gerando AI para {livro_nome} {capitulo} ---")
-    # Retorno Mockado para Teste
-    return json.dumps({
-        "geo": [{"nome": "Exemplo Local", "lat": 0.0, "lon": 0.0, "desc": "Local gerado via IA"}],
-        "crono": {"ano": "2000 AC", "periodo": "Exemplo", "personagens": "Fulano", "eventos": "Nenhum", "jesus": "Tipologia X"},
-        "app": {"verdade": "Deus é bom", "alerta": "Não peque", "acao": "Ore mais"}
-    })
-
-def salvar_no_banco(cursor, liv_id, capitulo, dados_json):
-    """
-    Insere os dados gerados nas tabelas de contexto.
-    """
-    dados = json.loads(dados_json)
-
-    # 1. Inserir Geografia
-    for geo in dados['geo']:
-        sql_geo = """
-        INSERT INTO contexto_geografico (liv_id, capitulo, nome, latitude, longitude, descricao)
-        VALUES (%s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(sql_geo, (liv_id, capitulo, geo['nome'], geo['lat'], geo['lon'], geo['desc']))
-
-    # 2. Inserir Cronologia
-    c = dados['crono']
+    # 1. Cronologia
+    crono = dados.get('cronologia', {})
     sql_crono = """
     INSERT INTO cronologia (liv_id, capitulo, ano_estimado, periodo, personagens, eventos_mundiais, conexao_jesus)
     VALUES (%s, %s, %s, %s, %s, %s, %s)
     """
-    cursor.execute(sql_crono, (liv_id, capitulo, c['ano'], c['periodo'], c['personagens'], c['eventos'], c['jesus']))
+    # Garantir que todos os campos existam no JSON, senão usa string vazia
+    cursor.execute(sql_crono, (
+        liv_id,
+        capitulo,
+        crono.get('ano_estimado', ''),
+        crono.get('periodo', ''),
+        crono.get('personagens', ''), # Personagens podem vir como lista ou string, ideal tratar
+        crono.get('eventos_mundiais', ''),
+        crono.get('conexao_jesus', '')
+    ))
 
-    # 3. Inserir Aplicação
-    a = dados['app']
+    # 2. Geografia
+    locais = dados.get('locais', [])
+    if locais:
+        sql_geo = """
+        INSERT INTO contexto_geografico (liv_id, capitulo, nome, latitude, longitude, descricao)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        for local in locais:
+            cursor.execute(sql_geo, (
+                liv_id,
+                capitulo,
+                local.get('nome', ''),
+                local.get('lat', 0.0),
+                local.get('lng', 0.0),
+                local.get('descricao', '')
+            ))
+
+    # 3. Aplicação Prática
+    app = dados.get('aplicacao', {})
     sql_app = """
     INSERT INTO aplicacao_pratica (liv_id, capitulo, verdade_central, alerta, acao_pratica)
     VALUES (%s, %s, %s, %s, %s)
     """
-    cursor.execute(sql_app, (liv_id, capitulo, a['verdade'], a['alerta'], a['acao']))
+    cursor.execute(sql_app, (
+        liv_id,
+        capitulo,
+        app.get('verdade', ''),
+        app.get('alerta', ''),
+        app.get('acao', '')
+    ))
 
-    print(f"Dados salvos para {liv_id}:{capitulo}")
+# ==============================================================================
+# LÓGICA DE IA (GEMINI)
+# ==============================================================================
+
+def gerar_contexto_ia(livro_nome, capitulo, texto_biblico):
+    """Envia o texto para o Gemini e recebe o JSON estruturado"""
+
+    prompt = f"""
+    Atue como um especialista em Teologia Bíblica, Arqueologia e Geografia Histórica.
+    Analise o texto bíblico abaixo ({livro_nome} Capítulo {capitulo}) e extraia as informações de contexto.
+
+    TEXTO BÍBLICO:
+    "{texto_biblico[:30000]}" (limitado para segurança)
+
+    INSTRUÇÕES DE SAÍDA (JSON ESTRITO):
+    Retorne APENAS um objeto JSON com a seguinte estrutura exata:
+
+    {{
+      "locais": [
+        {{
+          "nome": "Nome do Local (Ex: Jericó)",
+          "lat": -0.0000,
+          "lng": 0.0000,
+          "descricao": "Descrição curta da relevância neste capítulo."
+        }}
+      ],
+      "cronologia": {{
+        "ano_estimado": "Ex: 1406 a.C.",
+        "periodo": "Ex: Conquista de Canaã",
+        "personagens": "Ex: Josué, Raabe, Espias",
+        "eventos_mundiais": "Ex: Novo Reino no Egito",
+        "conexao_jesus": "Explique brevemente como este capítulo aponta para Cristo (tipologia, profecia ou tema redentor)."
+      }},
+      "aplicacao": {{
+        "verdade": "Uma frase resumindo a verdade teológica central.",
+        "alerta": "Um alerta espiritual baseado no erro de algum personagem ou mandamento.",
+        "acao": "Uma ação prática para o cristão moderno."
+      }}
+    }}
+
+    Regras:
+    1. Se não houver locais geográficos claros, retorne "locais": [].
+    2. Coordenadas (lat/lng) devem ser precisas (formato decimal).
+    3. Seja conservador e teologicamente ortodoxo.
+    """
+
+    try:
+        response = model.generate_content(prompt)
+        # O Gemini configurado com response_mime_type="application/json" já deve retornar JSON puro
+        return json.loads(response.text)
+    except Exception as e:
+        print(f"Erro na IA: {e}")
+        return None
+
+# ==============================================================================
+# LOOP PRINCIPAL
+# ==============================================================================
 
 def main():
+    conn = None
     try:
-        conn = mysql.connector.connect(**db_config)
+        conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Exemplo: Processar Gênesis (liv_id=1) do cap 1 ao 50
-        LIVRO_ID = 1
-        LIVRO_NOME = "Gênesis"
+        livros = get_livros(cursor)
+        print(f"Conectado! Encontrados {len(livros)} livros para processar.")
 
-        for cap in range(1, 3): # Teste com 2 capítulos
-            texto = get_texto_capitulo(cursor, LIVRO_ID, cap)
-            if texto:
-                json_saida = gerar_contexto_ia(LIVRO_NOME, cap, texto)
-                salvar_no_banco(cursor, LIVRO_ID, cap, json_saida)
-                conn.commit()
-                time.sleep(1) # Respeitar rate limits da API
-            else:
-                print(f"Texto não encontrado para {LIVRO_NOME} {cap}")
+        for liv_id, liv_nome in livros:
+            total_caps = get_total_capitulos(cursor, liv_id)
+            print(f"\n>>> Processando Livro: {liv_nome} ({total_caps} capítulos)")
 
+            for cap in range(1, total_caps + 1):
+                # Verificar se já processamos (para poder parar e continuar depois)
+                if check_contexto_existe(cursor, liv_id, cap):
+                    print(f"   [PULADO] Cap {cap} já existe.")
+                    continue
+
+                print(f"   [...] Lendo Cap {cap}...", end="\r")
+                texto = get_texto_capitulo(cursor, liv_id, cap)
+
+                if not texto:
+                    print(f"   [ERRO] Texto não encontrado para {liv_nome} {cap} (Versão ID {VERSAO_ID_LEITURA})")
+                    continue
+
+                # Chamada IA
+                print(f"   [IA] Gerando contexto para {liv_nome} {cap}...", end="\r")
+                dados_ia = gerar_contexto_ia(liv_nome, cap, texto)
+
+                if dados_ia:
+                    salvar_dados(cursor, liv_id, cap, dados_ia)
+                    conn.commit()
+                    print(f"   [OK] Cap {cap} processado e salvo!     ")
+                else:
+                    print(f"   [FALHA] Cap {cap} - Erro na geração da IA.")
+
+                # Pausa para não estourar limite da API (Rate Limit)
+                time.sleep(2)
+
+    except mysql.connector.Error as err:
+        print(f"Erro de Banco de Dados: {err}")
     except Exception as e:
-        print(f"Erro: {e}")
+        print(f"Erro Geral: {e}")
     finally:
-        if 'conn' in locals() and conn.is_connected():
+        if conn and conn.is_connected():
             cursor.close()
             conn.close()
+            print("\nConexão fechada. Processo finalizado.")
 
 if __name__ == "__main__":
     main()
