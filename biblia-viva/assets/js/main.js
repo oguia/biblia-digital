@@ -77,13 +77,29 @@ document.addEventListener('DOMContentLoaded', () => {
             btnTexto.classList.remove('border-primary', 'text-primary', 'font-bold');
             btnTexto.classList.add('border-transparent', 'text-gray-500', 'font-medium');
 
-            // Ajustar Mapa
+            // Ajustar Mapa e Tiles (Estratégia Agressiva para corrigir tiles cinzas)
             if (typeof map !== 'undefined' && map) {
-                console.log("Redimensionando mapa...");
-                map.invalidateSize();
+                console.log("Iniciando redimensionamento agressivo do mapa...");
+
+                // 1. Redimensionamento imediato e em cascata
+                const resizeDelays = [0, 100, 300, 500, 1000];
+                resizeDelays.forEach(delay => {
+                    setTimeout(() => {
+                        map.invalidateSize();
+                        console.log(`Resize executado em ${delay}ms`);
+                    }, delay);
+                });
+
+                // 2. Forçar atualização dos tiles após um breve delay
                 setTimeout(() => {
-                    map.invalidateSize();
-                }, 200);
+                    if (window.bibliaLocais && window.bibliaLocais.length > 0) {
+                        const bounds = L.latLngBounds(window.bibliaLocais.map(l => [l.latitude, l.longitude]));
+                        map.fitBounds(bounds, { padding: [50, 50] });
+                    } else {
+                        // Default reset
+                        map.setView([31.7683, 35.2137], 6);
+                    }
+                }, 350);
             }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
