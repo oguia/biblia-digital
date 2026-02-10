@@ -32,23 +32,28 @@ document.addEventListener('DOMContentLoaded', () => {
             mobileMenu.classList.toggle('hidden');
         });
     }
+
+    // 4. Carregar contexto via AJAX ao navegar (Exemplo para navegação de capítulos)
+    // Para simplificar, vamos manter a navegação padrão por recarregamento
+    // mas expor a função loadContext para uso futuro ou integração
 });
 
 let map; // Variável global para o mapa
+let markers = []; // Array para armazenar marcadores
 
 function initMap() {
-    // Verifica se existem locais definidos na view
-    if (typeof window.bibliaLocais === 'undefined' || window.bibliaLocais.length === 0) {
-        return;
-    }
+    // Inicializar mapa vazio se não existir
+    if (!document.getElementById('map')) return;
 
-    const locais = window.bibliaLocais;
-    const mapElement = document.getElementById('map');
+    // Se já existem locais carregados pelo PHP (via window.bibliaLocais), usa-os
+    // Caso contrário, inicia com visão global
+    const locaisIniciais = (typeof window.bibliaLocais !== 'undefined' && window.bibliaLocais.length > 0)
+        ? window.bibliaLocais
+        : [{latitude: 31.7683, longitude: 35.2137, nome: 'Jerusalém'}]; // Default Jerusalem
 
-    if (!mapElement) return;
+    const zoomInicial = (typeof window.bibliaLocais !== 'undefined' && window.bibliaLocais.length > 0) ? 6 : 4;
 
-    // Centralizar no primeiro ponto
-    map = L.map('map').setView([locais[0].latitude, locais[0].longitude], 5);
+    map = L.map('map').setView([locaisIniciais[0].latitude, locaisIniciais[0].longitude], zoomInicial);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -56,8 +61,25 @@ function initMap() {
         maxZoom: 19
     }).addTo(map);
 
+    // Se houver locais carregados via PHP, adiciona os marcadores
+    if (typeof window.bibliaLocais !== 'undefined' && window.bibliaLocais.length > 0) {
+        addMarkers(window.bibliaLocais);
+    }
+}
+
+function addMarkers(locais) {
+    // Limpar marcadores anteriores se necessário (para uso com AJAX)
+    markers.forEach(marker => map.removeLayer(marker));
+    markers = [];
+
+    if (locais.length === 0) return;
+
+    const bounds = L.latLngBounds();
+
     locais.forEach(local => {
         const marker = L.marker([local.latitude, local.longitude]).addTo(map);
+        markers.push(marker);
+        bounds.extend([local.latitude, local.longitude]);
 
         let popupContent = `<div class="p-2 text-center">
             <h4 class="font-bold text-lg text-gray-800 mb-1">${local.nome}</h4>`;
@@ -74,6 +96,83 @@ function initMap() {
 
         marker.bindPopup(popupContent);
     });
+
+    if (locais.length > 1) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+    } else {
+        map.setView([locais[0].latitude, locais[0].longitude], 8);
+    }
+}
+
+// Função para carregar contexto via AJAX
+window.loadContext = async function(livroId, capitulo) {
+    try {
+        const response = await fetch(`api/contexto.php?livro=${livroId}&cap=${capitulo}`);
+        const result = await response.json();
+
+        if (result.success) {
+            // Atualizar Mapa
+            const mapContainer = document.getElementById('map-container');
+            const noDataMessage = document.getElementById('no-geo-data');
+
+            if (result.data.geo && result.data.geo.length > 0) {
+                if (mapContainer) mapContainer.classList.remove('hidden');
+                if (noDataMessage) noDataMessage.classList.add('hidden');
+                addMarkers(result.data.geo);
+                updateGeoList(result.data.geo);
+            } else {
+                if (mapContainer) mapContainer.classList.add('hidden');
+                if (noDataMessage) noDataMessage.classList.remove('hidden');
+            }
+
+            // Atualizar Cronologia e Aplicação (Lógica similar de atualização de DOM necessária)
+            updateCronologia(result.data.cronologia);
+
+            console.log("Contexto carregado:", result.data);
+        }
+    } catch (error) {
+        console.error("Erro ao carregar contexto:", error);
+    }
+};
+
+function updateGeoList(locais) {
+    const listContainer = document.getElementById('geo-list');
+    if (!listContainer) return;
+
+    let html = '';
+    locais.forEach(geo => {
+        html += `
+            <div class="flex gap-3 items-start group cursor-pointer hover:bg-gray-50 p-2 rounded transition" onclick="focarMapa(${geo.latitude}, ${geo.longitude}, '${geo.nome.replace(/'/g, "\\'")}')">
+                <div class="w-2 h-2 mt-2 rounded-full bg-primary flex-shrink-0"></div>
+                <div>
+                    <h4 class="text-sm font-bold text-gray-800 group-hover:text-primary transition">${geo.nome}</h4>
+                    <p class="text-xs text-gray-500 line-clamp-2">${geo.descricao || ''}</p>
+                </div>
+            </div>`;
+    });
+    listContainer.innerHTML = html;
+
+    // Atualizar contador
+    const countBadge = document.getElementById('geo-count');
+    if (countBadge) countBadge.innerText = `${locais.length} Locais`;
+}
+
+function updateCronologia(data) {
+    const cronoContainer = document.getElementById('cronologia-container');
+    if (!cronoContainer) return;
+
+    if (!data) {
+        cronoContainer.classList.add('hidden');
+        return;
+    }
+
+    cronoContainer.classList.remove('hidden');
+    // Atualizar campos específicos pelos IDs (necessário adicionar IDs no HTML)
+    // Exemplo simplificado:
+    if(document.getElementById('crono-periodo')) document.getElementById('crono-periodo').innerText = data.periodo;
+    if(document.getElementById('crono-ano')) document.getElementById('crono-ano').innerText = `Aprox. ${data.ano_estimado}`;
+    if(document.getElementById('crono-personagens')) document.getElementById('crono-personagens').innerText = data.personagens;
+    if(document.getElementById('crono-eventos')) document.getElementById('crono-eventos').innerText = `"${data.eventos_mundiais}"`;
 }
 
 // Função para focar em um local específico ao clicar na lista
@@ -83,7 +182,5 @@ window.focarMapa = function(lat, lon, nome) {
             animate: true,
             duration: 1.5
         });
-
-        // Opcional: Abrir popup se encontrar o marcador correspondente (requer rastreamento de markers)
     }
 };
