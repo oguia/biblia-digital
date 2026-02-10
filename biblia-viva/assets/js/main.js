@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Listeners de Navegação
     const livroSelect = document.getElementById('livroSelect');
     const versaoSelect = document.getElementById('versaoSelect');
+    const menuButton = document.getElementById('menuButton');
+    const mobileMenu = document.getElementById('mobileMenu');
 
     if (livroSelect) {
         livroSelect.addEventListener('change', (e) => {
@@ -20,6 +22,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             params.set('versao', e.target.value);
             window.location.search = params.toString();
+        });
+    }
+
+    // 3. Listener do Menu Mobile
+    if (menuButton && mobileMenu) {
+        menuButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            mobileMenu.classList.toggle('hidden');
         });
     }
 });

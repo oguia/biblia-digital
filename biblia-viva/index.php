@@ -87,11 +87,20 @@ $tituloPagina = "{$livroAtual['liv_nome']} {$capitulo} - Bíblia Viva";
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <a href="#" class="text-secondary hover:text-primary transition">
+                <button id="menuButton" class="text-secondary hover:text-primary transition focus:outline-none">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
-                </a>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu (Hidden by default) -->
+        <div id="mobileMenu" class="hidden border-t border-gray-100 bg-white">
+            <div class="container mx-auto px-4 py-2 flex flex-col gap-2">
+                <a href="#" class="block py-2 text-secondary hover:text-primary font-medium">Início</a>
+                <a href="#" class="block py-2 text-secondary hover:text-primary font-medium">Sobre o Projeto</a>
+                <a href="#" class="block py-2 text-secondary hover:text-primary font-medium">Contato</a>
             </div>
         </div>
     </header>
