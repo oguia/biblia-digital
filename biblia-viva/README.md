@@ -21,7 +21,7 @@ O projeto foi estruturado para ser leve e performático em hospedagem compartilh
 
 ## Instalação
 
-1. Importe o arquivo `sql/schema.sql` e `sql/data_genesis_12.sql` no seu banco de dados MySQL.
+1. Importe o arquivo `sql/schema_safe.sql` (Recomendado para evitar erros de Chave Estrangeira) e `sql/data_genesis_12.sql` no seu banco de dados MySQL.
 2. Renomeie o arquivo `config.example.php` para `config.php`.
 3. Edite o arquivo `config.php` com as credenciais do seu banco de dados.
 4. Faça o upload de todos os arquivos para a pasta `/biblia-viva` no servidor.
