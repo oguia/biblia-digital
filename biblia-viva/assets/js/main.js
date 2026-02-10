@@ -173,6 +173,17 @@ function updateCronologia(data) {
     if(document.getElementById('crono-ano')) document.getElementById('crono-ano').innerText = `Aprox. ${data.ano_estimado}`;
     if(document.getElementById('crono-personagens')) document.getElementById('crono-personagens').innerText = data.personagens;
     if(document.getElementById('crono-eventos')) document.getElementById('crono-eventos').innerText = `"${data.eventos_mundiais}"`;
+
+    // Conexão com Jesus
+    const jesusContainer = document.getElementById('crono-jesus-container');
+    const jesusText = document.getElementById('crono-jesus');
+
+    if (data.conexao_jesus) {
+        if(jesusContainer) jesusContainer.classList.remove('hidden');
+        if(jesusText) jesusText.innerText = data.conexao_jesus;
+    } else {
+        if(jesusContainer) jesusContainer.classList.add('hidden');
+    }
 }
 
 // Função para focar em um local específico ao clicar na lista

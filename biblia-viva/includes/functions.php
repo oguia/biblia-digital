@@ -55,7 +55,7 @@ class BibliaModel {
     }
 
     public function getCronologia($liv_id, $capitulo) {
-        $sql = "SELECT ano_estimado, periodo, personagens, eventos_mundiais
+        $sql = "SELECT ano_estimado, periodo, personagens, eventos_mundiais, conexao_jesus
                 FROM cronologia
                 WHERE liv_id = :liv_id
                   AND capitulo = :capitulo

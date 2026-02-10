@@ -58,10 +58,21 @@
                     </div>
 
                     <!-- Item 3: Contexto Mundial -->
-                    <div class="relative pl-10">
+                    <div class="relative pl-10 mb-6">
                         <div class="absolute left-7 top-2 w-2 h-2 rounded-full bg-gray-300"></div>
                         <h5 class="text-sm font-bold text-gray-700 mb-1">No Mundo</h5>
                         <p id="crono-eventos" class="text-sm text-gray-600 italic leading-relaxed">"<?= htmlspecialchars($cronologia['eventos_mundiais'] ?? '') ?>"</p>
+                    </div>
+
+                    <!-- Item 4: Conexão com Jesus -->
+                    <div id="crono-jesus-container" class="relative pl-10 <?= !empty($cronologia['conexao_jesus']) ? '' : 'hidden' ?>">
+                        <div class="absolute left-6 top-1.5 w-4 h-4 rounded-full bg-red-100 border-2 border-red-500 flex items-center justify-center">
+                            <div class="w-1.5 h-1.5 bg-red-600 rounded-full"></div>
+                        </div>
+                        <h5 class="text-sm font-bold text-red-700 mb-1">Conexão com Jesus</h5>
+                        <p id="crono-jesus" class="text-sm text-gray-700 font-medium leading-relaxed bg-red-50 p-3 rounded-lg border border-red-100">
+                            <?= htmlspecialchars($cronologia['conexao_jesus'] ?? '') ?>
+                        </p>
                     </div>
                 </div>
             </div>
