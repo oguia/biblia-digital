@@ -233,7 +233,9 @@ def gerar_contexto_ia(livro_nome, capitulo, texto_biblico, tentativas=3):
         "acao": "Aplicação prática"
       }}
     }}
-    Regra: Se não houver locais, retorne "locais": [].
+    Regras:
+    1. Se não houver locais, retorne "locais": [].
+    2. NUNCA use lat/lng 0.0 e 0.0 (Golfo da Guiné). Se não souber exato, use cidade conhecida mais próxima ou omita.
     """
 
     for i in range(tentativas):
