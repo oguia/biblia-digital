@@ -120,13 +120,18 @@ function initMap() {
     // Inicializar mapa vazio se não existir
     if (!document.getElementById('map')) return;
 
-    // Se já existem locais carregados pelo PHP (via window.bibliaLocais), usa-os
-    // Caso contrário, inicia com visão global
-    const locaisIniciais = (typeof window.bibliaLocais !== 'undefined' && window.bibliaLocais.length > 0)
-        ? window.bibliaLocais
-        : [{latitude: 31.7683, longitude: 35.2137, nome: 'Jerusalém'}]; // Default Jerusalem
+    // Filtrar locais válidos (lat/lng != 0 e != null)
+    let locaisIniciais = (typeof window.bibliaLocais !== 'undefined' && window.bibliaLocais.length > 0)
+        ? window.bibliaLocais.filter(l => l.latitude != 0 && l.longitude != 0 && l.latitude != null)
+        : [];
 
-    const zoomInicial = (typeof window.bibliaLocais !== 'undefined' && window.bibliaLocais.length > 0) ? 6 : 4;
+    // Fallback para Jerusalém se não houver locais válidos
+    if (locaisIniciais.length === 0) {
+        locaisIniciais = [{latitude: 31.7683, longitude: 35.2137, nome: 'Jerusalém'}];
+    }
+
+    // Zoom inicial mais conservador se tiver apenas 1 ponto
+    const zoomInicial = (locaisIniciais.length > 1) ? 6 : 8;
 
     map = L.map('map').setView([locaisIniciais[0].latitude, locaisIniciais[0].longitude], zoomInicial);
 
@@ -136,22 +141,25 @@ function initMap() {
         maxZoom: 19
     }).addTo(map);
 
-    // Se houver locais carregados via PHP, adiciona os marcadores
+    // Se houver locais válidos, adiciona os marcadores
     if (typeof window.bibliaLocais !== 'undefined' && window.bibliaLocais.length > 0) {
         addMarkers(window.bibliaLocais);
     }
 }
 
 function addMarkers(locais) {
-    // Limpar marcadores anteriores se necessário (para uso com AJAX)
+    // Limpar marcadores anteriores
     markers.forEach(marker => map.removeLayer(marker));
     markers = [];
 
-    if (locais.length === 0) return;
+    // Filtrar inválidos
+    const locaisValidos = locais.filter(l => l.latitude != 0 && l.longitude != 0 && l.latitude != null);
+
+    if (locaisValidos.length === 0) return;
 
     const bounds = L.latLngBounds();
 
-    locais.forEach(local => {
+    locaisValidos.forEach(local => {
         const marker = L.marker([local.latitude, local.longitude]).addTo(map);
         markers.push(marker);
         bounds.extend([local.latitude, local.longitude]);
@@ -172,10 +180,11 @@ function addMarkers(locais) {
         marker.bindPopup(popupContent);
     });
 
-    if (locais.length > 1) {
+    if (locaisValidos.length > 1) {
         map.fitBounds(bounds, { padding: [50, 50] });
     } else {
-        map.setView([locais[0].latitude, locais[0].longitude], 8);
+        // Zoom máximo de 10 para evitar ficar muito perto ("no meio do nada") se for um ponto isolado ou impreciso
+        map.setView([locaisValidos[0].latitude, locaisValidos[0].longitude], 10);
     }
 }
 
