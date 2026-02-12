@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 url: window.location.href
             };
 
-            if (navigator.share) {
+            if (navigator.canShare && navigator.canShare(shareData)) {
                 try {
                     await navigator.share(shareData);
                 } catch (err) {
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Link copiado para a área de transferência!');
                 } catch (err) {
                     console.error('Falha ao copiar link:', err);
-                    alert('Não foi possível compartilhar automaticamente. Copie o link do navegador.');
+                    alert('Copie o link do navegador para compartilhar: ' + window.location.href);
                 }
             }
         });
@@ -141,34 +141,34 @@ document.addEventListener('DOMContentLoaded', () => {
     let deferredPrompt;
     const installBtn = document.getElementById('installAppBtn');
 
+    // Registrar Service Worker
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('service-worker.js')
             .then(reg => console.log('Service Worker registrado com sucesso:', reg.scope))
             .catch(err => console.log('Falha ao registrar Service Worker:', err));
     }
 
+    // Gerenciar lógica de Instalação
     window.addEventListener('beforeinstallprompt', (e) => {
         console.log('Evento beforeinstallprompt disparado!');
         e.preventDefault();
         deferredPrompt = e;
-        if (installBtn) {
-            installBtn.classList.remove('hidden');
-            installBtn.onclick = () => {
-                installBtn.classList.add('hidden');
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('Usuário aceitou instalar');
-                    } else {
-                        console.log('Usuário recusou instalar');
-                        // Mostrar botão novamente se recusar?
-                        installBtn.classList.remove('hidden');
-                    }
-                    deferredPrompt = null;
-                });
-            };
-        }
     });
+
+    if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                // Se o evento foi disparado, mostrar o prompt nativo
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`Usuário ${outcome} a instalação`);
+                deferredPrompt = null;
+            } else {
+                // Se o evento não foi disparado (já instalado, não suportado, ou iOS)
+                alert('Para instalar este aplicativo:\n\nNo Android/Chrome: Toque em Menu (⋮) > Instalar aplicativo.\n\nNo iPhone/Safari: Toque em Compartilhar > Adicionar à Tela de Início.');
+            }
+        });
+    }
 
     // 7. Carregar contexto via AJAX ao navegar (Exemplo para navegação de capítulos)
     // Para simplificar, vamos manter a navegação padrão por recarregamento

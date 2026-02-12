@@ -93,7 +93,7 @@ $tituloPagina = "{$livroAtual['liv_nome']} {$capitulo} - Bíblia Viva";
                     <?php endforeach; ?>
                 </select>
 
-                <button id="installAppBtn" class="hidden bg-primary text-white text-xs px-3 py-1 rounded-full font-bold hover:bg-red-800 transition shadow-sm mr-2" title="Instalar Aplicativo">
+                <button id="installAppBtn" class="bg-primary text-white text-xs px-3 py-1 rounded-full font-bold hover:bg-red-800 transition shadow-sm mr-2" title="Instalar Aplicativo">
                     Instalar App
                 </button>
 
