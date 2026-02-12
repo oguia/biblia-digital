@@ -91,4 +91,11 @@ class BibliaModel {
         $stmt->execute([':liv_id' => $liv_id]);
         return $stmt->fetch();
     }
+
+    public function getTotalCapitulos($liv_id) {
+        $stmt = $this->pdo->prepare("SELECT MAX(ver_capitulo) FROM versiculos WHERE ver_liv_id = :liv_id");
+        $stmt->execute([':liv_id' => $liv_id]);
+        $result = $stmt->fetchColumn();
+        return $result ? (int)$result : 0;
+    }
 }

@@ -17,11 +17,34 @@
                     <a href="?livro=<?= $livroId ?>&cap=<?= max(1, $capitulo - 1) ?>&versao=<?= $versaoId ?>" class="p-3 hover:bg-gray-200 sm:hover:bg-gray-100 rounded-lg transition <?= $capitulo <= 1 ? 'opacity-50 pointer-events-none' : '' ?>">
                         <svg class="w-6 h-6 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                     </a>
-                    <span class="text-xl font-bold px-4">Cap. <?= $capitulo ?></span>
+                    <button onclick="document.getElementById('capModal').classList.remove('hidden')" class="text-xl font-bold px-4 hover:bg-gray-100 py-1 rounded-md transition cursor-pointer select-none">
+                        Cap. <?= $capitulo ?>
+                    </button>
                     <!-- Nota: Idealmente verificar se existe próximo capítulo -->
-                    <a href="?livro=<?= $livroId ?>&cap=<?= $capitulo + 1 ?>&versao=<?= $versaoId ?>" class="p-3 hover:bg-gray-200 sm:hover:bg-gray-100 rounded-lg transition">
+                    <a href="?livro=<?= $livroId ?>&cap=<?= min($totalCapitulos, $capitulo + 1) ?>&versao=<?= $versaoId ?>" class="p-3 hover:bg-gray-200 sm:hover:bg-gray-100 rounded-lg transition <?= $capitulo >= $totalCapitulos ? 'opacity-50 pointer-events-none' : '' ?>">
                         <svg class="w-6 h-6 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                     </a>
+                </div>
+            </div>
+
+            <!-- Modal de Capítulos -->
+            <div id="capModal" class="fixed inset-0 bg-black/50 z-[60] hidden flex items-center justify-center p-4" onclick="if(event.target === this) this.classList.add('hidden')">
+                <div class="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col">
+                    <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="font-bold text-lg text-secondary">Escolha um Capítulo</h3>
+                        <button onclick="document.getElementById('capModal').classList.add('hidden')" class="p-2 hover:bg-gray-100 rounded-full text-gray-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                    <div class="p-6 overflow-y-auto grid grid-cols-5 gap-3">
+                        <?php for($c = 1; $c <= $totalCapitulos; $c++): ?>
+                            <a href="?livro=<?= $livroId ?>&cap=<?= $c ?>&versao=<?= $versaoId ?>"
+                               class="block py-3 text-center rounded-lg font-bold border transition
+                                      <?= $c == $capitulo ? 'bg-primary text-white border-primary' : 'bg-gray-50 text-gray-700 border-gray-100 hover:border-primary hover:text-primary' ?>">
+                                <?= $c ?>
+                            </a>
+                        <?php endfor; ?>
+                    </div>
                 </div>
             </div>
 

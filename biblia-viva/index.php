@@ -24,6 +24,7 @@ $versiculos = $model->getVersiculos($livroId, $capitulo, $versaoId);
 $contextoGeo = $model->getContextoGeografico($livroId, $capitulo);
 $cronologia = $model->getCronologia($livroId, $capitulo);
 $aplicacao = $model->getAplicacaoPratica($livroId, $capitulo);
+$totalCapitulos = $model->getTotalCapitulos($livroId);
 
 // Título da Página
 $tituloPagina = "{$livroAtual['liv_nome']} {$capitulo} - Bíblia Viva";
