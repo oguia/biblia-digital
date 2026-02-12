@@ -118,21 +118,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 url: window.location.href
             };
 
-            if (navigator.canShare && navigator.canShare(shareData)) {
+            if (navigator.share) {
                 try {
                     await navigator.share(shareData);
                 } catch (err) {
-                    console.error('Erro ao compartilhar:', err);
+                    // Erro silencioso ou cancelamento pelo usuário
+                    console.log('Compartilhamento cancelado ou falhou:', err);
                 }
             } else {
-                // Fallback: Copiar para área de transferência
-                try {
-                    await navigator.clipboard.writeText(window.location.href);
-                    alert('Link copiado para a área de transferência!');
-                } catch (err) {
-                    console.error('Falha ao copiar link:', err);
-                    alert('Copie o link do navegador para compartilhar: ' + window.location.href);
-                }
+                // Fallback garantido: Prompt nativo
+                prompt('Copie o link abaixo para compartilhar:', window.location.href);
             }
         });
     }
@@ -157,15 +152,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (installBtn) {
         installBtn.addEventListener('click', async () => {
+            // Log para debug
+            console.log('Botão Instalar Clicado. DeferredPrompt:', deferredPrompt);
+
             if (deferredPrompt) {
-                // Se o evento foi disparado, mostrar o prompt nativo
+                // Instalação Automática
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
-                console.log(`Usuário ${outcome} a instalação`);
                 deferredPrompt = null;
             } else {
-                // Se o evento não foi disparado (já instalado, não suportado, ou iOS)
-                alert('Para instalar este aplicativo:\n\nNo Android/Chrome: Toque em Menu (⋮) > Instalar aplicativo.\n\nNo iPhone/Safari: Toque em Compartilhar > Adicionar à Tela de Início.');
+                // Fallback Manual
+                alert('Para instalar o App:\n\n📱 iPhone/iPad: Toque no botão Compartilhar e escolha "Adicionar à Tela de Início".\n\n🤖 Android: Toque no menu do navegador (três pontos) e escolha "Instalar aplicativo".');
             }
         });
     }
