@@ -143,25 +143,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('service-worker.js')
-            .then(reg => console.log('Service Worker registrado', reg))
-            .catch(err => console.log('Erro no SW', err));
+            .then(reg => console.log('Service Worker registrado com sucesso:', reg.scope))
+            .catch(err => console.log('Falha ao registrar Service Worker:', err));
     }
 
     window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('Evento beforeinstallprompt disparado!');
         e.preventDefault();
         deferredPrompt = e;
         if (installBtn) {
             installBtn.classList.remove('hidden');
-            installBtn.addEventListener('click', () => {
+            installBtn.onclick = () => {
                 installBtn.classList.add('hidden');
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
                         console.log('Usuário aceitou instalar');
+                    } else {
+                        console.log('Usuário recusou instalar');
+                        // Mostrar botão novamente se recusar?
+                        installBtn.classList.remove('hidden');
                     }
                     deferredPrompt = null;
                 });
-            });
+            };
         }
     });
 
