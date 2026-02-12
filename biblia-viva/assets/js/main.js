@@ -108,7 +108,64 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn("Elementos das abas mobile não encontrados.");
     }
 
-    // 5. Carregar contexto via AJAX ao navegar (Exemplo para navegação de capítulos)
+    // 5. Compartilhar
+    const shareButton = document.getElementById('shareButton');
+    if (shareButton) {
+        shareButton.addEventListener('click', async () => {
+            const shareData = {
+                title: document.title,
+                text: 'Estou lendo este capítulo na Bíblia Viva: A Bíblia em Contexto.',
+                url: window.location.href
+            };
+
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareData);
+                } catch (err) {
+                    console.error('Erro ao compartilhar:', err);
+                }
+            } else {
+                // Fallback: Copiar para área de transferência
+                try {
+                    await navigator.clipboard.writeText(window.location.href);
+                    alert('Link copiado para a área de transferência!');
+                } catch (err) {
+                    console.error('Falha ao copiar link:', err);
+                    alert('Não foi possível compartilhar automaticamente. Copie o link do navegador.');
+                }
+            }
+        });
+    }
+
+    // 6. PWA Installation
+    let deferredPrompt;
+    const installBtn = document.getElementById('installAppBtn');
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js')
+            .then(reg => console.log('Service Worker registrado', reg))
+            .catch(err => console.log('Erro no SW', err));
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (installBtn) {
+            installBtn.classList.remove('hidden');
+            installBtn.addEventListener('click', () => {
+                installBtn.classList.add('hidden');
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('Usuário aceitou instalar');
+                    }
+                    deferredPrompt = null;
+                });
+            });
+        }
+    });
+
+    // 7. Carregar contexto via AJAX ao navegar (Exemplo para navegação de capítulos)
     // Para simplificar, vamos manter a navegação padrão por recarregamento
     // mas expor a função loadContext para uso futuro ou integração
 });
