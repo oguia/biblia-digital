@@ -28,7 +28,9 @@ define('DB_PASS', 'ChangeMe123!');
 
 // API Keys - Replace with your actual keys
 define('GEMINI_API_KEY', '');
-define('MERCADO_PAGO_ACCESS_TOKEN', '');
+// Mercado Pago Credentials (https://www.mercadopago.com.br/developers/panel)
+define('MERCADO_PAGO_ACCESS_TOKEN', ''); // Used for Backend (Create Preference)
+define('MERCADO_PAGO_PUBLIC_KEY', ''); // Used for Frontend (Optional for Checkout Pro)
 
 try {
     $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS);
