@@ -18,7 +18,7 @@ $sql = "
     CROSS JOIN targets t
     WHERE p.status = 'active'
       AND t.status = 'active'
-      AND u.credits > 0
+      AND (u.credits > 0 OR u.role = 'admin')
       AND NOT EXISTS (
           SELECT 1 FROM submissions s
           WHERE s.project_id = p.id AND s.target_id = t.id

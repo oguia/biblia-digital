@@ -23,8 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $pdo->prepare("INSERT INTO submissions (project_id, target_id, status, live_url, ai_generated_content) VALUES (?, ?, ?, ?, ?)");
     if ($stmt->execute([$projectId, $targetId, $status, $liveUrl, $aiContent])) {
         if ($status === 'completed') {
-            // Deduct 1 credit from the user who owns the project
-            $deduct = $pdo->prepare("UPDATE users u JOIN projects p ON p.user_id = u.id SET u.credits = u.credits - 1 WHERE p.id = ? AND u.credits > 0");
+            // Deduct 1 credit (only if user is NOT admin)
+            $deduct = $pdo->prepare("UPDATE users u JOIN projects p ON p.user_id = u.id SET u.credits = u.credits - 1 WHERE p.id = ? AND u.credits > 0 AND u.role != 'admin'");
             $deduct->execute([$projectId]);
         }
         jsonResponse(['message' => 'Submission recorded']);
