@@ -1,0 +1,79 @@
+{
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "projects": "My Projects",
+    "credits": "Buy Credits",
+    "targets": "Targets & Discovery",
+    "worker": "Submission Worker",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "welcome": "Welcome, {{email}}",
+    "credits": "Credits Available",
+    "buy_more": "Buy more credits",
+    "active_projects": "Active Projects",
+    "view_projects": "View projects",
+    "system_targets": "System Targets",
+    "manage_targets": "Manage targets",
+    "quick_actions": "Quick Actions",
+    "submit_link": "Submit New Link",
+    "start_worker": "Start Worker"
+  },
+  "projects": {
+    "title": "My Projects",
+    "add_link": "Add Link",
+    "col_url": "URL",
+    "col_keywords": "Keywords",
+    "col_status": "Status",
+    "col_actions": "Actions",
+    "no_projects": "No projects found. Add one to start.",
+    "modal_title": "Add New Link",
+    "label_url": "Target URL",
+    "label_keywords": "Keywords (comma separated)",
+    "label_description": "Base Description",
+    "btn_cancel": "Cancel",
+    "btn_create": "Create"
+  },
+  "credits": {
+    "title": "Buy Credits",
+    "subtitle": "Choose a package to boost your SEO campaigns.",
+    "links": "Links",
+    "buy_now": "Buy Now"
+  },
+  "targets": {
+    "title": "Target Discovery",
+    "find_new": "Find New Targets",
+    "scan": "Scan",
+    "potential": "Potential Targets",
+    "managed": "Managed Targets",
+    "col_url": "URL",
+    "col_status": "Status",
+    "col_actions": "Actions"
+  },
+  "worker": {
+    "target_site": "Target Site",
+    "project_info": "Project Info",
+    "label_url": "URL:",
+    "label_keywords": "Keywords:",
+    "label_desc": "Base Description:",
+    "ai_content": "AI Content",
+    "generate": "Generate",
+    "placeholder_ai": "Generated content will appear here...",
+    "completion": "Completion",
+    "live_link": "Live Link (Optional)",
+    "btn_skip": "Skip/Fail",
+    "btn_complete": "Complete",
+    "note_iframe": "Note: Many sites block iframes. If blank, click the icon in the Target box to open in a new tab.",
+    "no_tasks": "No pending tasks found. Add more Targets or Projects."
+  },
+  "auth": {
+    "login_title": "Login",
+    "register_title": "Register",
+    "email": "Email",
+    "password": "Password",
+    "btn_signin": "Sign In",
+    "btn_register": "Create Account",
+    "no_account": "Don't have an account?",
+    "has_account": "Already have an account?"
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "sidebar": {
+    "dashboard": "Painel",
+    "projects": "Meus Projetos",
+    "credits": "Comprar Créditos",
+    "targets": "Alvos & Descoberta",
+    "worker": "Operário de Submissão",
+    "logout": "Sair"
+  },
+  "dashboard": {
+    "welcome": "Bem-vindo, {{email}}",
+    "credits": "Créditos Disponíveis",
+    "buy_more": "Comprar mais créditos",
+    "active_projects": "Projetos Ativos",
+    "view_projects": "Ver projetos",
+    "system_targets": "Alvos do Sistema",
+    "manage_targets": "Gerenciar alvos",
+    "quick_actions": "Ações Rápidas",
+    "submit_link": "Enviar Novo Link",
+    "start_worker": "Iniciar Operário"
+  },
+  "projects": {
+    "title": "Meus Projetos",
+    "add_link": "Adicionar Link",
+    "col_url": "URL",
+    "col_keywords": "Palavras-chave",
+    "col_status": "Status",
+    "col_actions": "Ações",
+    "no_projects": "Nenhum projeto encontrado. Adicione um para começar.",
+    "modal_title": "Adicionar Novo Link",
+    "label_url": "URL do Alvo",
+    "label_keywords": "Palavras-chave (separadas por vírgula)",
+    "label_description": "Descrição Base",
+    "btn_cancel": "Cancelar",
+    "btn_create": "Criar"
+  },
+  "credits": {
+    "title": "Comprar Créditos",
+    "subtitle": "Escolha um pacote para impulsionar suas campanhas de SEO.",
+    "links": "Links",
+    "buy_now": "Comprar Agora"
+  },
+  "targets": {
+    "title": "Descoberta de Alvos",
+    "find_new": "Encontrar Novos Alvos",
+    "scan": "Escanear",
+    "potential": "Alvos Potenciais",
+    "managed": "Alvos Gerenciados",
+    "col_url": "URL",
+    "col_status": "Status",
+    "col_actions": "Ações"
+  },
+  "worker": {
+    "target_site": "Site Alvo",
+    "project_info": "Informações do Projeto",
+    "label_url": "URL:",
+    "label_keywords": "Palavras-chave:",
+    "label_desc": "Descrição Base:",
+    "ai_content": "Conteúdo IA",
+    "generate": "Gerar",
+    "placeholder_ai": "Conteúdo gerado aparecerá aqui...",
+    "completion": "Conclusão",
+    "live_link": "Link Vivo (Opcional)",
+    "btn_skip": "Pular/Falhar",
+    "btn_complete": "Concluir",
+    "note_iframe": "Nota: Muitos sites bloqueiam iframes. Se estiver em branco, clique no ícone na caixa Alvo para abrir em nova aba.",
+    "no_tasks": "Nenhuma tarefa pendente encontrada. Adicione mais Alvos ou Projetos."
+  },
+  "auth": {
+    "login_title": "Entrar",
+    "register_title": "Registrar",
+    "email": "Email",
+    "password": "Senha",
+    "btn_signin": "Entrar",
+    "btn_register": "Criar Conta",
+    "no_account": "Não tem uma conta?",
+    "has_account": "Já tem uma conta?"
+  }
+}

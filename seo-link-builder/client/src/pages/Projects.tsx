@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import api from '../api/api';
 import type { Project } from '../types';
 import { Plus, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Projects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newProject, setNewProject] = useState({ url: '', keywords: '', description: '' });
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchProjects();
@@ -46,9 +48,9 @@ const Projects = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">My Projects</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('projects.title')}</h1>
         <button onClick={() => setIsModalOpen(true)} className="flex items-center rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-          <Plus className="mr-2 h-4 w-4" /> Add Link
+          <Plus className="mr-2 h-4 w-4" /> {t('projects.add_link')}
         </button>
       </div>
 
@@ -56,10 +58,10 @@ const Projects = () => {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">URL</th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Keywords</th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{t('projects.col_url')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{t('projects.col_keywords')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{t('projects.col_status')}</th>
+              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">{t('projects.col_actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
@@ -79,7 +81,7 @@ const Projects = () => {
             ))}
             {projects.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">No projects found. Add one to start.</td>
+                <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">{t('projects.no_projects')}</td>
               </tr>
             )}
           </tbody>
@@ -90,10 +92,10 @@ const Projects = () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-600 bg-opacity-50">
           <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
-            <h3 className="mb-4 text-lg font-bold text-gray-900">Add New Link</h3>
+            <h3 className="mb-4 text-lg font-bold text-gray-900">{t('projects.modal_title')}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Target URL</label>
+                <label className="block text-sm font-medium text-gray-700">{t('projects.label_url')}</label>
                 <input
                   type="url"
                   value={newProject.url}
@@ -103,7 +105,7 @@ const Projects = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Keywords (comma separated)</label>
+                <label className="block text-sm font-medium text-gray-700">{t('projects.label_keywords')}</label>
                 <input
                   type="text"
                   value={newProject.keywords}
@@ -112,7 +114,7 @@ const Projects = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Base Description</label>
+                <label className="block text-sm font-medium text-gray-700">{t('projects.label_description')}</label>
                 <textarea
                   value={newProject.description}
                   onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
@@ -121,8 +123,8 @@ const Projects = () => {
                 />
               </div>
               <div className="flex justify-end space-x-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="rounded border px-4 py-2 hover:bg-gray-100 text-gray-900">Cancel</button>
-                <button type="submit" className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Create</button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="rounded border px-4 py-2 hover:bg-gray-100 text-gray-900">{t('projects.btn_cancel')}</button>
+                <button type="submit" className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">{t('projects.btn_create')}</button>
               </div>
             </form>
           </div>

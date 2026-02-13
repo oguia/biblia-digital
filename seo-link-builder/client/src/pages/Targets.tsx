@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import api from '../api/api';
 import type { Target } from '../types';
 import { Search, Loader, Trash2, CheckCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Targets = () => {
   const [targets, setTargets] = useState<Target[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [crawling, setCrawling] = useState(false);
   const [crawlResults, setCrawlResults] = useState<any[]>([]);
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchTargets();
@@ -60,11 +62,11 @@ const Targets = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Target Discovery</h1>
+      <h1 className="text-2xl font-bold text-gray-900">{t('targets.title')}</h1>
 
       {/* Crawler Interface */}
       <div className="rounded-lg bg-white p-6 shadow">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Find New Targets</h2>
+        <h2 className="text-lg font-medium text-gray-900 mb-4">{t('targets.find_new')}</h2>
         <form onSubmit={runCrawler} className="flex gap-4">
           <input
             type="text"
@@ -79,13 +81,13 @@ const Targets = () => {
             className="flex items-center rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-400"
           >
             {crawling ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-            Scan
+            {t('targets.scan')}
           </button>
         </form>
 
         {crawlResults.length > 0 && (
           <div className="mt-6">
-            <h3 className="text-md font-semibold text-gray-800 mb-2">Potential Targets ({crawlResults.length})</h3>
+            <h3 className="text-md font-semibold text-gray-800 mb-2">{t('targets.potential')} ({crawlResults.length})</h3>
             <div className="max-h-60 overflow-y-auto border rounded divide-y">
               {crawlResults.map((res, idx) => (
                 <div key={idx} className="flex items-center justify-between p-3 hover:bg-gray-50">
@@ -109,14 +111,14 @@ const Targets = () => {
       {/* Existing Targets List */}
       <div className="rounded-lg bg-white shadow overflow-hidden">
         <div className="px-6 py-4 border-b">
-          <h2 className="text-lg font-medium text-gray-900">Managed Targets</h2>
+          <h2 className="text-lg font-medium text-gray-900">{t('targets.managed')}</h2>
         </div>
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">URL</th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{t('targets.col_url')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{t('targets.col_status')}</th>
+              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">{t('targets.col_actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">

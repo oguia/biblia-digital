@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import {
   Home,
   Link as LinkIcon,
@@ -15,28 +16,34 @@ import { clsx } from 'clsx';
 
 const Layout = () => {
   const { user, logout } = useAuth();
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const toggleLanguage = () => {
+    i18n.changeLanguage(i18n.language === 'en' ? 'pt' : 'en');
+  };
+
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: Home },
-    { name: 'My Projects', href: '/projects', icon: LinkIcon },
-    { name: 'Buy Credits', href: '/credits', icon: CreditCard },
+    { name: t('sidebar.dashboard'), href: '/', icon: Home },
+    { name: t('sidebar.projects'), href: '/projects', icon: LinkIcon },
+    { name: t('sidebar.credits'), href: '/credits', icon: CreditCard },
   ];
 
   if (user?.role === 'admin') {
-    navigation.push({ name: 'Targets & Discovery', href: '/targets', icon: Globe });
-    navigation.push({ name: 'Submission Worker', href: '/worker', icon: Settings });
+    navigation.push({ name: t('sidebar.targets'), href: '/targets', icon: Globe });
+    navigation.push({ name: t('sidebar.worker'), href: '/worker', icon: Settings });
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex text-gray-900">
+    // Removendo o wrapper principal antigo pois index.css agora cuida do layout
+    <>
       {/* Mobile Sidebar Overlay */}
       <div className={clsx("fixed inset-0 z-40 bg-gray-600 bg-opacity-75 md:hidden", sidebarOpen ? "block" : "hidden")} onClick={() => setSidebarOpen(false)}></div>
 
       {/* Sidebar */}
       <div className={clsx("fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform md:translate-x-0 md:static md:inset-auto md:flex md:w-64 md:flex-col", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
-        <div className="flex h-16 items-center justify-center border-b px-4">
+        <div className="flex h-16 items-center justify-between border-b px-4">
           <h1 className="text-xl font-bold text-blue-600">SEO Master</h1>
           <button className="ml-auto md:hidden" onClick={() => setSidebarOpen(false)}>
             <X className="h-6 w-6" />
@@ -46,7 +53,7 @@ const Layout = () => {
           <nav className="space-y-1 px-2">
             {navigation.map((item) => (
               <Link
-                key={item.name}
+                key={item.href}
                 to={item.href}
                 className={clsx(
                   location.pathname === item.href ? 'bg-gray-100 text-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
@@ -60,7 +67,14 @@ const Layout = () => {
             ))}
           </nav>
         </div>
-        <div className="border-t p-4">
+        <div className="border-t p-4 space-y-2">
+           <button
+             onClick={toggleLanguage}
+             className="w-full flex items-center justify-center rounded-md border border-gray-300 py-1 px-2 text-sm text-gray-700 hover:bg-gray-50"
+          >
+             {i18n.language === 'en' ? '🇧🇷 Português' : '🇺🇸 English'}
+          </button>
+
           <div className="flex items-center mb-4">
              <div className="ml-1 overflow-hidden">
                 <p className="text-sm font-medium text-gray-700 truncate">{user?.email}</p>
@@ -71,7 +85,7 @@ const Layout = () => {
              onClick={() => logout()}
              className="w-full flex items-center justify-center rounded-md border border-transparent bg-red-100 py-2 px-4 text-sm font-medium text-red-700 hover:bg-red-200"
           >
-             <LogOut className="mr-2 h-4 w-4" /> Logout
+             <LogOut className="mr-2 h-4 w-4" /> {t('sidebar.logout')}
           </button>
         </div>
       </div>
@@ -89,7 +103,7 @@ const Layout = () => {
           <Outlet />
         </main>
       </div>
-    </div>
+    </>
   );
 };
 

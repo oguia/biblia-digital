@@ -30,8 +30,8 @@ Your `public_html` should look like this:
    define('GEMINI_API_KEY', 'YOUR_API_KEY_HERE'); // Your Google Gemini API Key
    define('MERCADO_PAGO_ACCESS_TOKEN', 'YOUR_TOKEN_HERE'); // Your Mercado Pago Token
 
-## 4. Setup .htaccess (Optional but recommended)
-If you navigate to a subpage and refresh, you might get a 404 error. Create a `.htaccess` file in `public_html` with this content:
+## 4. Setup .htaccess (Required for Navigation)
+Create a `.htaccess` file in `public_html` with this content to fix 404 errors on refresh:
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
@@ -44,5 +44,7 @@ If you navigate to a subpage and refresh, you might get a 404 error. Create a `.
 
 ## 5. Done!
 Open your domain in the browser.
+- The site now supports English and Portuguese (auto-detected).
+- Use the flag button in the sidebar to switch languages.
 - Login with the admin account created (check `users` table in phpMyAdmin or register a new one).
 - Note: If you register a new user, change their `role` to `admin` in the `users` table manually via phpMyAdmin to access Admin features.

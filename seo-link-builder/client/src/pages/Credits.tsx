@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import api from '../api/api';
 import { Loader, ShoppingCart } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const packages = [
   { id: '10_credits', credits: 10, price: 29.90, name: 'Starter Pack' },
@@ -10,6 +11,7 @@ const packages = [
 
 const Credits = () => {
   const [loading, setLoading] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   const buyCredits = async (packageId: string) => {
     setLoading(packageId);
@@ -29,8 +31,8 @@ const Credits = () => {
 
   return (
     <div className="space-y-6 text-center max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900">Buy Credits</h1>
-      <p className="text-gray-600">Choose a package to boost your SEO campaigns.</p>
+      <h1 className="text-3xl font-bold text-gray-900">{t('credits.title')}</h1>
+      <p className="text-gray-600">{t('credits.subtitle')}</p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
         {packages.map((pkg) => (
@@ -38,7 +40,7 @@ const Credits = () => {
              <h3 className="text-xl font-bold text-gray-800">{pkg.name}</h3>
              <div className="my-4">
                <span className="text-4xl font-bold text-blue-600">{pkg.credits}</span>
-               <span className="text-gray-500 ml-2">Links</span>
+               <span className="text-gray-500 ml-2">{t('credits.links')}</span>
              </div>
              <div className="text-2xl font-semibold text-gray-700 mb-6">
                R$ {pkg.price.toFixed(2)}
@@ -48,7 +50,7 @@ const Credits = () => {
                disabled={loading !== null}
                className="mt-auto bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 flex justify-center items-center font-bold"
              >
-               {loading === pkg.id ? <Loader className="animate-spin" /> : <>Buy Now <ShoppingCart className="ml-2 w-5 h-5" /></>}
+               {loading === pkg.id ? <Loader className="animate-spin" /> : <>{t('credits.buy_now')} <ShoppingCart className="ml-2 w-5 h-5" /></>}
              </button>
           </div>
         ))}

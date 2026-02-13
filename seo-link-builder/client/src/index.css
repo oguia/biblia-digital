@@ -15,6 +15,49 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* RESET ROBUSTO PARA HOSTINGER */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: row; /* Garante layout horizontal */
+  width: 100%;
+}
+
+/* Override para h1 que estava causando o bug de tamanho */
+h1 {
+  font-size: 1.875rem !important; /* text-3xl do tailwind */
+  line-height: 2.25rem !important;
+}
+
+/* Sidebar behavior */
+@media (min-width: 768px) {
+  .md\:static {
+      position: static !important;
+      height: 100vh;
+      overflow-y: auto;
+      flex-shrink: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  #root {
+    flex-direction: column;
+  }
+}
+
+main {
+  flex: 1;
+  width: 100%;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -22,19 +65,6 @@ a {
 }
 a:hover {
   color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
 }
 
 button {
