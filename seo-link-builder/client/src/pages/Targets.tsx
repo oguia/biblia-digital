@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api/api';
 import type { Target } from '../types';
-import { Search, Loader, Trash2, CheckCircle } from 'lucide-react';
+import { Search, Loader, Trash2, CheckCircle, PlayCircle, PauseCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const Targets = () => {
@@ -57,6 +57,17 @@ const Targets = () => {
       fetchTargets();
     } catch (err) {
         // ignore
+    }
+  };
+
+  const toggleStatus = async (target: Target) => {
+    const newStatus = target.status === 'active' ? 'pending' : 'active';
+    try {
+      await api.put(`/targets.php?id=${target.id}`, { status: newStatus });
+      fetchTargets();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update status');
     }
   };
 
@@ -131,6 +142,13 @@ const Targets = () => {
                    </span>
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                  <button
+                    onClick={() => toggleStatus(target)}
+                    className="text-blue-600 hover:text-blue-900 mr-4"
+                    title={target.status === 'active' ? 'Pause' : 'Activate'}
+                  >
+                    {target.status === 'active' ? <PauseCircle className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}
+                  </button>
                   <button onClick={() => deleteTarget(target.id)} className="text-red-600 hover:text-red-900">
                     <Trash2 className="h-4 w-4" />
                   </button>

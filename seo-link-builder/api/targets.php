@@ -24,7 +24,7 @@ switch ($method) {
         if (empty($url)) jsonResponse(['error' => 'URL required'], 400);
 
         try {
-            $stmt = $pdo->prepare("INSERT INTO targets (url, type, status) VALUES (?, ?, 'pending')");
+            $stmt = $pdo->prepare("INSERT INTO targets (url, type, status) VALUES (?, ?, 'active')");
             $stmt->execute([$url, $type]);
             jsonResponse(['message' => 'Target added', 'id' => $pdo->lastInsertId()]);
         } catch (PDOException $e) {
