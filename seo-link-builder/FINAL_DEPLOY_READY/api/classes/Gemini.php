@@ -1,7 +1,8 @@
 <?php
 class Gemini {
     private $apiKey;
-    private $model = 'gemini-1.5-flash';
+    // Using gemini-pro which is widely available on v1beta
+    private $model = 'gemini-pro';
 
     public function __construct($apiKey) {
         $this->apiKey = $apiKey;
