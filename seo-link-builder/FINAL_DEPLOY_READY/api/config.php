@@ -27,10 +27,10 @@ define('DB_USER', 'u123456789_seo_user');
 define('DB_PASS', 'ChangeMe123!');
 
 // API Keys - Replace with your actual keys
-define('GEMINI_API_KEY', '');
-// Mercado Pago Credentials (https://www.mercadopago.com.br/developers/panel)
-define('MERCADO_PAGO_ACCESS_TOKEN', ''); // Used for Backend (Create Preference)
-define('MERCADO_PAGO_PUBLIC_KEY', ''); // Used for Frontend (Optional for Checkout Pro)
+// Tries to get from environment first (better security), falls back to empty string
+define('GEMINI_API_KEY', getenv('GEMINI_API_KEY') ?: '');
+define('MERCADO_PAGO_ACCESS_TOKEN', getenv('MERCADO_PAGO_ACCESS_TOKEN') ?: '');
+define('MERCADO_PAGO_PUBLIC_KEY', getenv('MERCADO_PAGO_PUBLIC_KEY') ?: '');
 
 try {
     $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS);
@@ -51,10 +51,9 @@ function jsonResponse($data, $status = 200) {
 }
 
 // Start Session
-// Set session cookie parameters to allow cross-site cookies in dev (if needed)
 session_set_cookie_params([
-    'samesite' => 'Lax', // or 'None' if https
-    'secure' => false, // Set to true in production with HTTPS
+    'samesite' => 'Lax',
+    'secure' => false,
     'httponly' => true
 ]);
 

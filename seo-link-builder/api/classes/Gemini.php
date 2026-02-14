@@ -22,27 +22,32 @@ class Gemini {
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 
+        // Timeout
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
         $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if (curl_errno($ch)) {
-            error_log('Curl error: ' . curl_error($ch));
-            return "Error: Could not connect to Gemini API.";
+            $error = curl_error($ch);
+            curl_close($ch);
+            return "Error: Connection failed ($error)";
         }
 
         curl_close($ch);
 
         $json = json_decode($response, true);
 
+        if ($httpCode !== 200) {
+             $msg = $json['error']['message'] ?? 'Unknown API Error';
+             return "Error ($httpCode): $msg";
+        }
+
         if (isset($json['candidates'][0]['content']['parts'][0]['text'])) {
             return $json['candidates'][0]['content']['parts'][0]['text'];
         }
 
-        if (isset($json['error'])) {
-             error_log('Gemini API Error: ' . json_encode($json['error']));
-             return "Error: Gemini API responded with error: " . $json['error']['message'];
-        }
-
-        return "Error: Unexpected response format from Gemini.";
+        return "Error: No candidates returned (Safety settings blocked response?)";
     }
 }
 ?>
