@@ -1,8 +1,8 @@
 <?php
 class Gemini {
     private $apiKey;
-    // Fallback to gemini-1.5-flash-001 (specific version) if gemini-pro is unavailable
-    private $model = 'gemini-1.5-flash-001';
+    // Fallback to gemini-pro (generic alias) which should be available on v1beta
+    private $model = 'gemini-pro';
 
     public function __construct($apiKey) {
         $this->apiKey = $apiKey;
