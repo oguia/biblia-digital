@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  base: './', // For Hostinger subdirectory hosting
+  base: '/', // Changed for BrowserRouter compatibility (assumes root domain)
   server: {
     proxy: {
       '/api': {

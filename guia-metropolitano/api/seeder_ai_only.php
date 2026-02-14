@@ -29,10 +29,37 @@ if ($isCli) {
 
 // Image Mapping Strategy
 function getCategoryImage($category) {
-    // Clean category for URL
-    $keyword = strtolower(str_replace([' ', 'ã', 'ç', 'õ', 'é', 'ê'], ['-', 'a', 'c', 'o', 'e', 'e'], $category));
-    // Using LoremFlickr for reliable "real" looking placeholder images
-    return "https://loremflickr.com/800/600/$keyword,business/all";
+    // Map categories to specific keywords for better relevance
+    $mapping = [
+        'pizzaria' => 'pizza,restaurant',
+        'restaurante' => 'restaurant,food,dining',
+        'advogado' => 'lawyer,office,meeting',
+        'mecanica' => 'mechanic,car,garage',
+        'salao de beleza' => 'salon,haircut,beauty',
+        'pet shop' => 'dog,cat,pet',
+        'encanador' => 'plumber,pipes,bathroom',
+        'eletricista' => 'electrician,wires,tools',
+        'clinica' => 'clinic,doctor,medical',
+        'default' => 'curitiba,city,business'
+    ];
+
+    $cleanCat = strtolower(str_replace(
+        ['ã', 'ç', 'õ', 'é', 'ê', 'â', 'í', 'ú', 'à'],
+        ['a', 'c', 'o', 'e', 'e', 'a', 'i', 'u', 'a'],
+        $category
+    ));
+
+    // Find best match in mapping keys
+    $keywords = $mapping['default'];
+    foreach ($mapping as $key => $val) {
+        if (strpos($cleanCat, $key) !== false) {
+            $keywords = $val;
+            break;
+        }
+    }
+
+    // Using LoremFlickr with specific keywords
+    return "https://loremflickr.com/800/600/$keywords/all";
 }
 
 // Fallback Generator

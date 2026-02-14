@@ -1,53 +1,33 @@
-# Guia de Negócios e Serviços - Guia de Implantação
+# Guia Metropolitano - Deployment Guide (v2)
 
-## 1. Banco de Dados
-1. Acesse o painel da Hostinger (phpMyAdmin).
-2. Crie um novo banco de dados (ex: `u123456789_guia`).
-3. Importe o arquivo `api/schema.sql`.
+## 1. Upload Files
+1. Extract `guia-metropolitano-v2.zip`.
+2. Upload the contents of `api/` to `public_html/api/`.
+3. Upload the contents of `client/dist/` to `public_html/`.
 
-## 2. Configuração do Backend (API)
-1. Edite o arquivo `api/config.php` com as credenciais do banco de dados que você criou:
-   ```php
-   define('DB_HOST', 'localhost');
-   define('DB_NAME', 'u123456789_guia');
-   define('DB_USER', 'u123456789_usuario');
-   define('DB_PASS', 'SuaSenhaForte');
-   ```
-2. Adicione sua chave da Google Gemini API no `config.php`:
-   ```php
-   define('GEMINI_API_KEY', 'SUA_CHAVE_AQUI');
-   ```
-3. Configure as credenciais do Mercado Pago no `config.php` se for usar pagamentos.
-
-## 3. Upload dos Arquivos
-1. No Gerenciador de Arquivos da Hostinger, vá para a pasta `public_html`.
-2. Crie uma pasta chamada `guia` (ou use a raiz se for um domínio exclusivo).
-3. Faça upload do conteúdo da pasta `client/dist` para dentro dessa pasta. (Estes são os arquivos do site: index.html, assets/, etc).
-4. Crie uma pasta chamada `api` dentro da pasta `guia`.
-5. Faça upload de todos os arquivos da pasta `api` (do seu computador) para a pasta `api` no servidor.
-
-A estrutura final deve ser:
+## 2. Directory Structure
+Ensure your server looks like this:
 ```
-/public_html/guia/
-  ├── assets/
-  ├── index.html
-  ├── vite.svg
-  └── api/
-      ├── config.php
-      ├── search.php
-      ├── classes/
-      └── ...
+public_html/
+├── api/
+│   ├── config.php
+│   ├── seeder_ai_only.php
+│   └── ...
+├── assets/ (from client/dist)
+├── index.html (from client/dist)
+├── .htaccess (CRITICAL for routing)
 ```
 
-## 4. Popular o Banco de Dados (Seed)
-Para começar com dados, você pode rodar o script de seed via SSH ou acessando pelo navegador (não recomendado para produção, mas útil para teste inicial).
-- SSH: `php api/seeder.php "Pizzaria" "Curitiba"`
-- Se não tiver SSH, você pode tentar acessar `https://seu-site.com/guia/api/seeder.php?cat=Pizzaria` (precisará adaptar o script para receber GET parameters se quiser rodar via browser, atualmente ele espera CLI args).
+## 3. Configuration
+- Edit `api/config.php` and set your `GEMINI_API_KEY`.
+- If using MySQL, create a database and update `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`.
+- If using SQLite, ensure `api/` folder is writable (`chmod 775`).
 
-**Recomendação:** Use o terminal SSH da Hostinger para rodar o `seed_data.sh`.
+## 4. Seeding Data
+- Visit `https://yourdomain.com/api/seeder_ai_only.php?cat=Pizzaria` to generate data.
+- Or use the CLI if you have SSH access: `php api/seeder_ai_only.php "Pizzaria" "Curitiba"`.
 
-## 5. Teste
-Acesse `https://seu-site.com/guia` e tente fazer uma busca.
-
-## Suporte
-Se precisar de ajuda, verifique os logs de erro na pasta `api` ou no painel da Hostinger.
+## 5. Troubleshooting
+- **404 on Refresh:** Ensure `.htaccess` is present in the root folder.
+- **Images not loading:** Check if `loremflickr.com` is accessible or use the seeder to regenerate with valid URLs.
+- **API Errors:** Check `api/error_log` or enable display_errors in `api/config.php` temporarily.
