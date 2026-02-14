@@ -51,8 +51,9 @@ const Worker = () => {
 
       const { data } = await api.post('/gemini.php', { prompt });
       setAiContent(data.content);
-    } catch (err) {
-      alert('AI Generation Failed');
+    } catch (err: any) {
+      const msg = err.response?.data?.error || 'AI Generation Failed';
+      alert(msg);
     } finally {
       setGenerating(false);
     }
