@@ -1,8 +1,8 @@
 <?php
 class Gemini {
     private $apiKey;
-    // Fallback to gemini-pro (generic alias) which should be available on v1beta
-    private $model = 'gemini-pro';
+    // Using gemini-1.0-pro which is the versioned name for gemini-pro
+    private $model = 'gemini-1.0-pro';
 
     public function __construct($apiKey) {
         $this->apiKey = $apiKey;
