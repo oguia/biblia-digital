@@ -1,0 +1,17 @@
+<svg width="250" height="60" viewBox="0 0 250 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Symbol: Map Pin + Search + Connect -->
+  <g transform="translate(10, 5)">
+    <!-- Map Pin Shape -->
+    <path d="M25 0C11.19 0 0 11.19 0 25C0 42.5 25 55 25 55C25 55 50 42.5 50 25C50 11.19 38.81 0 25 0ZM25 34C20.03 34 16 29.97 16 25C16 20.03 20.03 16 25 16C29.97 16 34 20.03 34 25C34 29.97 29.97 34 25 34Z" fill="#0f172a"/>
+    <!-- Search Loupe Handle (Green for Action) -->
+    <path d="M38 38L48 48" stroke="#25D366" stroke-width="6" stroke-linecap="round"/>
+    <!-- Inner Dot (Green) -->
+    <circle cx="25" cy="25" r="5" fill="#25D366"/>
+  </g>
+
+  <!-- Text: O Guia -->
+  <text x="65" y="28" font-family="Arial, sans-serif" font-weight="800" font-size="24" fill="#0f172a" letter-spacing="-1">O GUIA</text>
+
+  <!-- Text: Metropolitano -->
+  <text x="65" y="48" font-family="Arial, sans-serif" font-weight="500" font-size="16" fill="#64748b" letter-spacing="2">METROPOLITANO</text>
+</svg>

@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
 import { CheckCircle, XCircle, Trash2, Star, Eye } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 interface Business {
   id: number;
@@ -19,7 +18,6 @@ const AdminDashboard = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
 
   const fetchBusinesses = async () => {
     setLoading(true);

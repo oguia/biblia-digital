@@ -113,3 +113,5 @@ guia-fix/
 *.zip
 verification_*.png
 generation_log.txt
+!guia-metropolitano-final.zip
+!guia-metropolitano-final/api/guia.sqlite

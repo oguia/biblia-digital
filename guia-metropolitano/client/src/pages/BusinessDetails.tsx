@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Phone, MapPin, CheckCircle, ExternalLink, MessageCircle, Share2, Clock, Globe } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import { Phone, CheckCircle, MessageCircle, Share2, Clock, Globe } from 'lucide-react';
 import { getBusinessDetails } from '../services/api';
 
 const BusinessDetails = () => {
   const { slug } = useParams();
-  const navigate = useNavigate();
   const [business, setBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

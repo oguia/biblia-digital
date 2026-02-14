@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Bot } from 'lucide-react';
+import { X, Send, Bot } from 'lucide-react';
 import axios from 'axios';
-import { useTranslation } from 'react-i18next';
 
 const AIConsultantWidget = () => {
-  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{role: 'user' | 'bot', content: string}[]>([]);
   const [input, setInput] = useState('');
