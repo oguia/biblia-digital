@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { useSearchParams, Link } from 'react-router-dom';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { searchBusinesses } from '../services/api';
 import BusinessCard from '../components/BusinessCard';
@@ -17,6 +17,15 @@ let DefaultIcon = L.icon({
     iconAnchor: [12, 41]
 });
 L.Marker.prototype.options.icon = DefaultIcon;
+
+const MapUpdater = ({ viewMode }: { viewMode: string }) => {
+  const map = useMap();
+  useEffect(() => {
+    // Invalidate size when view mode changes or after mount
+    setTimeout(() => map.invalidateSize(), 200);
+  }, [viewMode, map]);
+  return null;
+};
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
@@ -98,6 +107,7 @@ const SearchResults = () => {
         {/* Map View */}
         <div className={`flex-1 bg-slate-200 rounded-2xl overflow-hidden shadow-inner relative ${viewMode === 'list' ? 'hidden lg:block' : 'h-full'}`}>
            <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
+             <MapUpdater viewMode={viewMode} />
              <TileLayer
                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -108,6 +118,9 @@ const SearchResults = () => {
                    <Popup>
                      <div className="font-bold">{biz.name}</div>
                      <div className="text-xs text-slate-500">{biz.address}</div>
+                     <Link to={`/negocio/${biz.slug}`} className="block mt-2 text-green-600 text-xs hover:underline">
+                        Ver Detalhes
+                     </Link>
                      {biz.whatsapp && (
                        <a href={`https://wa.me/55${biz.whatsapp}`} target="_blank" className="block mt-2 text-green-600 font-bold text-xs text-center border border-green-200 bg-green-50 rounded py-1">
                          Chamar no Zap

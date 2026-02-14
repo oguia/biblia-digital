@@ -2,8 +2,11 @@ import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Home from './pages/Home';
 import SearchResults from './pages/SearchResults';
+import BusinessDetails from './pages/BusinessDetails';
 import Login from './pages/Login';
 import RegisterBusiness from './pages/RegisterBusiness';
+import AIConsultantWidget from './components/AIConsultantWidget';
+import AdminDashboard from './pages/AdminDashboard';
 // import Footer from './components/Footer'; // Placeholder
 
 const FooterPlaceholder = () => (
@@ -23,12 +26,14 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/busca" element={<SearchResults />} />
+            <Route path="/negocio/:slug" element={<BusinessDetails />} />
             <Route path="/login" element={<Login />} />
             <Route path="/anuncie" element={<RegisterBusiness />} />
-            {/* Future routes: /categorias, /negocio/:slug */}
+            <Route path="/admin" element={<AdminDashboard />} />
           </Routes>
         </main>
         <FooterPlaceholder />
+        <AIConsultantWidget />
       </div>
     </Router>
   );

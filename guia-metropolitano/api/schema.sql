@@ -39,6 +39,18 @@ CREATE TABLE IF NOT EXISTS businesses (
     FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 
+CREATE TABLE IF NOT EXISTS coupons (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    business_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    code VARCHAR(50),
+    discount_value VARCHAR(50),
+    valid_until DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (business_id) REFERENCES businesses(id)
+);
+
 CREATE TABLE IF NOT EXISTS leads (
     id INT AUTO_INCREMENT PRIMARY KEY,
     business_id INT NOT NULL,

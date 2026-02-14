@@ -105,3 +105,11 @@ temp/
 *.db
 *.sqlite
 *.sqlite3
+
+# Project specific artifacts
+dist_final/
+guia-metropolitano/dist_final/
+guia-fix/
+*.zip
+verification_*.png
+generation_log.txt

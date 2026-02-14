@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, MapPin, Menu, X, Globe } from 'lucide-react';
+import { Menu, X, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const Header = () => {
@@ -16,14 +16,11 @@ const Header = () => {
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="relative">
-            <MapPin className="w-8 h-8 text-green-500 transition-transform group-hover:-translate-y-1" />
-            <Search className="w-4 h-4 text-white absolute bottom-0 right-0 bg-slate-900 rounded-full p-0.5 border border-slate-900" />
-          </div>
-          <div className="flex flex-col leading-none">
-            <span className="font-bold text-lg tracking-tight">O Guia</span>
-            <span className="text-xs text-slate-400 uppercase tracking-widest">{t('header.subtitle')}</span>
-          </div>
+          <img
+            src="./logo.svg"
+            alt="O Guia Metropolitano"
+            className="h-10 md:h-12 w-auto transition-transform group-hover:-translate-y-1"
+          />
         </Link>
 
         {/* Desktop Nav */}
