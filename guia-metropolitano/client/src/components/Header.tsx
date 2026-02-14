@@ -1,10 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, MapPin, Menu, X } from 'lucide-react';
+import { Search, MapPin, Menu, X, Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
-  // const navigate = useNavigate(); // Unused
+  const { t, i18n } = useTranslation();
+
+  const toggleLanguage = () => {
+    i18n.changeLanguage(i18n.language === 'pt' ? 'en' : 'pt');
+  };
 
   return (
     <header className="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
@@ -17,16 +22,22 @@ const Header = () => {
           </div>
           <div className="flex flex-col leading-none">
             <span className="font-bold text-lg tracking-tight">O Guia</span>
-            <span className="text-xs text-slate-400 uppercase tracking-widest">Metropolitano</span>
+            <span className="text-xs text-slate-400 uppercase tracking-widest">{t('header.subtitle')}</span>
           </div>
         </Link>
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-6">
-          <Link to="/" className="hover:text-green-400 transition-colors">Início</Link>
-          <Link to="/categorias" className="hover:text-green-400 transition-colors">Categorias</Link>
+          <Link to="/" className="hover:text-green-400 transition-colors">{t('header.home')}</Link>
+          <Link to="/categorias" className="hover:text-green-400 transition-colors">{t('header.categories')}</Link>
+
+          <button onClick={toggleLanguage} className="flex items-center gap-1 text-slate-300 hover:text-white transition-colors">
+             <Globe size={18} />
+             <span className="uppercase text-xs font-bold">{i18n.language}</span>
+          </button>
+
           <Link to="/anuncie" className="bg-green-600 hover:bg-green-500 text-white px-5 py-2 rounded-full font-medium transition-colors shadow-lg hover:shadow-green-500/20">
-            Anuncie Grátis
+            {t('header.advertise')}
           </Link>
         </nav>
 
@@ -39,9 +50,12 @@ const Header = () => {
       {/* Mobile Nav */}
       {isOpen && (
         <div className="md:hidden bg-slate-800 border-t border-slate-700 py-4 px-4 flex flex-col gap-4">
-          <Link to="/" className="text-lg py-2 border-b border-slate-700" onClick={() => setIsOpen(false)}>Início</Link>
-          <Link to="/categorias" className="text-lg py-2 border-b border-slate-700" onClick={() => setIsOpen(false)}>Categorias</Link>
-          <Link to="/anuncie" className="text-lg py-2 text-green-400 font-bold" onClick={() => setIsOpen(false)}>Anuncie Seu Negócio</Link>
+          <Link to="/" className="text-lg py-2 border-b border-slate-700" onClick={() => setIsOpen(false)}>{t('header.home')}</Link>
+          <Link to="/categorias" className="text-lg py-2 border-b border-slate-700" onClick={() => setIsOpen(false)}>{t('header.categories')}</Link>
+          <button onClick={() => { toggleLanguage(); setIsOpen(false); }} className="text-left text-lg py-2 border-b border-slate-700 flex items-center gap-2">
+             <Globe size={18} /> Mudar Idioma ({i18n.language.toUpperCase()})
+          </button>
+          <Link to="/anuncie" className="text-lg py-2 text-green-400 font-bold" onClick={() => setIsOpen(false)}>{t('header.advertise_business')}</Link>
         </div>
       )}
     </header>

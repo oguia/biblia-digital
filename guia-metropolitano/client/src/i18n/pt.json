@@ -1,0 +1,82 @@
+{
+  "translation": {
+    "header": {
+      "subtitle": "Metropolitano",
+      "home": "Início",
+      "categories": "Categorias",
+      "advertise": "Anuncie Grátis",
+      "advertise_business": "Anuncie Seu Negócio"
+    },
+    "hero": {
+      "title_prefix": "Encontre tudo em",
+      "title_suffix": "Curitiba",
+      "subtitle": "O guia inteligente que conecta você aos melhores serviços da cidade. Simples, rápido e direto no WhatsApp.",
+      "placeholder": "O que você precisa? (ex: Mecânico no Batel, Pizzaria aberta...)",
+      "search": "Buscar",
+      "popular": "Populares:"
+    },
+    "categories": {
+      "title": "Categorias",
+      "subtitle": "Navegue pelos serviços mais procurados",
+      "view_all": "Ver todas"
+    },
+    "cta": {
+      "title": "Tem um negócio em Curitiba?",
+      "subtitle": "Cadastre-se gratuitamente e apareça para milhares de clientes. Destaque sua empresa no mapa e receba contatos direto no WhatsApp.",
+      "button": "Cadastrar Agora",
+      "whatsapp_label": "CHAMAR NO ZAP"
+    },
+    "business": {
+      "verified": "Verificado",
+      "featured": "Destaque",
+      "whatsapp_btn": "Chamar no Zap",
+      "call_btn": "Ligar",
+      "no_results": "Nenhum resultado encontrado.",
+      "try_search": "Tente buscar por 'Pizzaria' ou 'Mecânica'."
+    },
+    "search": {
+      "results_for": "Resultados para",
+      "found": "locais encontrados",
+      "list_view": "Lista",
+      "map_view": "Mapa"
+    },
+    "auth": {
+      "login_title": "Acessar Painel",
+      "register_title": "Criar Conta",
+      "name": "Nome",
+      "email": "Email",
+      "password": "Senha",
+      "login_btn": "Entrar",
+      "register_btn": "Cadastrar",
+      "have_account": "Já tem conta?",
+      "no_account": "Não tem conta?",
+      "login_link": "Fazer Login",
+      "register_link": "Cadastre-se"
+    },
+    "register_biz": {
+      "title": "Cadastrar meu Negócio",
+      "step1": "1. Dados",
+      "step2": "2. Plano",
+      "name_label": "Nome do Negócio",
+      "category_label": "Categoria",
+      "whatsapp_label": "WhatsApp (com DDD)",
+      "desc_label": "Descrição",
+      "address_label": "Endereço Completo",
+      "next_btn": "Próximo: Escolher Plano",
+      "choose_plan": "Escolha como aparecer",
+      "free_plan": "Grátis",
+      "premium_plan": "Premium",
+      "month": "/mês",
+      "best_seller": "MAIS VENDIDO",
+      "map_presence": "Presença no Mapa",
+      "whatsapp_link": "Link para WhatsApp",
+      "top_search": "Topo das Buscas",
+      "verified_badge": "Selo de Verificado",
+      "visual_highlight": "Destaque Visual (Borda Amarela)",
+      "more_clicks": "3x Mais Cliques no Zap",
+      "back_btn": "Voltar",
+      "finish_btn": "Finalizar Cadastro",
+      "payment_btn": "Ir para Pagamento"
+    }
+  }
+}

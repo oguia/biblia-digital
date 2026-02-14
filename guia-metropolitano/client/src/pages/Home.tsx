@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Star, ArrowRight } from 'lucide-react';
 import { getCategories } from '../services/api';
+import { useTranslation } from 'react-i18next';
 
 const Home = () => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [categories, setCategories] = useState<any[]>([]);
   const navigate = useNavigate();
@@ -28,11 +30,10 @@ const Home = () => {
 
         <div className="container mx-auto max-w-4xl relative z-10 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
-            Encontre tudo em <span className="text-green-500">Curitiba</span>
+            {t('hero.title_prefix')} <span className="text-green-500">{t('hero.title_suffix')}</span>
           </h1>
           <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
-            O guia inteligente que conecta você aos melhores serviços da cidade.
-            Simples, rápido e direto no WhatsApp.
+            {t('hero.subtitle')}
           </p>
 
           <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto group">
@@ -43,20 +44,20 @@ const Home = () => {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="O que você precisa? (ex: Mecânico no Batel, Pizzaria aberta...)"
+              placeholder={t('hero.placeholder')}
               className="w-full pl-14 pr-4 py-5 rounded-2xl bg-white text-slate-900 text-lg shadow-2xl focus:ring-4 focus:ring-green-500/30 focus:outline-none transition-all placeholder:text-slate-400"
             />
             <button
               type="submit"
               className="absolute right-2 top-2 bottom-2 bg-green-600 hover:bg-green-500 text-white px-6 rounded-xl font-bold transition-all shadow-md"
             >
-              Buscar
+              {t('hero.search')}
             </button>
           </form>
 
           {/* Quick Tags */}
           <div className="mt-6 flex flex-wrap justify-center gap-2 text-sm text-slate-400">
-            <span>Populares:</span>
+            <span>{t('hero.popular')}</span>
             {['Pizzaria', 'Advogado', 'Pet Shop', 'Mecânica'].map(tag => (
               <button
                 key={tag}
@@ -75,11 +76,11 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-end mb-10">
             <div>
-              <h2 className="text-3xl font-bold text-slate-900">Categorias</h2>
-              <p className="text-slate-500 mt-2">Navegue pelos serviços mais procurados</p>
+              <h2 className="text-3xl font-bold text-slate-900">{t('categories.title')}</h2>
+              <p className="text-slate-500 mt-2">{t('categories.subtitle')}</p>
             </div>
             <button onClick={() => navigate('/categorias')} className="text-green-600 font-semibold flex items-center hover:translate-x-1 transition-transform">
-              Ver todas <ArrowRight className="ml-1 w-4 h-4" />
+              {t('categories.view_all')} <ArrowRight className="ml-1 w-4 h-4" />
             </button>
           </div>
 
@@ -106,15 +107,15 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-8 md:p-16 text-white flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
             <div className="relative z-10 max-w-xl">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Tem um negócio em Curitiba?</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('cta.title')}</h2>
               <p className="text-lg text-slate-300 mb-8">
-                Cadastre-se gratuitamente e apareça para milhares de clientes. Destaque sua empresa no mapa e receba contatos direto no WhatsApp.
+                {t('cta.subtitle')}
               </p>
               <button
                 onClick={() => navigate('/anuncie')}
                 className="bg-green-500 hover:bg-green-400 text-slate-900 px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-green-500/50 transition-all"
               >
-                Cadastrar Agora
+                {t('cta.button')}
               </button>
             </div>
             {/* Abstract visual */}
@@ -131,7 +132,7 @@ const Home = () => {
                   </div>
                   <div className="h-2 w-full bg-white/20 rounded mb-2"></div>
                   <div className="h-2 w-full bg-white/20 rounded mb-2"></div>
-                  <div className="mt-4 bg-green-500 text-center py-2 rounded-lg text-xs font-bold text-slate-900">CHAMAR NO ZAP</div>
+                  <div className="mt-4 bg-green-500 text-center py-2 rounded-lg text-xs font-bold text-slate-900">{t('cta.whatsapp_label')}</div>
                </div>
             </div>
           </div>

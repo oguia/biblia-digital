@@ -1,6 +1,7 @@
 import React from 'react';
 import { Phone, MapPin, CheckCircle, ExternalLink, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface BusinessProps {
   business: {
@@ -19,6 +20,7 @@ interface BusinessProps {
 }
 
 const BusinessCard: React.FC<BusinessProps> = ({ business }) => {
+  const { t } = useTranslation();
   const whatsappLink = business.whatsapp
     ? `https://wa.me/55${business.whatsapp.replace(/\D/g, '')}?text=Olá, vi no Guia Metropolitano!`
     : business.phone
@@ -42,7 +44,7 @@ const BusinessCard: React.FC<BusinessProps> = ({ business }) => {
         )}
         {business.is_featured && (
            <div className="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm">
-             Destaque
+             {t('business.featured')}
            </div>
         )}
       </div>
@@ -80,7 +82,7 @@ const BusinessCard: React.FC<BusinessProps> = ({ business }) => {
               className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-green-500/20"
             >
               <MessageCircle className="w-5 h-5" />
-              Chamar no Zap
+              {t('business.whatsapp_btn')}
             </a>
           )}
 
@@ -90,7 +92,7 @@ const BusinessCard: React.FC<BusinessProps> = ({ business }) => {
                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
              >
                <Phone className="w-5 h-5" />
-               Ligar
+               {t('business.call_btn')}
              </a>
           )}
 

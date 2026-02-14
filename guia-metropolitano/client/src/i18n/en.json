@@ -1,0 +1,82 @@
+{
+  "translation": {
+    "header": {
+      "subtitle": "Metropolitano",
+      "home": "Home",
+      "categories": "Categories",
+      "advertise": "Advertise Free",
+      "advertise_business": "Advertise Your Business"
+    },
+    "hero": {
+      "title_prefix": "Find everything in",
+      "title_suffix": "Curitiba",
+      "subtitle": "The smart guide connecting you to the best services in the city. Simple, fast, and straight to WhatsApp.",
+      "placeholder": "What do you need? (e.g., Mechanic, Pizza...)",
+      "search": "Search",
+      "popular": "Popular:"
+    },
+    "categories": {
+      "title": "Categories",
+      "subtitle": "Browse most searched services",
+      "view_all": "View all"
+    },
+    "cta": {
+      "title": "Own a business in Curitiba?",
+      "subtitle": "Register for free and appear to thousands of customers. Highlight your company on the map and receive contacts directly on WhatsApp.",
+      "button": "Register Now",
+      "whatsapp_label": "CHAT ON WHATSAPP"
+    },
+    "business": {
+      "verified": "Verified",
+      "featured": "Featured",
+      "whatsapp_btn": "Chat on WhatsApp",
+      "call_btn": "Call",
+      "no_results": "No results found.",
+      "try_search": "Try searching for 'Pizza' or 'Mechanic'."
+    },
+    "search": {
+      "results_for": "Results for",
+      "found": "locations found",
+      "list_view": "List",
+      "map_view": "Map"
+    },
+    "auth": {
+      "login_title": "Access Dashboard",
+      "register_title": "Create Account",
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "login_btn": "Login",
+      "register_btn": "Register",
+      "have_account": "Already have an account?",
+      "no_account": "Don't have an account?",
+      "login_link": "Login here",
+      "register_link": "Register here"
+    },
+    "register_biz": {
+      "title": "Register my Business",
+      "step1": "1. Data",
+      "step2": "2. Plan",
+      "name_label": "Business Name",
+      "category_label": "Category",
+      "whatsapp_label": "WhatsApp (with code)",
+      "desc_label": "Description",
+      "address_label": "Full Address",
+      "next_btn": "Next: Choose Plan",
+      "choose_plan": "Choose how to appear",
+      "free_plan": "Free",
+      "premium_plan": "Premium",
+      "month": "/month",
+      "best_seller": "BEST SELLER",
+      "map_presence": "Map Presence",
+      "whatsapp_link": "WhatsApp Link",
+      "top_search": "Top of Search",
+      "verified_badge": "Verified Badge",
+      "visual_highlight": "Visual Highlight",
+      "more_clicks": "3x More Clicks on WhatsApp",
+      "back_btn": "Back",
+      "finish_btn": "Finish Registration",
+      "payment_btn": "Go to Payment"
+    }
+  }
+}
