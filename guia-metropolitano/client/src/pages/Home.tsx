@@ -76,28 +76,34 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-end mb-10">
             <div>
-              <h2 className="text-3xl font-bold text-slate-900">{t('categories.title')}</h2>
-              <p className="text-slate-500 mt-2">{t('categories.subtitle')}</p>
+              <h2 className="text-3xl font-bold text-slate-900">Categorias Populares</h2>
+              <p className="text-slate-500 mt-2">Encontre o que você precisa em Curitiba</p>
             </div>
             <button onClick={() => navigate('/categorias')} className="text-green-600 font-semibold flex items-center hover:translate-x-1 transition-transform">
-              {t('categories.view_all')} <ArrowRight className="ml-1 w-4 h-4" />
+              Ver Todas <ArrowRight className="ml-1 w-4 h-4" />
             </button>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {categories.slice(0, 12).map((cat) => (
-              <div
-                key={cat.id}
-                onClick={() => navigate(`/busca?q=${cat.name}`)}
-                className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer border border-slate-100 flex flex-col items-center text-center group"
-              >
-                <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
-                  {/* Icons could be dynamic based on 'icon' field, defaulting to Star for now */}
-                  <Star className="w-6 h-6 text-green-600" />
-                </div>
-                <h3 className="font-semibold text-slate-800 group-hover:text-green-700 transition-colors">{cat.name}</h3>
-              </div>
-            ))}
+            {categories.length > 0 ? (
+                categories.slice(0, 12).map((cat) => (
+                  <div
+                    key={cat.id}
+                    onClick={() => navigate(`/busca?q=${cat.name}`)}
+                    className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer border border-slate-100 flex flex-col items-center text-center group"
+                  >
+                    <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
+                      {/* Icons could be dynamic based on 'icon' field, defaulting to Star for now */}
+                      <Star className="w-6 h-6 text-green-600" />
+                    </div>
+                    <h3 className="font-semibold text-slate-800 group-hover:text-green-700 transition-colors">{cat.name}</h3>
+                  </div>
+                ))
+            ) : (
+                [1,2,3,4,5,6].map(i => (
+                    <div key={i} className="h-40 bg-white rounded-2xl animate-pulse"></div>
+                ))
+            )}
           </div>
         </div>
       </section>

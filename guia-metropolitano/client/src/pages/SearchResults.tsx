@@ -4,7 +4,8 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { searchBusinesses } from '../services/api';
 import BusinessCard from '../components/BusinessCard';
-import { MapPin, List, Map as MapIcon } from 'lucide-react';
+import { MapPin, List, Map as MapIcon, SlidersHorizontal } from 'lucide-react';
+import 'leaflet/dist/leaflet.css';
 
 // Fix Leaflet marker icons in React
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -18,12 +19,12 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-const MapUpdater = ({ viewMode }: { viewMode: string }) => {
+const MapUpdater = ({ businesses, center }: { businesses: any[], center: [number, number] }) => {
   const map = useMap();
   useEffect(() => {
-    // Invalidate size when view mode changes or after mount
-    setTimeout(() => map.invalidateSize(), 200);
-  }, [viewMode, map]);
+    map.setView(center, 13);
+    setTimeout(() => map.invalidateSize(), 300);
+  }, [center, map]);
   return null;
 };
 
@@ -32,7 +33,7 @@ const SearchResults = () => {
   const query = searchParams.get('q') || '';
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list'); // Mobile only state
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -49,85 +50,93 @@ const SearchResults = () => {
   const mapCenter: [number, number] = results.length > 0 && results[0].lat ? [results[0].lat, results[0].lng] : defaultCenter;
 
   return (
-    <div className="bg-slate-50 min-h-screen pb-20">
-      {/* Header for Results */}
-      <div className="bg-white border-b border-slate-200 sticky top-16 z-40">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-bold text-slate-800">
-              Resultados para <span className="text-green-600">"{query}"</span>
-            </h1>
-            <p className="text-sm text-slate-500">{results.length} locais encontrados</p>
-          </div>
-
-          {/* View Toggle (Visible on all small/medium screens) */}
-          <div className="flex bg-slate-100 p-1 rounded-lg lg:hidden z-50">
-            <button
-              type="button"
-              onClick={() => setViewMode('list')}
-              className={`flex-1 p-2 rounded-md flex items-center justify-center gap-2 text-sm font-medium transition-colors cursor-pointer select-none ${viewMode === 'list' ? 'bg-white shadow text-green-700' : 'text-slate-500 hover:bg-slate-200'}`}
-            >
-              <List size={18} /> Lista
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('map')}
-              className={`flex-1 p-2 rounded-md flex items-center justify-center gap-2 text-sm font-medium transition-colors cursor-pointer select-none ${viewMode === 'map' ? 'bg-white shadow text-green-700' : 'text-slate-500 hover:bg-slate-200'}`}
-            >
-              <MapIcon size={18} /> Mapa
-            </button>
-          </div>
+    <div className="flex flex-col h-[calc(100vh-64px)] bg-slate-50 overflow-hidden">
+      {/* Sub-Header / Filters */}
+      <div className="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center shadow-sm z-20">
+        <div>
+          <h1 className="text-lg font-bold text-slate-800 truncate">
+            {query ? `Busca: "${query}"` : 'Explorar Curitiba'}
+          </h1>
+          <p className="text-xs text-slate-500">{results.length} locais encontrados</p>
         </div>
+
+        {/* Mobile View Toggle (Tabs Style) */}
+        <div className="flex bg-slate-100 p-1 rounded-lg lg:hidden">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'list' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              Lista
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'map' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              Mapa
+            </button>
+        </div>
+
+        {/* Desktop Filter Button (Placeholder) */}
+        <button className="hidden lg:flex items-center gap-2 text-slate-500 hover:text-slate-800 text-sm font-medium border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors">
+          <SlidersHorizontal size={16} /> Filtros
+        </button>
       </div>
 
-      <div className="container mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6 h-[calc(100vh-180px)]">
+      {/* Main Content Area - Split View */}
+      <div className="flex flex-1 overflow-hidden relative">
 
-        {/* List View */}
-        <div className={`flex-1 overflow-y-auto pr-2 custom-scrollbar ${viewMode === 'map' ? 'hidden lg:block' : ''}`}>
+        {/* Left Side: List (Visible on Desktop always, on Mobile if viewMode=list) */}
+        <div className={`
+          flex-1 lg:flex-[0.4] xl:flex-[0.35] bg-slate-50 overflow-y-auto custom-scrollbar p-4 space-y-4
+          ${viewMode === 'map' ? 'hidden lg:block' : 'block'}
+        `}>
            {loading ? (
-             <div className="space-y-4">
-               {[1,2,3].map(i => (
-                 <div key={i} className="h-48 bg-slate-200 rounded-2xl animate-pulse"></div>
-               ))}
+             [1,2,3,4].map(i => (
+               <div key={i} className="h-40 bg-slate-200 rounded-xl animate-pulse"></div>
+             ))
+           ) : results.length === 0 ? (
+             <div className="text-center py-20 text-slate-400">
+               <MapPin className="mx-auto w-12 h-12 mb-4 opacity-50" />
+               <p>Nenhum local encontrado.</p>
              </div>
            ) : (
-             <div className="space-y-6">
-               {results.map(biz => (
-                 <BusinessCard key={biz.id} business={biz} />
-               ))}
-               {results.length === 0 && (
-                 <div className="text-center py-20 text-slate-500">
-                   <MapPin className="mx-auto w-12 h-12 text-slate-300 mb-4" />
-                   <p className="text-lg">Nenhum resultado encontrado.</p>
-                   <p className="text-sm">Tente buscar por "Pizzaria" ou "Mecânica".</p>
-                 </div>
-               )}
-             </div>
+             results.map(biz => (
+               <BusinessCard key={biz.id} business={biz} compact={true} />
+             ))
            )}
+
+           <div className="text-center py-8 text-xs text-slate-400">
+             Fim dos resultados
+           </div>
         </div>
 
-        {/* Map View */}
-        <div className={`flex-1 bg-slate-200 rounded-2xl overflow-hidden shadow-inner relative ${viewMode === 'list' ? 'hidden lg:block' : 'h-full'}`}>
-           <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
-             <MapUpdater viewMode={viewMode} />
+        {/* Right Side: Map (Visible on Desktop always, on Mobile if viewMode=map) */}
+        <div className={`
+          flex-1 lg:flex-[0.6] xl:flex-[0.65] bg-slate-200 relative z-0
+          ${viewMode === 'list' ? 'hidden lg:block' : 'block'}
+        `}>
+           <MapContainer
+             center={mapCenter}
+             zoom={13}
+             style={{ height: '100%', width: '100%', zIndex: 0 }}
+             zoomControl={false}
+           >
+             <MapUpdater businesses={results} center={mapCenter} />
              <TileLayer
-               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+               url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
              />
              {results.map(biz => (
                biz.lat && biz.lng && (
                  <Marker key={biz.id} position={[biz.lat, biz.lng]}>
                    <Popup>
-                     <div className="font-bold">{biz.name}</div>
-                     <div className="text-xs text-slate-500">{biz.address}</div>
-                     <Link to={`/negocio/${biz.slug}`} className="block mt-2 text-green-600 text-xs hover:underline">
-                        Ver Detalhes
-                     </Link>
-                     {biz.whatsapp && (
-                       <a href={`https://wa.me/55${biz.whatsapp}`} target="_blank" className="block mt-2 text-green-600 font-bold text-xs text-center border border-green-200 bg-green-50 rounded py-1">
-                         Chamar no Zap
-                       </a>
-                     )}
+                     <div className="font-sans min-w-[200px]">
+                       <h3 className="font-bold text-sm mb-1">{biz.name}</h3>
+                       <p className="text-xs text-slate-500 mb-2">{biz.address}</p>
+                       <Link to={`/negocio/${biz.slug}`} className="block text-center bg-slate-900 text-white text-xs py-1.5 rounded hover:bg-slate-700 transition-colors">
+                          Ver Detalhes
+                       </Link>
+                     </div>
                    </Popup>
                  </Marker>
                )
