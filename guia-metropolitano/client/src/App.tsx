@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import RegisterBusiness from './pages/RegisterBusiness';
 import AIConsultantWidget from './components/AIConsultantWidget';
 import AdminDashboard from './pages/AdminDashboard';
+import OwnerDashboard from './pages/OwnerDashboard';
 // import Footer from './components/Footer'; // Placeholder
 
 const FooterPlaceholder = () => (
@@ -30,6 +31,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/anuncie" element={<RegisterBusiness />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/dashboard" element={<OwnerDashboard />} />
           </Routes>
         </main>
         <FooterPlaceholder />

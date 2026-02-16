@@ -60,17 +60,19 @@ const SearchResults = () => {
             <p className="text-sm text-slate-500">{results.length} locais encontrados</p>
           </div>
 
-          {/* View Toggle (Mobile mostly) */}
-          <div className="flex bg-slate-100 p-1 rounded-lg lg:hidden">
+          {/* View Toggle (Visible on all small/medium screens) */}
+          <div className="flex bg-slate-100 p-1 rounded-lg lg:hidden z-50">
             <button
+              type="button"
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors ${viewMode === 'list' ? 'bg-white shadow text-slate-900' : 'text-slate-500'}`}
+              className={`flex-1 p-2 rounded-md flex items-center justify-center gap-2 text-sm font-medium transition-colors cursor-pointer select-none ${viewMode === 'list' ? 'bg-white shadow text-green-700' : 'text-slate-500 hover:bg-slate-200'}`}
             >
               <List size={18} /> Lista
             </button>
             <button
+              type="button"
               onClick={() => setViewMode('map')}
-              className={`p-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors ${viewMode === 'map' ? 'bg-white shadow text-slate-900' : 'text-slate-500'}`}
+              className={`flex-1 p-2 rounded-md flex items-center justify-center gap-2 text-sm font-medium transition-colors cursor-pointer select-none ${viewMode === 'map' ? 'bg-white shadow text-green-700' : 'text-slate-500 hover:bg-slate-200'}`}
             >
               <MapIcon size={18} /> Mapa
             </button>

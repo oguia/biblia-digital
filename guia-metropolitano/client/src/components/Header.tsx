@@ -33,6 +33,9 @@ const Header = () => {
              <span className="uppercase text-xs font-bold">{i18n.language}</span>
           </button>
 
+          <Link to="/login" className="text-slate-300 hover:text-white transition-colors font-medium">
+            Login
+          </Link>
           <Link to="/anuncie" className="bg-green-600 hover:bg-green-500 text-white px-5 py-2 rounded-full font-medium transition-colors shadow-lg hover:shadow-green-500/20">
             {t('header.advertise')}
           </Link>
@@ -49,6 +52,7 @@ const Header = () => {
         <div className="md:hidden bg-slate-800 border-t border-slate-700 py-4 px-4 flex flex-col gap-4">
           <Link to="/" className="text-lg py-2 border-b border-slate-700" onClick={() => setIsOpen(false)}>{t('header.home')}</Link>
           <Link to="/categorias" className="text-lg py-2 border-b border-slate-700" onClick={() => setIsOpen(false)}>{t('header.categories')}</Link>
+          <Link to="/login" className="text-lg py-2 border-b border-slate-700" onClick={() => setIsOpen(false)}>Login / Painel</Link>
           <button onClick={() => { toggleLanguage(); setIsOpen(false); }} className="text-left text-lg py-2 border-b border-slate-700 flex items-center gap-2">
              <Globe size={18} /> Mudar Idioma ({i18n.language.toUpperCase()})
           </button>

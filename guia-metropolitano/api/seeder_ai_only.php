@@ -31,16 +31,16 @@ if ($isCli) {
 function getCategoryImage($category) {
     // Map categories to specific keywords for better relevance
     $mapping = [
-        'pizzaria' => 'pizza,restaurant',
-        'restaurante' => 'restaurant,food,dining',
-        'advogado' => 'lawyer,office,meeting',
-        'mecanica' => 'mechanic,car,garage',
-        'salao de beleza' => 'salon,haircut,beauty',
-        'pet shop' => 'dog,cat,pet',
-        'encanador' => 'plumber,pipes,bathroom',
-        'eletricista' => 'electrician,wires,tools',
-        'clinica' => 'clinic,doctor,medical',
-        'default' => 'curitiba,city,business'
+        'pizzaria' => 'pizza,oven',
+        'restaurante' => 'restaurant,dining',
+        'advogado' => 'lawyer,office',
+        'mecanica' => 'mechanic,workshop',
+        'salao de beleza' => 'hairsalon,beauty',
+        'pet shop' => 'dog,puppy',
+        'encanador' => 'plumber,tools',
+        'eletricista' => 'electrician,voltage',
+        'clinica' => 'doctor,hospital',
+        'default' => 'office,building'
     ];
 
     $cleanCat = strtolower(str_replace(

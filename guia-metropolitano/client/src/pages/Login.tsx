@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
@@ -7,6 +7,12 @@ const Login = () => {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (localStorage.getItem('user')) {
+      navigate('/dashboard');
+    }
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +28,7 @@ const Login = () => {
         const res = await api.post('/login.php', { email: formData.email, password: formData.password });
         if (res.data.success) {
            localStorage.setItem('user', JSON.stringify(res.data.user));
-           navigate('/anuncie'); // Redirect to business registration
+           navigate('/dashboard'); // Redirect to dashboard
         }
       }
     } catch (err: any) {

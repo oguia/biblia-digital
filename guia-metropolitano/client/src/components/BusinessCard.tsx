@@ -22,6 +22,8 @@ interface BusinessProps {
 
 const BusinessCard: React.FC<BusinessProps> = ({ business }) => {
   const { t } = useTranslation();
+  const [imgError, setImgError] = React.useState(false);
+
   const whatsappLink = business.whatsapp
     ? `https://wa.me/55${business.whatsapp.replace(/\D/g, '')}?text=Olá, vi no Guia Metropolitano!`
     : business.phone
@@ -36,8 +38,13 @@ const BusinessCard: React.FC<BusinessProps> = ({ business }) => {
     >
       {/* Image / Thumbnail */}
       <Link to={`/negocio/${business.slug}`} className="md:w-48 h-48 md:h-auto bg-slate-200 flex-shrink-0 relative group-hover:opacity-90 transition-opacity cursor-pointer">
-        {business.image_url ? (
-          <img src={business.image_url} alt={business.name} className="w-full h-full object-cover" />
+        {!imgError && business.image_url ? (
+          <img
+            src={business.image_url}
+            alt={business.name}
+            className="w-full h-full object-cover"
+            onError={() => setImgError(true)}
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
              <span className="text-4xl font-bold opacity-20">{business.name.charAt(0)}</span>

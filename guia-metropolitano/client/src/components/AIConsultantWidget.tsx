@@ -50,7 +50,8 @@ const AIConsultantWidget = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-[9999] bg-green-600 hover:bg-green-500 text-white p-4 rounded-full shadow-2xl transition-transform hover:scale-110 flex items-center justify-center group"
+          className="fixed bottom-6 right-6 z-[99999] bg-green-600 hover:bg-green-500 text-white p-4 rounded-full shadow-2xl transition-transform hover:scale-110 flex items-center justify-center group"
+          style={{ isolation: 'isolate' }}
         >
           <Bot className="w-8 h-8 group-hover:rotate-12 transition-transform" />
           <span className="absolute right-full mr-4 bg-slate-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
@@ -61,7 +62,10 @@ const AIConsultantWidget = () => {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-[9999] w-full max-w-sm h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 animate-slide-up">
+        <div
+          className="fixed bottom-6 right-6 z-[99999] w-full max-w-sm h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 animate-slide-up"
+          style={{ isolation: 'isolate' }}
+        >
           {/* Header */}
           <div className="bg-slate-900 text-white p-4 flex justify-between items-center">
             <div className="flex items-center gap-2">

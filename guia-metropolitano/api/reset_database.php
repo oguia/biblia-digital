@@ -5,51 +5,37 @@ header("Content-Type: text/json; charset=UTF-8");
 require_once 'config.php';
 
 try {
-    // 1. Drop existing tables
-    $pdo->exec("DROP TABLE IF EXISTS businesses");
-    $pdo->exec("DROP TABLE IF EXISTS categories");
+    // 1. Drop existing tables to ensure clean slate
+    $tables = ['leads', 'coupons', 'businesses', 'categories', 'users'];
+    foreach ($tables as $table) {
+        $pdo->exec("DROP TABLE IF EXISTS $table");
+    }
 
-    // 2. Re-create tables
-    $pdo->exec("CREATE TABLE IF NOT EXISTS categories (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        slug TEXT UNIQUE NOT NULL,
-        icon TEXT DEFAULT 'Briefcase'
-    )");
+    // 2. Load schema from file
+    $schema = file_get_contents('schema_sqlite.sql');
+    if (!$schema) {
+        throw new Exception("Schema file not found.");
+    }
 
-    $pdo->exec("CREATE TABLE IF NOT EXISTS businesses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        slug TEXT UNIQUE NOT NULL,
-        description TEXT,
-        category_id INTEGER,
-        address TEXT,
-        phone TEXT,
-        whatsapp TEXT,
-        lat REAL,
-        lng REAL,
-        rating REAL DEFAULT 0,
-        image_url TEXT,
-        featured INTEGER DEFAULT 0,
-        FOREIGN KEY(category_id) REFERENCES categories(id)
-    )");
+    // Execute multiple queries (PDO exec doesn't always support multiple statements in SQLite depending on driver, but usually fine)
+    // Splitting by semicolon is safer
+    $statements = explode(';', $schema);
+    foreach ($statements as $statement) {
+        if (trim($statement)) {
+            $pdo->exec($statement);
+        }
+    }
 
-    // 3. Run Seeder Logic
-    // We can include the seeder logic directly or just replicate it.
-    // To ensure consistency, let's include the seeder file but we need to suppress its output if it echoes stuff.
-    // Or better, just copy the logic since seeder is a standalone script.
-
-    // Instead of copying, let's just run the seeder script via include if it's safe.
-    // The seeder script outputs text. Let's capture it.
-
+    // 3. Run Seeder Logic (optional, maybe just structure)
+    // Let's run the seeder to have initial data
     ob_start();
     include 'seeder_ai_only.php';
     $output = ob_get_clean();
 
     echo json_encode([
         "success" => true,
-        "message" => "Banco de dados resetado com sucesso!",
-        "debug" => $output
+        "message" => "Banco de dados recriado com sucesso usando schema_sqlite.sql!",
+        "seeder_output" => $output
     ]);
 
 } catch (Exception $e) {

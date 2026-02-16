@@ -19,6 +19,12 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Google Import State
+  const [importQuery, setImportQuery] = useState('');
+  const [googleKey, setGoogleKey] = useState('');
+  const [importResult, setImportResult] = useState<any>(null);
+  const [importing, setImporting] = useState(false);
+
   const fetchBusinesses = async () => {
     setLoading(true);
     setError('');
@@ -56,6 +62,28 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleImport = async () => {
+    if (!importQuery || !googleKey) return alert('Fill query and API Key');
+    setImporting(true);
+    setImportResult(null);
+    try {
+        const apiPath = import.meta.env.DEV ? 'http://localhost:8000/api/google_import.php' : './api/google_import.php';
+        const res = await axios.post(apiPath, {
+            query: importQuery,
+            api_key: googleKey,
+            location: 'Curitiba'
+        }, {
+            headers: { 'X-Admin-Secret': secret }
+        });
+        setImportResult(res.data);
+        fetchBusinesses(); // Refresh list
+    } catch (err) {
+        setImportResult({ error: 'Import failed' });
+    } finally {
+        setImporting(false);
+    }
+  };
+
   if (!businesses.length && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100">
@@ -86,6 +114,59 @@ const AdminDashboard = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
           <button onClick={() => setBusinesses([])} className="text-red-500 hover:underline">Logout</button>
+        </div>
+
+        {/* Google Import Section */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <span className="bg-blue-100 text-blue-600 p-2 rounded-lg"><Eye size={20} /></span>
+                Import from Google Places
+            </h2>
+            <div className="flex gap-4 items-end flex-wrap">
+                <div className="flex-1 min-w-[200px]">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Search Query (e.g. "Advogados")</label>
+                    <input
+                        type="text"
+                        value={importQuery}
+                        onChange={e => setImportQuery(e.target.value)}
+                        className="w-full p-2 border rounded-lg"
+                        placeholder="Category or Keyword"
+                    />
+                </div>
+                <div className="flex-1 min-w-[200px]">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Google Places API Key</label>
+                    <input
+                        type="password"
+                        value={googleKey}
+                        onChange={e => setGoogleKey(e.target.value)}
+                        className="w-full p-2 border rounded-lg"
+                        placeholder="AIzaSy..."
+                    />
+                </div>
+                <button
+                    onClick={handleImport}
+                    disabled={importing}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50"
+                >
+                    {importing ? 'Importing...' : 'Start Import'}
+                </button>
+            </div>
+            {importResult && (
+                <div className="mt-4 p-4 bg-slate-50 rounded-lg text-sm">
+                    {importResult.success ? (
+                        <p className="text-green-600 font-bold">
+                            Success! Imported: {importResult.imported}, Skipped: {importResult.skipped}
+                        </p>
+                    ) : (
+                        <p className="text-red-600 font-bold">Error: {importResult.error}</p>
+                    )}
+                    {importResult.errors && importResult.errors.length > 0 && (
+                        <ul className="mt-2 text-red-500 list-disc list-inside">
+                            {importResult.errors.map((e: string, i: number) => <li key={i}>{e}</li>)}
+                        </ul>
+                    )}
+                </div>
+            )}
         </div>
 
         <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
