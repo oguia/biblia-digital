@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Bloquear acesso a arquivos sensíveis e de configuração
+    RewriteRule ^(\.env|\.git|composer\.json|composer\.lock|database\.sql|README\.md|INSTALL\.md) - [F,L]
+
+    # Bloquear User-Agents de downloaders (HTTrack, Wget, etc)
+    RewriteCond %{HTTP_USER_AGENT} (HTTrack|Wget|libwww|curl|python|nikto|wikto|panther|webbandit) [NC]
+    RewriteRule .* - [F,L]
+
+    # Redirecionar tudo para index.php se não for arquivo ou diretório existente
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+</IfModule>
+
+# Desabilitar listagem de diretórios
+Options -Indexes
