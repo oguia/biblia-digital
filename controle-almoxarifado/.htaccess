@@ -1,18 +1,25 @@
+# Configuração de Roteamento para Hostinger
+# Se o site estiver em subpasta (ex: seusite.com/almoxarifado), o RewriteBase pode ser necessário.
+# Se der erro 500, tente descomentar a linha RewriteBase abaixo.
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Bloquear acesso a arquivos sensíveis e de configuração
-    RewriteRule ^(\.env|\.git|composer\.json|composer\.lock|database\.sql|README\.md|INSTALL\.md) - [F,L]
+    # Se estiver instalando na raiz, deixe comentado.
+    # Se estiver em subpasta 'almoxarifado', descomente e ajuste:
+    # RewriteBase /almoxarifado/
 
-    # Bloquear User-Agents de downloaders (HTTrack, Wget, etc)
-    RewriteCond %{HTTP_USER_AGENT} (HTTrack|Wget|libwww|curl|python|nikto|wikto|panther|webbandit) [NC]
-    RewriteRule .* - [F,L]
-
-    # Redirecionar tudo para index.php se não for arquivo ou diretório existente
+    # Ignora arquivos e diretórios reais
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Redireciona todo o resto para index.php
     RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
 </IfModule>
 
-# Desabilitar listagem de diretórios
+# Segurança básica
 Options -Indexes
+<FilesMatch "\.(env|sql|log|ini)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
