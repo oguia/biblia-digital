@@ -1,8 +1,0 @@
-User-agent: *
-Disallow: /admin/
-Disallow: /api/
-Disallow: /config/
-Disallow: /app/
-Disallow: /vendor/
-Allow: /
-Sitemap: https://oguiametropolitano.com.br/sitemap.xml
