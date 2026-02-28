@@ -47,9 +47,8 @@ try {
     $stmtComp = $db->prepare("
         INSERT INTO companies (
             category_id, neighborhood_id, name, slug, description, address, number,
-            zip_code, phone, whatsapp, latitude, longitude, image_url, status,
-            rating, total_reviews
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)
+            zip_code, phone, whatsapp, latitude, longitude, image_url, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
     ");
 
     $count = 0;
@@ -97,27 +96,29 @@ try {
         // --- IMAGE HANDLING ---
         $imageUrl = '/img_exemplo.png';
 
-        $rating = rand(35, 50) / 10;
-        $totalReviews = rand(5, 120);
-
         // --- Execute Insert ---
         $stmtComp->execute([
             $catId, $neighId, $realName, $slug, $desc, $street, $number,
-            $zip, $phone, $whatsapp, $lat, $lng, $imageUrl,
-            $rating, $totalReviews
+            $zip, $phone, $whatsapp, $lat, $lng, $imageUrl
         ]);
+
+        // Fake Reviews
+        $companyId = $db->lastInsertId();
+        $totalReviews = rand(1, 15);
+        $stmtReview = $db->prepare("INSERT INTO reviews (company_id, name, rating, comment) VALUES (?, 'Cliente', ?, 'Ótimo lugar, recomendo!')");
+
+        for ($i=0; $i < $totalReviews; $i++) {
+            $rating = rand(3, 5);
+            $stmtReview->execute([$companyId, $rating]);
+        }
 
         $count++;
     }
 
     echo "<h1>Sucesso!</h1>";
     echo "<p>Foi feita a injeção de <strong>$count</strong> empresas usando os dados exatos do seu arquivo JSON.</p>";
-    echo "<p>Todas as empresas receberam a imagem de exemplo: <code>img_exemplo.png</code>.</p>";
+    echo "<p>Todas as empresas receberam a imagem de exemplo: <code>img_exemplo.png</code> e avaliações.</p>";
     echo "<br><a href='/'>Voltar para a Home</a>";
-
-    // Opcional: remover o arquivo para evitar que outra pessoa acesse e sobrescreva os dados
-    // unlink(__FILE__);
-    // unlink(__DIR__ . '/raw_geo.json');
 
 } catch (Exception $e) {
     echo "<h1>Erro</h1>";
