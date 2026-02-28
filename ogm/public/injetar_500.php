@@ -24,11 +24,10 @@ try {
         return $text ?: 'n-a';
     }
 
-    // 2. Fetch the JSON payload from the user's provided URL
-    $json_url = "https://oguiametropolitano.com.br/img/empresas_curitiba_500_geo.json";
-    $json_data = file_get_contents($json_url);
+    // Embed the JSON content directly to bypass HTTP 404
+    $json_data = file_get_contents(__DIR__ . '/raw_geo.json');
     if (!$json_data) {
-        throw new Exception("Não foi possível baixar o JSON de 500 empresas da URL oficial.");
+        throw new Exception("Não foi possível carregar o arquivo raw_geo.json.");
     }
 
     $empresas = json_decode($json_data, true);
@@ -69,7 +68,6 @@ try {
         $neighName = trim($empresa['endereco']['bairro']);
         $cityName = trim($empresa['endereco']['cidade']);
 
-        // Composite key because 'Centro' can be in Curitiba or Araucária
         $neighKey = $neighName . '_' . $cityName;
 
         if (!isset($neighMap[$neighKey])) {
@@ -81,7 +79,6 @@ try {
 
         // --- 3. Handle Company Data ---
         $realName = trim($empresa['nome']);
-        // Create a unique slug using name and ID to prevent duplicates
         $slug = slugify($realName . '-' . $empresa['id']);
 
         $street = trim($empresa['endereco']['rua']);
@@ -89,22 +86,18 @@ try {
         $zip = trim($empresa['endereco']['cep']);
 
         $phone = trim($empresa['telefone']);
-        // Create a clean whatsapp number from phone (numbers only + 55)
         $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
         $whatsapp = "55" . $cleanPhone;
 
         $lat = (float) $empresa['latitude'];
         $lng = (float) $empresa['longitude'];
 
-        // Create a description
         $desc = "A {$realName} é uma excelente opção em {$catName} localizada na região de {$neighName}, {$cityName}.";
 
         // --- IMAGE HANDLING ---
-        // The user specifically requested to use their provided example image for all 500
-        $imageUrl = 'https://oguiametropolitano.com.br/img/img%20exemplo.png';
+        $imageUrl = '/img_exemplo.png';
 
-        // Random fake ratings to make it look active
-        $rating = rand(35, 50) / 10; // Generates between 3.5 and 5.0
+        $rating = rand(35, 50) / 10;
         $totalReviews = rand(5, 120);
 
         // --- Execute Insert ---
@@ -118,9 +111,13 @@ try {
     }
 
     echo "<h1>Sucesso!</h1>";
-    echo "<p>Foi feito o download e a injeção de <strong>$count</strong> empresas exatamente como no seu arquivo original.</p>";
-    echo "<p>Todas as empresas receberam a imagem de exemplo solicitada: <code>img exemplo.png</code>.</p>";
+    echo "<p>Foi feita a injeção de <strong>$count</strong> empresas usando os dados exatos do seu arquivo JSON.</p>";
+    echo "<p>Todas as empresas receberam a imagem de exemplo: <code>img_exemplo.png</code>.</p>";
     echo "<br><a href='/'>Voltar para a Home</a>";
+
+    // Opcional: remover o arquivo para evitar que outra pessoa acesse e sobrescreva os dados
+    // unlink(__FILE__);
+    // unlink(__DIR__ . '/raw_geo.json');
 
 } catch (Exception $e) {
     echo "<h1>Erro</h1>";
