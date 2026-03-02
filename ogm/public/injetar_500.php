@@ -46,8 +46,8 @@ try {
     $stmtNeigh = $db->prepare("INSERT IGNORE INTO neighborhoods (name, slug, city) VALUES (?, ?, ?)");
 
     // Select statements to get IDs if INSERT IGNORE skipped it
-    $stmtGetCat = $db->prepare("SELECT id FROM categories WHERE name = ? LIMIT 1");
-    $stmtGetNeigh = $db->prepare("SELECT id FROM neighborhoods WHERE name = ? AND city = ? LIMIT 1");
+    $stmtGetCat = $db->prepare("SELECT id FROM categories WHERE slug = ? LIMIT 1");
+    $stmtGetNeigh = $db->prepare("SELECT id FROM neighborhoods WHERE slug = ? LIMIT 1");
 
     // Prepared statement for Company
     $stmtComp = $db->prepare("
@@ -62,34 +62,40 @@ try {
     foreach ($empresas as $empresa) {
         // --- 1. Handle Category ---
         $catName = trim($empresa['categoria']);
-        if (!isset($catMap[$catName])) {
-            $slug = slugify($catName);
-            $stmtCat->execute([$catName, $slug]);
+        if (empty($catName)) $catName = 'Geral';
 
-            $stmtGetCat->execute([$catName]);
+        $catSlug = slugify($catName);
+        if (!isset($catMap[$catSlug])) {
+            $stmtCat->execute([$catName, $catSlug]);
+
+            $stmtGetCat->execute([$catSlug]);
             $catId = $stmtGetCat->fetchColumn();
-            $catMap[$catName] = $catId;
+            $catMap[$catSlug] = $catId;
         } else {
-            $catId = $catMap[$catName];
+            $catId = $catMap[$catSlug];
         }
 
         // --- 2. Handle Neighborhood ---
         $neighName = trim($empresa['endereco']['bairro']);
         $cityName = trim($empresa['endereco']['cidade']);
+        if (empty($neighName)) $neighName = 'Centro';
+        if (empty($cityName)) $cityName = 'Curitiba';
 
-        // Composite key because 'Centro' can be in Curitiba or Araucária
-        $neighKey = $neighName . '_' . $cityName;
+        $neighSlug = slugify($neighName . '-' . $cityName);
 
-        if (!isset($neighMap[$neighKey])) {
-            $slug = slugify($neighName . '-' . $cityName);
-            $stmtNeigh->execute([$neighName, $slug, $cityName]);
+        if (!isset($neighMap[$neighSlug])) {
+            $stmtNeigh->execute([$neighName, $neighSlug, $cityName]);
 
-            $stmtGetNeigh->execute([$neighName, $cityName]);
+            $stmtGetNeigh->execute([$neighSlug]);
             $neighId = $stmtGetNeigh->fetchColumn();
-            $neighMap[$neighKey] = $neighId;
+            $neighMap[$neighSlug] = $neighId;
         } else {
-            $neighId = $neighMap[$neighKey];
+            $neighId = $neighMap[$neighSlug];
         }
+
+        // Safety check if ID is still null for some reason
+        if (!$catId) $catId = null;
+        if (!$neighId) $neighId = null;
 
         // --- 3. Handle Company Data ---
         $realName = trim($empresa['nome']);
