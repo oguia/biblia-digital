@@ -41,13 +41,11 @@ try {
     $neighMap = [];
 
     // Prepared statements for Category and Neighborhoods
-    // Use INSERT IGNORE to prevent duplicate entry errors
     $stmtCat = $db->prepare("INSERT IGNORE INTO categories (name, slug) VALUES (?, ?)");
     $stmtNeigh = $db->prepare("INSERT IGNORE INTO neighborhoods (name, slug, city) VALUES (?, ?, ?)");
 
-    // Select statements to get IDs if INSERT IGNORE skipped it
-    $stmtGetCat = $db->prepare("SELECT id FROM categories WHERE slug = ? LIMIT 1");
-    $stmtGetNeigh = $db->prepare("SELECT id FROM neighborhoods WHERE slug = ? LIMIT 1");
+    $stmtGetCat = $db->prepare("SELECT id FROM categories WHERE name = ? LIMIT 1");
+    $stmtGetNeigh = $db->prepare("SELECT id FROM neighborhoods WHERE name = ? LIMIT 1");
 
     // Prepared statement for Company
     $stmtComp = $db->prepare("
@@ -64,38 +62,36 @@ try {
         $catName = trim($empresa['categoria']);
         if (empty($catName)) $catName = 'Geral';
 
-        $catSlug = slugify($catName);
-        if (!isset($catMap[$catSlug])) {
+        if (!isset($catMap[$catName])) {
+            $catSlug = slugify($catName);
             $stmtCat->execute([$catName, $catSlug]);
 
-            $stmtGetCat->execute([$catSlug]);
+            $stmtGetCat->execute([$catName]);
             $catId = $stmtGetCat->fetchColumn();
-            $catMap[$catSlug] = $catId;
+            $catMap[$catName] = $catId;
         } else {
-            $catId = $catMap[$catSlug];
+            $catId = $catMap[$catName];
         }
 
         // --- 2. Handle Neighborhood ---
+        // Since neighborhoods.name is UNIQUE in the DB schema,
+        // we map strictly by neighborhood name, ignoring the city difference
+        // if two neighborhoods have the same name (e.g. Centro).
         $neighName = trim($empresa['endereco']['bairro']);
         $cityName = trim($empresa['endereco']['cidade']);
         if (empty($neighName)) $neighName = 'Centro';
         if (empty($cityName)) $cityName = 'Curitiba';
 
-        $neighSlug = slugify($neighName . '-' . $cityName);
-
-        if (!isset($neighMap[$neighSlug])) {
+        if (!isset($neighMap[$neighName])) {
+            $neighSlug = slugify($neighName); // generate slug based only on name to avoid unique conflicts
             $stmtNeigh->execute([$neighName, $neighSlug, $cityName]);
 
-            $stmtGetNeigh->execute([$neighSlug]);
+            $stmtGetNeigh->execute([$neighName]);
             $neighId = $stmtGetNeigh->fetchColumn();
-            $neighMap[$neighSlug] = $neighId;
+            $neighMap[$neighName] = $neighId;
         } else {
-            $neighId = $neighMap[$neighSlug];
+            $neighId = $neighMap[$neighName];
         }
-
-        // Safety check if ID is still null for some reason
-        if (!$catId) $catId = null;
-        if (!$neighId) $neighId = null;
 
         // --- 3. Handle Company Data ---
         $realName = trim($empresa['nome']);
@@ -119,6 +115,15 @@ try {
         $imageUrl = '/img_exemplo.png';
 
         // --- Execute Insert ---
+        // Ensure valid IDs to prevent Foreign Key 1452 error
+        if (!$catId) {
+            $catId = null;
+        }
+        if (!$neighId) {
+            // Hard fallback: insert without neighborhood if it completely failed
+            $neighId = null;
+        }
+
         $stmtComp->execute([
             $catId, $neighId, $realName, $slug, $desc, $street, $number,
             $zip, $phone, $whatsapp, $lat, $lng, $imageUrl
