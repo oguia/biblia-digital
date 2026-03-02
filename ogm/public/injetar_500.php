@@ -13,6 +13,7 @@ try {
     $db->exec("TRUNCATE TABLE companies");
     $db->exec("TRUNCATE TABLE categories");
     $db->exec("TRUNCATE TABLE neighborhoods");
+    $db->exec("TRUNCATE TABLE reviews");
     $db->exec("SET FOREIGN_KEY_CHECKS=1");
 
     function slugify($text) {
@@ -40,8 +41,13 @@ try {
     $neighMap = [];
 
     // Prepared statements for Category and Neighborhoods
-    $stmtCat = $db->prepare("INSERT INTO categories (name, slug) VALUES (?, ?)");
-    $stmtNeigh = $db->prepare("INSERT INTO neighborhoods (name, slug, city) VALUES (?, ?, ?)");
+    // Use INSERT IGNORE to prevent duplicate entry errors
+    $stmtCat = $db->prepare("INSERT IGNORE INTO categories (name, slug) VALUES (?, ?)");
+    $stmtNeigh = $db->prepare("INSERT IGNORE INTO neighborhoods (name, slug, city) VALUES (?, ?, ?)");
+
+    // Select statements to get IDs if INSERT IGNORE skipped it
+    $stmtGetCat = $db->prepare("SELECT id FROM categories WHERE name = ? LIMIT 1");
+    $stmtGetNeigh = $db->prepare("SELECT id FROM neighborhoods WHERE name = ? AND city = ? LIMIT 1");
 
     // Prepared statement for Company
     $stmtComp = $db->prepare("
@@ -59,25 +65,35 @@ try {
         if (!isset($catMap[$catName])) {
             $slug = slugify($catName);
             $stmtCat->execute([$catName, $slug]);
-            $catMap[$catName] = $db->lastInsertId();
+
+            $stmtGetCat->execute([$catName]);
+            $catId = $stmtGetCat->fetchColumn();
+            $catMap[$catName] = $catId;
+        } else {
+            $catId = $catMap[$catName];
         }
-        $catId = $catMap[$catName];
 
         // --- 2. Handle Neighborhood ---
         $neighName = trim($empresa['endereco']['bairro']);
         $cityName = trim($empresa['endereco']['cidade']);
 
+        // Composite key because 'Centro' can be in Curitiba or Araucária
         $neighKey = $neighName . '_' . $cityName;
 
         if (!isset($neighMap[$neighKey])) {
             $slug = slugify($neighName . '-' . $cityName);
             $stmtNeigh->execute([$neighName, $slug, $cityName]);
-            $neighMap[$neighKey] = $db->lastInsertId();
+
+            $stmtGetNeigh->execute([$neighName, $cityName]);
+            $neighId = $stmtGetNeigh->fetchColumn();
+            $neighMap[$neighKey] = $neighId;
+        } else {
+            $neighId = $neighMap[$neighKey];
         }
-        $neighId = $neighMap[$neighKey];
 
         // --- 3. Handle Company Data ---
         $realName = trim($empresa['nome']);
+        // Append unique ID to slug to avoid duplicates on company names
         $slug = slugify($realName . '-' . $empresa['id']);
 
         $street = trim($empresa['endereco']['rua']);
@@ -115,9 +131,9 @@ try {
         $count++;
     }
 
-    echo "<h1>Sucesso!</h1>";
+    echo "<h1>Sucesso Absoluto!</h1>";
     echo "<p>Foi feita a injeção de <strong>$count</strong> empresas usando os dados exatos do seu arquivo JSON.</p>";
-    echo "<p>Todas as empresas receberam a imagem de exemplo: <code>img_exemplo.png</code> e avaliações.</p>";
+    echo "<p>Todas as empresas receberam a imagem de exemplo: <code>img_exemplo.png</code> e avaliações simuladas.</p>";
     echo "<br><a href='/'>Voltar para a Home</a>";
 
 } catch (Exception $e) {
