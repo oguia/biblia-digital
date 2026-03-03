@@ -53,7 +53,7 @@ if (isset($available_models['models'])) {
             break;
         }
     }
-    // Se não achou o 1.5, pega qualquer gemini suportado
+    // Se não achou o 1.5, pega qualquer gemini suportado (como o 2.5 novo)
     if (!$model_name) {
          foreach ($available_models['models'] as $model) {
             if (strpos($model['name'], 'gemini') !== false && in_array('generateContent', $model['supportedGenerationMethods'] ?? [])) {
@@ -76,8 +76,8 @@ if (!$model_name) {
 foreach ($urls_encartes_encontrados as $encarte) {
     addLog("Processando encarte da loja: " . $encarte['loja']);
 
-    // Estrutura do prompt (ideal para imagens)
-    $prompt = "Você é um assistente especialista em ler encartes de supermercado. Extraia as 3 melhores ofertas desta imagem. Retorne estritamente no formato JSON: [{\"titulo\": \"Nome do Produto e Quantidade\", \"preco\": 10.99}]";
+    // Estrutura do prompt (ideal para imagens) - Reforçado para não mandar markdown na resposta
+    $prompt = "Você é um assistente especialista em ler encartes de supermercado. Extraia as 3 melhores ofertas desta imagem. Retorne ESTRITAMENTE uma array JSON (sem formatação markdown como ```json). Exemplo de retorno:\n[{\"titulo\": \"Arroz Branco 5kg\", \"preco\": 22.90}]";
 
     // Chamada cURL para o Gemini (Visão) usando o modelo que foi descoberto na API
     $url_gemini = "https://generativelanguage.googleapis.com/v1beta/models/{$model_name}:generateContent?key=" . $GEMINI_API_KEY;
@@ -113,10 +113,22 @@ foreach ($urls_encartes_encontrados as $encarte) {
         $result = json_decode($response, true);
         if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
             $json_text = $result['candidates'][0]['content']['parts'][0]['text'];
+
+            // Tratamento contra Markdown ```json ``` que alguns modelos como Gemini 2.5 teimam em enviar
+            $json_text = preg_replace('/```json/i', '', $json_text);
+            $json_text = preg_replace('/```/', '', $json_text);
+            $json_text = trim($json_text);
+
             $ofertas_extraidas = json_decode($json_text, true);
 
+            // Tratamento caso a IA tenha retornado um único objeto {titulo...} em vez de Array [ {titulo...} ]
+            if (is_array($ofertas_extraidas) && isset($ofertas_extraidas['titulo'])) {
+                $ofertas_extraidas = [$ofertas_extraidas];
+            }
+
             if (is_array($ofertas_extraidas)) {
-                addLog("Gemini extraiu " . count($ofertas_extraidas) . " ofertas com sucesso.");
+                $count_salvos = 0;
+                addLog("Gemini extraiu " . count($ofertas_extraidas) . " objetos JSON.");
 
                 // 4. Salvar no banco (Bot)
                 $stmt = $db->prepare("INSERT INTO ofertas (titulo, preco, loja, imagem_url, categoria, fonte, status) VALUES (?, ?, ?, ?, ?, 'auto', 'ativo')");
@@ -131,14 +143,18 @@ foreach ($urls_encartes_encontrados as $encarte) {
                                 $encarte['imagem_url'],
                                 $encarte['categoria']
                             ]);
-                            addLog("Oferta salva: " . $of['titulo'] . " - R$ " . $of['preco']);
+                            $count_salvos++;
+                            addLog("Oferta salva no banco: " . $of['titulo'] . " - R$ " . $of['preco']);
                         } catch (PDOException $e) {
-                            addLog("Erro ao salvar no banco: " . $e->getMessage());
+                            addLog("Erro SQLite ao salvar no banco: " . $e->getMessage());
                         }
+                    } else {
+                         addLog("Aviso: Objeto JSON não possui as chaves 'titulo' e 'preco' requeridas. Conteúdo: " . json_encode($of));
                     }
                 }
+                addLog("Total de ofertas inseridas no banco: " . $count_salvos);
             } else {
-                 addLog("Erro no JSON do Gemini: " . $json_text);
+                 addLog("Erro Crítico: JSON do Gemini não pôde ser decodificado ou não é Array. Texto recebido: " . $json_text);
             }
         }
     } else {
