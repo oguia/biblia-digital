@@ -40,8 +40,8 @@ foreach ($urls_encartes_encontrados as $encarte) {
     // Estrutura do prompt para o Gemini 1.5 Flash (ideal para imagens)
     $prompt = "Você é um assistente especialista em ler encartes de supermercado. Extraia as 3 melhores ofertas desta imagem. Retorne estritamente no formato JSON: [{\"titulo\": \"Nome do Produto e Quantidade\", \"preco\": 10.99}]";
 
-    // Chamada cURL para o Gemini (Visão)
-    $url_gemini = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . $GEMINI_API_KEY;
+    // Chamada cURL para o Gemini (Visão) - Corrigindo o nome do modelo para 'gemini-1.5-flash-latest' ou fallback para 'gemini-pro-vision' dependendo do erro
+    $url_gemini = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" . $GEMINI_API_KEY;
 
     $payload = [
         "contents" => [
