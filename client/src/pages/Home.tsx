@@ -81,8 +81,8 @@ export default function Home() {
             <div className="flex items-center gap-3 w-full md:w-auto">
               <img src="/logo.png" alt="Logo" className="h-10 w-10 bg-white rounded-full p-1 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
               <div>
-                <h1 className="text-2xl font-black tracking-tight leading-none">CuriOfertas</h1>
-                <p className="text-xs font-medium text-orange-200">Região Metropolitana</p>
+                <h1 className="text-2xl font-black tracking-tight leading-none">O Guia Metropolitano</h1>
+                <p className="text-xs font-medium text-orange-200">Ofertas e Saldões na Sua Região</p>
               </div>
             </div>
 
@@ -217,8 +217,8 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 py-8 text-center text-sm text-gray-500 mt-auto">
-         <p>© {new Date().getFullYear()} CuriOfertas. Todos os direitos reservados.</p>
-         <p className="mt-1 text-xs">Agregador de ofertas para Curitiba e Região Metropolitana.</p>
+         <p>© {new Date().getFullYear()} O Guia Metropolitano. Todos os direitos reservados.</p>
+         <p className="mt-1 text-xs">O seu agregador de ofertas local.</p>
       </footer>
     </div>
   );

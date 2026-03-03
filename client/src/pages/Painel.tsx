@@ -7,37 +7,44 @@ export default function PainelLojista() {
   const [lojistaId, setLojistaId] = useState<number | null>(null);
   const [nomeLojista, setNomeLojista] = useState('');
 
-  // Login State
+  // Login / Register State
+  const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [nomeFantasia, setNomeFantasia] = useState('');
+  const [telefone, setTelefone] = useState('');
 
   // Cadastro Oferta State
   const [titulo, setTitulo] = useState('');
   const [preco, setPreco] = useState('');
   const [categoria, setCategoria] = useState('Supermercado');
-  const [imagem, setImagem] = useState<File | null>(null); // Placeholder for image upload
+  const [imagem, setImagem] = useState<File | null>(null);
 
   const [mensagem, setMensagem] = useState({ tipo: '', texto: '' });
   const [loading, setLoading] = useState(false);
 
   const baseURL = import.meta.env.DEV ? 'http://localhost:8000/api' : '/api';
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post(`${baseURL}/lojista.php`, {
-        action: 'login',
-        email,
-        senha
-      });
+      const payload = isRegistering
+        ? { action: 'register', email, senha, nome_fantasia: nomeFantasia, telefone }
+        : { action: 'login', email, senha };
+
+      const res = await axios.post(`${baseURL}/lojista.php`, payload);
+
       if (res.data.success) {
         setLojistaId(res.data.id_lojista);
         setNomeLojista(res.data.nome_fantasia);
         setMensagem({ tipo: '', texto: '' });
       }
     } catch (error: any) {
-      setMensagem({ tipo: 'erro', texto: error.response?.data?.error || 'Erro ao fazer login' });
+      setMensagem({
+        tipo: 'erro',
+        texto: error.response?.data?.error || (isRegistering ? 'Erro ao criar conta. Este email já está em uso?' : 'Erro ao fazer login')
+      });
     } finally {
       setLoading(false);
     }
@@ -55,11 +62,11 @@ export default function PainelLojista() {
         loja: nomeLojista,
         categoria,
         id_lojista: lojistaId,
-        imagem_url: null // TODO: Implementar upload de imagem e enviar URL
+        imagem_url: null // TODO: Implementar upload de imagem (S3/Local) para produção
       });
 
       if (res.data.success) {
-        setMensagem({ tipo: 'sucesso', texto: 'Oferta enviada! Aguardando pagamento para ser publicada.' });
+        setMensagem({ tipo: 'sucesso', texto: 'Oferta enviada com sucesso! Aguardando pagamento no Mercado Pago para aparecer na vitrine.' });
         setTitulo('');
         setPreco('');
       }
@@ -79,10 +86,10 @@ export default function PainelLojista() {
           </Link>
           <Store className="mx-auto h-12 w-12 text-orange-600" />
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Acesso do Lojista
+            {isRegistering ? 'Criar Conta de Loja' : 'Acesso do Lojista'}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Anuncie suas ofertas para milhares de clientes na região
+            {isRegistering ? 'Cadastre seu mercado e alcance toda a cidade' : 'Anuncie suas ofertas para milhares de clientes na região'}
           </p>
         </div>
 
@@ -94,7 +101,38 @@ export default function PainelLojista() {
                 {mensagem.texto}
               </div>
             )}
-            <form className="space-y-6" onSubmit={handleLogin}>
+            <form className="space-y-6" onSubmit={handleAuth}>
+
+              {isRegistering && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Nome da Loja (Nome Fantasia)</label>
+                    <div className="mt-1">
+                      <input
+                        type="text"
+                        required
+                        value={nomeFantasia}
+                        onChange={e => setNomeFantasia(e.target.value)}
+                        placeholder="Ex: Mercado Compre Mais"
+                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">WhatsApp Comercial</label>
+                    <div className="mt-1">
+                      <input
+                        type="text"
+                        value={telefone}
+                        onChange={e => setTelefone(e.target.value)}
+                        placeholder="(41) 90000-0000"
+                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email da Loja</label>
                 <div className="mt-1">
@@ -127,13 +165,23 @@ export default function PainelLojista() {
                   disabled={loading}
                   className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
                 >
-                  {loading ? 'Entrando...' : 'Entrar'}
+                  {loading ? 'Processando...' : (isRegistering ? 'Criar Minha Conta' : 'Entrar')}
                 </button>
               </div>
             </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-500">Para cadastro de novas lojas, entre em contato com o suporte.</p>
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="text-center">
+                <p className="text-sm text-gray-500">
+                  {isRegistering ? 'Já tem uma conta? ' : 'Ainda não tem conta da sua loja? '}
+                  <button
+                    onClick={() => { setIsRegistering(!isRegistering); setMensagem({tipo:'', texto:''}); }}
+                    className="font-medium text-orange-600 hover:text-orange-500 bg-transparent border-none cursor-pointer"
+                  >
+                    {isRegistering ? 'Fazer Login' : 'Cadastre-se Agora'}
+                  </button>
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -146,7 +194,7 @@ export default function PainelLojista() {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Store className="text-orange-600" /> Painel da Loja: {nomeLojista}
+            <Store className="text-orange-600" /> Painel: {nomeLojista}
           </h1>
           <button
             onClick={() => setLojistaId(null)}
@@ -159,17 +207,19 @@ export default function PainelLojista() {
 
       <main className="max-w-4xl mx-auto mt-8 px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
-          <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">Nova Oferta Patrocinada</h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              Preencha os dados abaixo para criar um novo anúncio no feed principal.
-            </p>
+          <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+            <div>
+              <h3 className="text-lg leading-6 font-medium text-gray-900">Nova Oferta Patrocinada</h3>
+              <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                Preencha os dados abaixo para criar um novo anúncio no feed principal.
+              </p>
+            </div>
           </div>
 
           <div className="p-6">
             {mensagem.texto && (
               <div className={`mb-6 p-4 rounded-md flex items-center gap-3 text-sm ${mensagem.tipo === 'sucesso' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-                {mensagem.tipo === 'sucesso' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+                {mensagem.tipo === 'sucesso' ? <CheckCircle2 size={20} className="shrink-0" /> : <AlertCircle size={20} className="shrink-0" />}
                 {mensagem.texto}
               </div>
             )}
@@ -219,6 +269,8 @@ export default function PainelLojista() {
                     >
                       <option value="Supermercado">Supermercado</option>
                       <option value="Construção">Construção</option>
+                      <option value="Atacado">Atacado</option>
+                      <option value="Farmácia">Farmácia</option>
                     </select>
                   </div>
                 </div>
@@ -229,27 +281,30 @@ export default function PainelLojista() {
                     <div className="space-y-1 text-center">
                       <Upload className="mx-auto h-12 w-12 text-gray-400" />
                       <div className="flex text-sm text-gray-600 justify-center">
-                        <label className="relative cursor-pointer bg-white rounded-md font-medium text-orange-600 hover:text-orange-500 focus-within:outline-none px-2 py-1">
-                          <span>Fazer Upload</span>
+                        <label className="relative cursor-pointer bg-white rounded-md font-medium text-orange-600 hover:text-orange-500 focus-within:outline-none px-2 py-1 shadow-sm border border-gray-200">
+                          <span>Selecionar Imagem do Computador</span>
                           <input type="file" className="sr-only" accept="image/*" onChange={(e) => setImagem(e.target.files?.[0] || null)} />
                         </label>
                       </div>
-                      <p className="text-xs text-gray-500">
-                        {imagem ? imagem.name : 'PNG, JPG, GIF até 5MB'}
+                      <p className="text-xs text-gray-500 mt-2">
+                        {imagem ? <span className="font-semibold text-green-600">Arquivo selecionado: {imagem.name}</span> : 'PNG, JPG, GIF até 5MB'}
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-5 border-t border-gray-200 flex justify-end gap-3 items-center">
-                <span className="text-sm text-gray-500">Custo do Anúncio: <strong className="text-gray-900">R$ 5,00 / dia</strong></span>
+              <div className="pt-5 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-4 items-center bg-gray-50 -mx-6 -mb-6 p-6 sm:px-6 rounded-b-lg">
+                <div className="text-center sm:text-right">
+                  <span className="block text-sm text-gray-500 mb-1">Custo do Anúncio Local:</span>
+                  <strong className="text-xl text-gray-900">R$ 5,00 / dia</strong>
+                </div>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
+                  className="w-full sm:w-auto inline-flex justify-center items-center py-3 px-8 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
                 >
-                  {loading ? 'Processando...' : 'Ir para Pagamento'}
+                  {loading ? 'Processando...' : 'Pagar via Mercado Pago e Publicar'}
                 </button>
               </div>
             </form>
