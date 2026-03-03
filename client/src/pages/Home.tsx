@@ -206,7 +206,10 @@ export default function Home() {
                   </div>
                 </div>
 
-                <button className="w-full py-3 bg-gray-50 text-gray-700 font-semibold text-sm border-t border-gray-100 hover:bg-orange-50 hover:text-orange-600 transition-colors">
+                <button
+                  onClick={() => alert(`Esta oferta de "${oferta.titulo}" é válida presencialmente na loja: ${oferta.loja}.\n\nDirija-se ao local para aproveitar! O Guia Metropolitano apenas repassa as ofertas, não realiza vendas online.`)}
+                  className="w-full py-3 bg-gray-50 text-gray-700 font-semibold text-sm border-t border-gray-100 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                >
                   Pegar Oferta
                 </button>
               </div>
