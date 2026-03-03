@@ -4,6 +4,6 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  base: './', // Important for Hostinger subdirectories
+  plugins: [react(), tailwindcss()],
+  base: '/', // Fix para o root domain (oguiametropolitano.com.br) na Hostinger
 });
