@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, MapPin, Tag, ShoppingCart, Loader2, ArrowRight } from 'lucide-react';
+import { Search, MapPin, Tag, ShoppingCart, Loader2, ArrowRight, ServerCrash } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface Oferta {
@@ -17,6 +17,7 @@ interface Oferta {
 export default function Home() {
   const [ofertas, setOfertas] = useState<Oferta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorStatus, setErrorStatus] = useState(false);
   const [categoriaAtiva, setCategoriaAtiva] = useState('Todas');
   const [busca, setBusca] = useState('');
 
@@ -28,6 +29,7 @@ export default function Home() {
 
   const carregarOfertas = async () => {
     setLoading(true);
+    setErrorStatus(false);
     try {
       // Ajuste o caminho da API conforme necessário no deploy Hostinger
       const baseURL = import.meta.env.DEV ? 'http://localhost:8000/api' : '/api';
@@ -37,15 +39,18 @@ export default function Home() {
 
       const res = await axios.get(`${baseURL}/ofertas.php?${params.toString()}`);
 
-      // Corrigindo para aceitar quando a API retorna erro (ex: 404 em html em vez de JSON no preview do React)
+      // Validação extremamente forte para evitar a quebra do React (.map is not a function)
+      // Se a Hostinger retornar HTML de erro (ex: 404, 500, ou "Database is locked"), tratamos como []
       if (Array.isArray(res.data)) {
          setOfertas(res.data);
       } else {
+         console.warn("API não retornou um array de ofertas válido:", res.data);
          setOfertas([]);
       }
     } catch (error) {
-      console.error("Erro ao carregar ofertas:", error);
+      console.error("Erro fatal ao carregar ofertas da API:", error);
       setOfertas([]);
+      setErrorStatus(true);
     } finally {
       setLoading(false);
     }
@@ -74,7 +79,7 @@ export default function Home() {
 
             {/* Logo e Nome */}
             <div className="flex items-center gap-3 w-full md:w-auto">
-              <img src="./logo.png" alt="Logo" className="h-10 w-10 bg-white rounded-full p-1" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+              <img src="/logo.png" alt="Logo" className="h-10 w-10 bg-white rounded-full p-1 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
               <div>
                 <h1 className="text-2xl font-black tracking-tight leading-none">CuriOfertas</h1>
                 <p className="text-xs font-medium text-orange-200">Região Metropolitana</p>
@@ -86,7 +91,7 @@ export default function Home() {
               <input
                 type="text"
                 placeholder="Busque por produtos, marcas ou lojas..."
-                className="w-full py-3 px-4 pr-12 rounded-lg text-gray-900 border-none outline-none focus:ring-2 focus:ring-orange-400 shadow-inner"
+                className="w-full py-3 px-4 pr-12 rounded-lg text-gray-900 border-none outline-none focus:ring-2 focus:ring-orange-400 shadow-inner bg-white"
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
               />
@@ -107,7 +112,7 @@ export default function Home() {
       </header>
 
       {/* Navegação de Categorias */}
-      <div className="bg-white border-b border-gray-200 overflow-x-auto">
+      <div className="bg-white border-b border-gray-200 overflow-x-auto shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8 py-3">
             {categorias.map(cat => (
@@ -133,8 +138,14 @@ export default function Home() {
           <div className="flex justify-center items-center h-64">
              <Loader2 className="animate-spin text-orange-600" size={48} />
           </div>
-        ) : !ofertas || ofertas.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
+        ) : errorStatus ? (
+          <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100 max-w-lg mx-auto">
+            <ServerCrash className="mx-auto h-16 w-16 text-red-300 mb-4" />
+            <h3 className="text-xl font-bold text-gray-900">Erro de Comunicação</h3>
+            <p className="text-gray-500 mt-2 text-sm px-4">Nosso sistema (Backend) não respondeu como esperado. Se for o primeiro acesso, certifique-se que o SQLite está permissivo na Hostinger.</p>
+          </div>
+        ) : !Array.isArray(ofertas) || ofertas.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100 max-w-lg mx-auto">
             <ShoppingCart className="mx-auto h-16 w-16 text-gray-300 mb-4" />
             <h3 className="text-xl font-bold text-gray-900">Nenhuma oferta encontrada</h3>
             <p className="text-gray-500 mt-2">Tente buscar por termos diferentes ou verifique as categorias.</p>
@@ -176,7 +187,7 @@ export default function Home() {
 
                   <div className="mt-auto pt-4 flex flex-col gap-1">
                     <span className="text-2xl font-black text-orange-600">
-                      R$ {oferta.preco.toFixed(2).replace('.', ',')}
+                      R$ {Number(oferta.preco).toFixed(2).replace('.', ',')}
                     </span>
 
                     <div className="flex items-center text-gray-500 text-xs gap-1 mt-2">
@@ -205,7 +216,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-8 text-center text-sm text-gray-500">
+      <footer className="bg-white border-t border-gray-200 py-8 text-center text-sm text-gray-500 mt-auto">
          <p>© {new Date().getFullYear()} CuriOfertas. Todos os direitos reservados.</p>
          <p className="mt-1 text-xs">Agregador de ofertas para Curitiba e Região Metropolitana.</p>
       </footer>
