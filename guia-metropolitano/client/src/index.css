@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0f172a; /* Deep Navy Blue */
+  --color-secondary: #25D366; /* WhatsApp Green */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  background-color: #f8fafc; /* Slate-50 */
+}
