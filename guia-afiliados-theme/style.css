@@ -1,0 +1,284 @@
+/*
+Theme Name: Guia Afiliados Theme
+Theme URI: https://oguiametropolitano.com.br
+Description: Tema para sites de afiliados com identidade visual do "O Guia Metropolitano" (Azul Marinho, Amarelo Alerta, Cinza Concreto, Branco Puro). Baseado no tema Hello Elementor e otimizado para conversão.
+Author: Jules
+Author URI: https://oguiametropolitano.com.br
+Template: hello-elementor
+Version: 1.0.0
+Text Domain: guia-afiliados-theme
+*/
+
+/* ==========================================================================
+   1. Variáveis de Cor (A Paleta Metropolitana)
+   ========================================================================== */
+:root {
+    --cor-primaria: #1A2B3C; /* Azul Marinho Urbano - Header e Footer */
+    --cor-destaque: #FFD700; /* Amarelo Alerta/Oferta - Botões */
+    --cor-fundo: #F4F4F4; /* Cinza Concreto - Background da Loja */
+    --cor-card: #FFFFFF; /* Branco Puro - Fundo dos cards */
+    --cor-preco: #2E7D32; /* Verde Dinheiro - Preços */
+    --cor-texto-escuro: #333333; /* Texto Base */
+    --cor-borda: #EAEAEA; /* Cinza suave para bordas */
+}
+
+/* ==========================================================================
+   2. Base e Tipografia (Google Fonts enfileiradas no functions.php)
+   ========================================================================== */
+body {
+    background-color: var(--cor-fundo);
+    font-family: 'Open Sans', sans-serif;
+    color: var(--cor-texto-escuro);
+}
+
+h1, h2, h3, h4, h5, h6,
+.elementor-heading-title,
+.woocommerce ul.products li.product .woocommerce-loop-product__title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    color: var(--cor-primaria);
+}
+
+/* ==========================================================================
+   3. Estilos do Header e Barra de Busca (FiboSearch e Padrão)
+   ========================================================================== */
+/* Fundo Azul Marinho para o Header (Caso utilize Elementor H&F Builder) */
+.elementor-location-header {
+    background-color: var(--cor-primaria) !important;
+}
+
+/* Fixar Header no Topo (Sticky) */
+.elementor-location-header {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+/* Cor do texto no header deve ser branco por padrão para contrastar */
+.elementor-location-header a,
+.elementor-location-header span,
+.elementor-location-header p {
+    color: var(--cor-card);
+}
+
+/* Estilo do Plugin de Busca (FiboSearch/DGWT) para parecer com Mercado Livre */
+.dgwt-wcas-search-form {
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,.12);
+}
+.dgwt-wcas-sf-wrapp input[type="search"].dgwt-wcas-search-input {
+    border: none !important;
+    background: transparent !important;
+    color: #333 !important;
+    padding-left: 15px !important;
+    font-size: 16px;
+}
+/* Botão de lupa da busca */
+.dgwt-wcas-search-submit {
+    background: var(--cor-card) !important;
+    border: none !important;
+    color: #999 !important;
+    border-radius: 0 4px 4px 0 !important;
+}
+.dgwt-wcas-search-submit:hover {
+    color: var(--cor-primaria) !important;
+}
+
+/* ==========================================================================
+   4. Estilos WooCommerce (Grid e Cards de Produto)
+   ========================================================================== */
+/* Espaçamento do Grid */
+.woocommerce ul.products {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+    gap: 20px !important;
+}
+.woocommerce ul.products::before, .woocommerce ul.products::after {
+    display: none !important;
+}
+.woocommerce ul.products li.product {
+    width: 100% !important;
+    margin: 0 !important;
+    background-color: var(--cor-card) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    transition: box-shadow 0.3s ease, transform 0.2s ease !important;
+    border: 1px solid var(--cor-borda);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    padding-bottom: 15px;
+}
+
+.woocommerce ul.products li.product:hover {
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
+    transform: translateY(-2px);
+}
+
+/* Imagem do Produto */
+.woocommerce ul.products li.product a img {
+    margin-bottom: 15px !important;
+    border-bottom: 1px solid var(--cor-borda);
+    width: 100%;
+    height: 250px;
+    object-fit: contain; /* Para não cortar logos/produtos (estilo Amazon/ML) */
+    padding: 10px;
+}
+
+/* Título do Produto */
+.woocommerce ul.products li.product .woocommerce-loop-product__title {
+    padding: 0 15px !important;
+    font-size: 14px !important;
+    font-weight: 400 !important; /* Mais fino, estilo ML */
+    line-height: 1.3 !important;
+    margin-bottom: 10px !important;
+    height: 36px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    color: var(--cor-texto-escuro) !important;
+}
+
+/* Preços - Verde Dinheiro */
+.woocommerce ul.products li.product .price {
+    padding: 0 15px !important;
+    color: var(--cor-preco) !important;
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    margin-bottom: 15px !important;
+}
+.woocommerce ul.products li.product .price del {
+    font-size: 14px;
+    color: #999;
+    font-weight: 400;
+    display: block;
+    margin-bottom: 2px;
+}
+.woocommerce ul.products li.product .price ins {
+    text-decoration: none;
+    background: transparent;
+}
+
+/* ==========================================================================
+   5. Botões de Ação (Amarelo Vibrante)
+   ========================================================================== */
+.woocommerce ul.products li.product .button,
+.woocommerce div.product form.cart .button,
+.woocommerce #respond input#submit.alt,
+.woocommerce a.button.alt,
+.woocommerce button.button.alt,
+.woocommerce input.button.alt,
+.elementor-button {
+    background-color: var(--cor-destaque) !important;
+    color: var(--cor-primaria) !important;
+    font-family: 'Montserrat', sans-serif !important;
+    font-weight: 700 !important;
+    border-radius: 4px !important;
+    text-transform: uppercase;
+    transition: background-color 0.2s ease, transform 0.1s ease !important;
+    padding: 12px 20px !important;
+    border: none !important;
+    text-align: center;
+    width: calc(100% - 30px);
+    margin: auto 15px 0 15px !important;
+    display: block;
+}
+
+.woocommerce ul.products li.product .button:hover,
+.woocommerce div.product form.cart .button:hover,
+.woocommerce #respond input#submit.alt:hover,
+.woocommerce a.button.alt:hover,
+.woocommerce button.button.alt:hover,
+.woocommerce input.button.alt:hover,
+.elementor-button:hover {
+    background-color: #e6c200 !important; /* Amarelo um pouco mais escuro */
+    color: var(--cor-primaria) !important;
+}
+
+/* ==========================================================================
+   6. Selo "Escolha do Guia" (Injetado via PHP se "Featured")
+   ========================================================================== */
+.selo-escolha-guia {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: var(--cor-primaria);
+    color: var(--cor-destaque);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    z-index: 9;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.selo-escolha-guia svg {
+    width: 12px;
+    height: 12px;
+    fill: var(--cor-destaque);
+}
+
+/* Esconder badge padrão de promoção (Sale) do WooCommerce se estiver no mesmo lugar */
+.woocommerce span.onsale {
+    top: 10px;
+    right: 10px;
+    left: auto;
+    background-color: var(--cor-preco);
+    border-radius: 4px;
+    padding: 4px 8px;
+    min-height: auto;
+    min-width: auto;
+    font-weight: bold;
+    line-height: 1;
+}
+
+/* ==========================================================================
+   7. Barra de Categorias (Ícones Outline)
+   ========================================================================== */
+/* Para criar uma barra similar ao app/site no elementor, crie uma seção Icon Box
+   e aplique a classe css "barra-categorias-guia" nela */
+.barra-categorias-guia .elementor-widget-container {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    padding: 20px 0;
+}
+.barra-categorias-guia .elementor-icon-box-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+.barra-categorias-guia .elementor-icon-box-wrapper:hover {
+    transform: translateY(-5px);
+}
+.barra-categorias-guia .elementor-icon-box-icon {
+    margin-bottom: 10px !important;
+}
+.barra-categorias-guia .elementor-icon {
+    background-color: var(--cor-card);
+    border: 1px solid var(--cor-borda);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cor-primaria) !important; /* Ícones em Azul Marinho */
+    font-size: 24px;
+}
+.barra-categorias-guia .elementor-icon-box-title {
+    font-size: 13px !important;
+    color: var(--cor-texto-escuro) !important;
+    font-weight: 600 !important;
+    font-family: 'Open Sans', sans-serif !important;
+}
