@@ -21,14 +21,6 @@ function guia_afiliados_enqueue_styles() {
         get_template_directory_uri() . '/style.min.css'
     );
 
-    // Enfileirar estilos do tema filho
-    wp_enqueue_style(
-        'guia-afiliados-child-style',
-        get_stylesheet_directory_uri() . '/style.css',
-        array('hello-elementor-parent-style'),
-        wp_get_theme()->get('Version')
-    );
-
     // Enfileirar Google Fonts: Playfair Display (Títulos Premium) e Open Sans (Corpo de Texto)
     wp_enqueue_style(
         'guia-afiliados-fonts',
@@ -36,8 +28,26 @@ function guia_afiliados_enqueue_styles() {
         array(),
         null
     );
+
+    // Enfileirar estilos do tema filho com prioridade mais alta, dependendo do elementor para carregar DEPOIS dele
+    // Verifica se o Elementor está ativo para adicioná-lo como dependência, forçando nosso CSS a carregar por último
+    $dependencies = array('hello-elementor-parent-style');
+    if ( wp_style_is( 'elementor-frontend', 'registered' ) ) {
+        $dependencies[] = 'elementor-frontend';
+    }
+    if ( wp_style_is( 'hello-elementor-theme-style', 'registered' ) ) {
+        $dependencies[] = 'hello-elementor-theme-style';
+    }
+
+    wp_enqueue_style(
+        'guia-afiliados-child-style',
+        get_stylesheet_directory_uri() . '/style.css',
+        $dependencies,
+        wp_get_theme()->get('Version') . '.' . time() // Cache buster agressivo
+    );
 }
-add_action( 'wp_enqueue_scripts', 'guia_afiliados_enqueue_styles' );
+// Prioridade 20 para garantir que rode depois do Elementor (padrão é 10)
+add_action( 'wp_enqueue_scripts', 'guia_afiliados_enqueue_styles', 99 );
 
 /**
  * Adicionar suporte ao WooCommerce (Garante que a galeria e as customizações funcionem no Elementor)
