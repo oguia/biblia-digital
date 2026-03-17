@@ -1,25 +1,25 @@
 /*
 Theme Name: Guia Afiliados Theme
 Theme URI: https://oguiametropolitano.com.br
-Description: Tema para sites de afiliados com identidade visual do "O Guia Metropolitano" (Azul Marinho, Amarelo Alerta, Cinza Concreto, Branco Puro). Baseado no tema Hello Elementor e otimizado para conversão.
+Description: Tema premium para sites de afiliados com identidade visual do "O Guia Metropolitano" (Conceito 2: Azul Marinho Real, Ouro Velho, Off-White). Baseado no tema Hello Elementor e otimizado para conversão de alto padrão.
 Author: Jules
 Author URI: https://oguiametropolitano.com.br
 Template: hello-elementor
-Version: 1.0.0
+Version: 1.1.0
 Text Domain: guia-afiliados-theme
 */
 
 /* ==========================================================================
-   1. Variáveis de Cor (A Paleta Metropolitana)
+   1. Variáveis de Cor (Conceito 2 - O Guia Premium)
    ========================================================================== */
 :root {
-    --cor-primaria: #1A2B3C; /* Azul Marinho Urbano - Header e Footer */
-    --cor-destaque: #FFD700; /* Amarelo Alerta/Oferta - Botões */
-    --cor-fundo: #F4F4F4; /* Cinza Concreto - Background da Loja */
+    --cor-primaria: #1A2B3C; /* Azul Marinho Real - Header e Títulos (Autoridade) */
+    --cor-destaque: #C19A6B; /* Ouro Velho / Mostarda (Botões, Ícones, Detalhes premium) */
+    --cor-fundo: #F8F9FA; /* Off-White suave - Background da Loja (Mais elegante que cinza concreto) */
     --cor-card: #FFFFFF; /* Branco Puro - Fundo dos cards */
-    --cor-preco: #2E7D32; /* Verde Dinheiro - Preços */
-    --cor-texto-escuro: #333333; /* Texto Base */
-    --cor-borda: #EAEAEA; /* Cinza suave para bordas */
+    --cor-preco: #1A2B3C; /* Azul Marinho Real - Preços (Elegante e direto) */
+    --cor-texto-escuro: #4A4A4A; /* Texto Base (Menos agressivo que #333) */
+    --cor-borda: #EAEAEA; /* Cinza suave para bordas e separadores */
 }
 
 /* ==========================================================================
@@ -34,7 +34,7 @@ body {
 h1, h2, h3, h4, h5, h6,
 .elementor-heading-title,
 .woocommerce ul.products li.product .woocommerce-loop-product__title {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Playfair Display', serif;
     font-weight: 700;
     color: var(--cor-primaria);
 }
@@ -62,7 +62,7 @@ h1, h2, h3, h4, h5, h6,
     color: var(--cor-card);
 }
 
-/* Estilo do Plugin de Busca (FiboSearch/DGWT) para parecer com Mercado Livre */
+/* Estilo do Plugin de Busca (FiboSearch/DGWT) */
 .dgwt-wcas-search-form {
     background: #fff;
     border-radius: 4px;
@@ -87,13 +87,13 @@ h1, h2, h3, h4, h5, h6,
 }
 
 /* ==========================================================================
-   4. Estilos WooCommerce (Grid e Cards de Produto)
+   4. Estilos WooCommerce (Grid e Cards de Produto Premium)
    ========================================================================== */
 /* Espaçamento do Grid */
 .woocommerce ul.products {
     display: grid !important;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
-    gap: 20px !important;
+    gap: 24px !important;
 }
 .woocommerce ul.products::before, .woocommerce ul.products::after {
     display: none !important;
@@ -102,20 +102,20 @@ h1, h2, h3, h4, h5, h6,
     width: 100% !important;
     margin: 0 !important;
     background-color: var(--cor-card) !important;
-    border-radius: 8px !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    border-radius: 4px !important; /* Bordas menos arredondadas para ar mais sério/premium */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important; /* Sombra mais difusa e suave */
     transition: box-shadow 0.3s ease, transform 0.2s ease !important;
     border: 1px solid var(--cor-borda);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     position: relative;
-    padding-bottom: 15px;
+    padding-bottom: 20px;
 }
 
 .woocommerce ul.products li.product:hover {
-    box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
-    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.1) !important;
+    transform: translateY(-4px);
 }
 
 /* Imagem do Produto */
@@ -124,32 +124,33 @@ h1, h2, h3, h4, h5, h6,
     border-bottom: 1px solid var(--cor-borda);
     width: 100%;
     height: 250px;
-    object-fit: contain; /* Para não cortar logos/produtos (estilo Amazon/ML) */
+    object-fit: contain;
     padding: 10px;
 }
 
 /* Título do Produto */
 .woocommerce ul.products li.product .woocommerce-loop-product__title {
-    padding: 0 15px !important;
-    font-size: 14px !important;
-    font-weight: 400 !important; /* Mais fino, estilo ML */
-    line-height: 1.3 !important;
-    margin-bottom: 10px !important;
-    height: 36px;
+    padding: 0 20px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+    margin-bottom: 12px !important;
+    height: 44px; /* Ajuste para fonte maior */
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    color: var(--cor-texto-escuro) !important;
+    color: var(--cor-primaria) !important; /* Título em Azul Marinho Real */
 }
 
-/* Preços - Verde Dinheiro */
+/* Preços - Elegante Azul Marinho */
 .woocommerce ul.products li.product .price {
-    padding: 0 15px !important;
+    padding: 0 20px !important;
     color: var(--cor-preco) !important;
-    font-size: 24px !important;
+    font-size: 22px !important;
     font-weight: 700 !important;
-    margin-bottom: 15px !important;
+    margin-bottom: 20px !important;
+    font-family: 'Playfair Display', serif; /* Preços com serifa transmitem valor/luxo */
 }
 .woocommerce ul.products li.product .price del {
     font-size: 14px;
@@ -164,7 +165,7 @@ h1, h2, h3, h4, h5, h6,
 }
 
 /* ==========================================================================
-   5. Botões de Ação (Amarelo Vibrante)
+   5. Botões de Ação (Ouro Velho / Elegante)
    ========================================================================== */
 .woocommerce ul.products li.product .button,
 .woocommerce div.product form.cart .button,
@@ -174,17 +175,18 @@ h1, h2, h3, h4, h5, h6,
 .woocommerce input.button.alt,
 .elementor-button {
     background-color: var(--cor-destaque) !important;
-    color: var(--cor-primaria) !important;
-    font-family: 'Montserrat', sans-serif !important;
-    font-weight: 700 !important;
+    color: #FFFFFF !important; /* Texto branco sobre Ouro Velho */
+    font-family: 'Open Sans', sans-serif !important;
+    font-weight: 600 !important;
     border-radius: 4px !important;
     text-transform: uppercase;
-    transition: background-color 0.2s ease, transform 0.1s ease !important;
-    padding: 12px 20px !important;
+    letter-spacing: 1px; /* Espaçamento de letras premium */
+    transition: all 0.3s ease !important;
+    padding: 14px 24px !important;
     border: none !important;
     text-align: center;
-    width: calc(100% - 30px);
-    margin: auto 15px 0 15px !important;
+    width: calc(100% - 40px);
+    margin: auto 20px 0 20px !important;
     display: block;
 }
 
@@ -195,8 +197,10 @@ h1, h2, h3, h4, h5, h6,
 .woocommerce button.button.alt:hover,
 .woocommerce input.button.alt:hover,
 .elementor-button:hover {
-    background-color: #e6c200 !important; /* Amarelo um pouco mais escuro */
-    color: var(--cor-primaria) !important;
+    background-color: #A88152 !important; /* Ouro um pouco mais escuro (Hover) */
+    color: #FFFFFF !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(193, 154, 107, 0.4); /* Brilho dourado no hover */
 }
 
 /* ==========================================================================
@@ -230,26 +234,31 @@ h1, h2, h3, h4, h5, h6,
     top: 10px;
     right: 10px;
     left: auto;
-    background-color: var(--cor-preco);
-    border-radius: 4px;
-    padding: 4px 8px;
+    background-color: var(--cor-primaria); /* Azul marinho para promoções */
+    border-radius: 2px;
+    padding: 4px 10px;
     min-height: auto;
     min-width: auto;
-    font-weight: bold;
-    line-height: 1;
+    font-weight: 600;
+    line-height: 1.2;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
 }
 
 /* ==========================================================================
-   7. Barra de Categorias (Ícones Outline)
+   7. Barra de Categorias (Elegante e Fina)
    ========================================================================== */
 /* Para criar uma barra similar ao app/site no elementor, crie uma seção Icon Box
    e aplique a classe css "barra-categorias-guia" nela */
 .barra-categorias-guia .elementor-widget-container {
     display: flex;
     justify-content: center;
-    gap: 30px;
+    gap: 40px;
     flex-wrap: wrap;
-    padding: 20px 0;
+    padding: 30px 0;
+    border-bottom: 1px solid var(--cor-borda);
+    background-color: #FFFFFF;
 }
 .barra-categorias-guia .elementor-icon-box-wrapper {
     display: flex;
@@ -265,16 +274,21 @@ h1, h2, h3, h4, h5, h6,
     margin-bottom: 10px !important;
 }
 .barra-categorias-guia .elementor-icon {
-    background-color: var(--cor-card);
-    border: 1px solid var(--cor-borda);
+    background-color: transparent;
+    border: 1px solid var(--cor-destaque); /* Borda dourada fina */
     border-radius: 50%;
-    width: 60px;
-    height: 60px;
+    width: 64px;
+    height: 64px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--cor-primaria) !important; /* Ícones em Azul Marinho */
-    font-size: 24px;
+    color: var(--cor-destaque) !important; /* Ícones em Ouro Velho */
+    font-size: 26px;
+    transition: all 0.3s ease;
+}
+.barra-categorias-guia .elementor-icon-box-wrapper:hover .elementor-icon {
+    background-color: var(--cor-destaque);
+    color: #FFFFFF !important;
 }
 .barra-categorias-guia .elementor-icon-box-title {
     font-size: 13px !important;

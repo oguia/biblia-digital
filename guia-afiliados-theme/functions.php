@@ -29,10 +29,10 @@ function guia_afiliados_enqueue_styles() {
         wp_get_theme()->get('Version')
     );
 
-    // Enfileirar Google Fonts: Montserrat (Títulos) e Open Sans (Corpo de Texto)
+    // Enfileirar Google Fonts: Playfair Display (Títulos Premium) e Open Sans (Corpo de Texto)
     wp_enqueue_style(
         'guia-afiliados-fonts',
-        'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Open+Sans:wght@400;600&display=swap',
+        'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Open+Sans:wght@400;600&display=swap',
         array(),
         null
     );
