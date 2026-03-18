@@ -74,10 +74,6 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'Accept: application/json'
 ]);
 
-// Necessário na Hostinger dependendo do certificado SSL do site
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-
 // Executa
 $response = curl_exec($ch);
 $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);

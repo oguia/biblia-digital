@@ -189,6 +189,13 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             setTimeout(() => { alertArea.innerHTML = ''; }, 5000);
         }
 
+        // Função simples para sanitizar HTML e evitar XSS
+        function sanitizeHTML(str) {
+            var temp = document.createElement('div');
+            temp.textContent = str;
+            return temp.innerHTML;
+        }
+
         searchForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const query = document.getElementById('query').value;
@@ -202,7 +209,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             try {
                 const response = await fetch(`api.php?action=search&q=${encodeURIComponent(query)}&sort=${sort}`);
 
-                if (!response.ok) {
+                if (!response.ok && response.status !== 403) {
                     throw new Error(`Erro de rede ou servidor (${response.status})`);
                 }
 
@@ -212,7 +219,12 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 loadingIndicator.classList.remove('flex');
 
                 if (data.error) {
-                    showAlert(data.error, 'red');
+                    if (data.auth_required) {
+                        const authLink = `<a href="auth.php" class="bg-[#1A2B3C] hover:bg-[#2A445D] text-white px-4 py-2 rounded font-bold ml-2 inline-block shadow">Autorizar Mercado Livre Agora</a>`;
+                        showAlert(`${data.error} <br><br> ${authLink}`, 'yellow');
+                    } else {
+                        showAlert(data.error, 'red');
+                    }
                     return;
                 }
 
@@ -232,6 +244,10 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 
         function renderResults(products) {
             resultsGrid.innerHTML = products.map(product => {
+                const safeTitle = sanitizeHTML(product.title);
+                const safePermalink = sanitizeHTML(product.permalink);
+                const safeImage = sanitizeHTML(product.image);
+
                 // Selo Catálogo (Proxy de boa avaliação)
                 let catalogBadge = product.is_catalog ? `<span class="absolute top-2 left-2 bg-destaque text-white text-xs font-bold px-2 py-1 rounded shadow"><i class="fas fa-star text-white"></i> Mais Vendido</span>` : '';
 
@@ -239,29 +255,30 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 let shippingBadge = product.free_shipping ? `<span class="text-green-600 font-bold text-xs"><i class="fas fa-truck-fast"></i> Frete Grátis</span>` : '';
 
                 // Link para copiar (Para afiliados)
-                const copyBtnHtml = `<button onclick="navigator.clipboard.writeText('${product.permalink}'); showAlert('Link do Mercado Livre copiado!', 'green');" class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold py-2 px-3 rounded w-full flex items-center justify-center gap-1 transition duration-200"><i class="fas fa-copy"></i> Copiar Link Puro</button>`;
+                const copyBtnHtml = `<button onclick="navigator.clipboard.writeText('${safePermalink}'); showAlert('Link do Mercado Livre copiado!', 'green');" class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold py-2 px-3 rounded w-full flex items-center justify-center gap-1 transition duration-200"><i class="fas fa-copy"></i> Copiar Link Puro</button>`;
 
                 // Botão de Importação (Opção B)
-                const importBtnHtml = `<button onclick="importToWooCommerce('${product.id}')" class="bg-primaria hover:bg-[#2A445D] text-white text-sm font-bold py-2 px-3 rounded w-full flex items-center justify-center gap-1 transition duration-200 mt-2 import-btn-${product.id}" data-product='${JSON.stringify(product).replace(/'/g, "&apos;")}'>
+                const encodedProduct = encodeURIComponent(JSON.stringify(product));
+                const importBtnHtml = `<button onclick="importToWooCommerce('${product.id}')" class="bg-primaria hover:bg-[#2A445D] text-white text-sm font-bold py-2 px-3 rounded w-full flex items-center justify-center gap-1 transition duration-200 mt-2 import-btn-${product.id}" data-product="${encodedProduct}">
                     <i class="fas fa-download"></i> Importar para Site
                 </button>`;
 
                 return `
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow relative">
                     ${catalogBadge}
-                    <a href="${product.permalink}" target="_blank" rel="noopener noreferrer" class="h-48 bg-white flex items-center justify-center p-4 border-b border-gray-100">
-                        <img src="${product.image}" alt="Imagem do produto" class="max-h-full max-w-full object-contain mix-blend-multiply" onerror="this.src='https://via.placeholder.com/150?text=Imagem+Indispon%C3%ADvel'">
+                    <a href="${safePermalink}" target="_blank" rel="noopener noreferrer" class="h-48 bg-white flex items-center justify-center p-4 border-b border-gray-100">
+                        <img src="${safeImage}" alt="Imagem do produto" class="max-h-full max-w-full object-contain mix-blend-multiply" onerror="this.src='https://via.placeholder.com/150?text=Imagem+Indispon%C3%ADvel'">
                     </a>
                     <div class="p-4 flex flex-col flex-grow">
                         <div class="text-xs text-gray-500 mb-1 uppercase tracking-wider">${product.condition === 'new' ? 'Novo' : 'Usado'} ${shippingBadge}</div>
-                        <h3 class="font-semibold text-gray-800 text-sm mb-2 line-clamp-2 title-min-h" title="${product.title}">
-                            ${product.title}
+                        <h3 class="font-semibold text-gray-800 text-sm mb-2 line-clamp-2 title-min-h" title="${safeTitle}">
+                            ${safeTitle}
                         </h3>
                         <div class="mt-auto">
                             <p class="text-2xl font-bold font-serif text-primaria mb-4">${formatter.format(product.price)}</p>
 
                             <div class="flex flex-col gap-2">
-                                <a href="${product.permalink}" target="_blank" rel="noopener noreferrer" class="text-primaria border border-primaria hover:bg-primaria hover:text-white text-xs font-bold py-2 px-3 rounded text-center transition duration-200">
+                                <a href="${safePermalink}" target="_blank" rel="noopener noreferrer" class="text-primaria border border-primaria hover:bg-primaria hover:text-white text-xs font-bold py-2 px-3 rounded text-center transition duration-200">
                                     Ver no ML <i class="fas fa-external-link-alt ml-1"></i>
                                 </a>
                                 ${copyBtnHtml}
@@ -279,7 +296,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             const originalText = btn.innerHTML;
 
             // Recuperar o JSON embedado no botão de forma segura
-            const productData = JSON.parse(btn.getAttribute('data-product'));
+            const productData = JSON.parse(decodeURIComponent(btn.getAttribute('data-product')));
 
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
             btn.disabled = true;
@@ -300,7 +317,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     btn.innerHTML = '<i class="fas fa-check"></i> Importado!';
                     btn.classList.remove('bg-primaria', 'hover:bg-[#2A445D]');
                     btn.classList.add('bg-green-600', 'hover:bg-green-700');
-                    showAlert(`Produto "<b>${productData.title}</b>" importado com sucesso para o Faro de Ouro! (ID: ${result.wp_id})`, 'green');
+                    showAlert(`Produto "<b>${sanitizeHTML(productData.title)}</b>" importado com sucesso para o Faro de Ouro! (ID: ${result.wp_id})`, 'green');
                 } else {
                     throw new Error(result.error || 'Erro desconhecido na importação.');
                 }
