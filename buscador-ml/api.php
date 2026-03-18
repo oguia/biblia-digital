@@ -21,19 +21,37 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
         exit;
     }
 
-    $token_file = 'ml_tokens.php';
+    // Usar caminho absoluto no servidor (Garante a compatibilidade na Hostinger em subpastas)
+    $token_file = __DIR__ . '/ml_tokens.php';
 
     // Verifica se temos o token armazenado
     if (!file_exists($token_file)) {
         http_response_code(403);
-        echo json_encode(['error' => 'Acesso negado pelo Mercado Livre (403 Forbidden). Você precisa autorizar seu aplicativo primeiro clicando no botão abaixo.', 'auth_required' => true]);
+        echo json_encode([
+            'error' => 'O token não foi encontrado no servidor (' . $token_file . '). Você precisa autorizar seu aplicativo primeiro clicando no botão abaixo.',
+            'auth_required' => true
+        ]);
         exit;
     }
 
     // Ler o token seguro ignorando a primeira linha (o <?php die...)
     $file_content = file_get_contents($token_file);
+    if (!$file_content) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Falha ao ler o arquivo de token no servidor. Verifique as permissões de leitura do ml_tokens.php']);
+        exit;
+    }
+
     $json_content = preg_replace('/^<\?php.*?\?>\n/s', '', $file_content);
     $tokens = json_decode($json_content, true);
+
+    if (!isset($tokens['access_token'])) {
+        http_response_code(403);
+        unlink($token_file); // Remove o arquivo corrompido
+        echo json_encode(['error' => 'O arquivo de token está corrompido ou vazio. Por favor, autorize novamente.', 'auth_required' => true]);
+        exit;
+    }
+
     $access_token = $tokens['access_token'];
 
     // Renovar Token se estiver expirado
@@ -76,7 +94,16 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             // Refresh falhou, forçar re-autorização manual
             unlink($token_file);
             http_response_code(403);
-            echo json_encode(['error' => 'A autorização do Mercado Livre expirou. Clique no botão abaixo para autorizar novamente.', 'auth_required' => true]);
+
+            $debug_msg = "";
+            if(isset($data['error'])) {
+               $debug_msg = " (" . $data['error'] . " - " . ($data['message'] ?? 'Falha no refresh token') . ")";
+            }
+
+            echo json_encode([
+                'error' => 'A autorização do Mercado Livre expirou ou o token foi revogado' . $debug_msg . '. Clique no botão abaixo para autorizar novamente.',
+                'auth_required' => true
+            ]);
             exit;
         }
     }
@@ -102,8 +129,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
         unlink($token_file);
         http_response_code(403);
         echo json_encode([
-            'error' => "Erro de Autenticação com o Mercado Livre ($http_code). O token pode ter sido revogado ou as chaves no config.php estão incorretas. Autorize novamente.",
-            'auth_required' => true
+            'error' => "Erro de Autenticação com o Mercado Livre ($http_code). O token expirou, foi revogado, ou suas chaves no config.php não batem. Autorize novamente.",
+            'auth_required' => true,
+            'details' => json_decode($response)
         ]);
         exit;
     }

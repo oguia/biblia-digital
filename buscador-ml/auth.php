@@ -8,7 +8,8 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     die("Acesso negado. Faça login no index.php primeiro.");
 }
 
-$token_file = 'ml_tokens.php';
+// Usar caminho absoluto para evitar problemas de permissão em hospedagens compartilhadas
+$token_file = __DIR__ . '/ml_tokens.php';
 
 // Passo 1: Redirecionar para o Mercado Livre para Autorizar
 if (!isset($_GET['code']) && !isset($_GET['action'])) {
@@ -50,7 +51,7 @@ if (isset($_GET['code'])) {
         'Accept: application/json'
     ]);
 
-    // Deixando o SSL verifier no padrão do sistema (ativo) para segurança.
+    // Deixando o SSL verifier no padrão do sistema (ativo) para segurança. Se o servidor do usuário falhar, ele deve atualizar o cacert local.
 
     $response = curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -67,11 +68,21 @@ if (isset($_GET['code'])) {
         ];
 
         $secure_content = "<?php die('Acesso negado'); ?>\n" . json_encode($tokens);
-        file_put_contents($token_file, $secure_content);
 
-        echo "<!DOCTYPE html><html><head><script src='https://cdn.tailwindcss.com'></script></head><body class='bg-gray-100 p-8 text-center'>";
-        echo "<div class='bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mx-auto max-w-lg mb-4' role='alert'>Sucesso! Mercado Livre Autorizado. O buscador agora funcionará sem bloqueios.</div>";
-        echo "<a href='index.php' class='text-blue-500 underline font-bold'>Voltar para o Buscador</a>";
+        // Tentar salvar o arquivo e checar erros
+        $result = file_put_contents($token_file, $secure_content);
+
+        if ($result === false) {
+             echo "<!DOCTYPE html><html><head><script src='https://cdn.tailwindcss.com'></script></head><body class='bg-gray-100 p-8 text-center'>";
+             echo "<div class='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mx-auto max-w-lg mb-4' role='alert'>Erro Crítico: Não foi possível salvar o arquivo <code>ml_tokens.php</code> no servidor. Verifique as permissões de gravação (pasta <code>buscador</code> na Hostinger deve permitir escrita pelo PHP). Caminho tentado: $token_file</div>";
+             echo "<a href='auth.php' class='bg-[#1A2B3C] text-white px-6 py-3 rounded font-bold inline-block hover:bg-[#2A445D]'>Tentar Novamente</a>";
+             echo "</body></html>";
+             exit;
+        }
+
+        echo "<!DOCTYPE html><html><head><script src='https://cdn.tailwindcss.com'></script></head><body class='bg-gray-100 p-8 text-center flex flex-col items-center justify-center min-h-screen'>";
+        echo "<div class='bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded shadow max-w-lg mb-6' role='alert'><strong>Sucesso!</strong> Mercado Livre Autorizado e token salvo no servidor.<br>O buscador agora funcionará perfeitamente!</div>";
+        echo "<a href='index.php' class='bg-[#1A2B3C] text-white px-6 py-3 rounded shadow font-bold inline-block hover:bg-[#2A445D] transition'>Voltar para o Buscador e Pesquisar</a>";
         echo "</body></html>";
     } else {
         echo "<h1>Erro ao gerar token</h1>";
