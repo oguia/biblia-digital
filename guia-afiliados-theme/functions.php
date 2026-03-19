@@ -39,14 +39,18 @@ function guia_afiliados_enqueue_styles() {
         $dependencies[] = 'hello-elementor-theme-style';
     }
 
+    $theme_version = wp_get_theme()->get('Version');
+    $css_file = get_stylesheet_directory() . '/style.css';
+    $version = file_exists($css_file) ? $theme_version . '.' . filemtime($css_file) : $theme_version;
+
     wp_enqueue_style(
         'guia-afiliados-child-style',
         get_stylesheet_directory_uri() . '/style.css',
         $dependencies,
-        wp_get_theme()->get('Version') . '.' . time() // Cache buster agressivo
+        $version
     );
 }
-// Prioridade 20 para garantir que rode depois do Elementor (padrão é 10)
+// Prioridade 99 para garantir que rode depois do Elementor (padrão é 10)
 add_action( 'wp_enqueue_scripts', 'guia_afiliados_enqueue_styles', 99 );
 
 /**

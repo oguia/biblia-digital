@@ -69,6 +69,12 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     exit;
 }
 
+// Generate CSRF Token
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['csrf_token'];
+
 // O código principal da aplicação virá aqui (Painel de Busca)
 ?>
 <!DOCTYPE html>
@@ -112,6 +118,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     </style>
 </head>
 <body class="bg-[#F8F9FA]">
+    <input type="hidden" id="csrf_token" value="<?php echo htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8'); ?>">
 
     <!-- Navbar -->
     <nav class="bg-primaria p-4 shadow-md sticky top-0 z-50">
@@ -132,19 +139,13 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         <!-- Search Header -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 text-center">
             <h2 class="text-2xl font-serif mb-2">O que vamos curar hoje?</h2>
-            <p class="text-gray-500 mb-6">Busque no Mercado Livre e importe direto para o Faro de Ouro com 1 clique.</p>
+            <p class="text-gray-500 mb-6">Busque no Mercado Livre e crie links de afiliado direto para o Faro de Ouro com 1 clique.</p>
 
             <form id="searchForm" class="flex flex-col md:flex-row gap-4 justify-center max-w-3xl mx-auto">
                 <input type="text" id="query" name="query" class="flex-grow shadow-sm appearance-none border border-gray-300 rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:border-destaque focus:ring-1 focus:ring-destaque" placeholder="Ex: iPhone 13, Fritadeira Mondial, Notebook Gamer..." required>
 
-                <select id="sort" name="sort" class="shadow-sm border border-gray-300 rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:border-destaque bg-white">
-                    <option value="relevance">Mais Relevantes</option>
-                    <option value="price_asc">Menor Preço</option>
-                    <option value="price_desc">Maior Preço</option>
-                </select>
-
                 <button type="submit" class="bg-destaque hover:bg-[#A88152] text-white font-bold py-3 px-8 rounded focus:outline-none focus:shadow-outline transition duration-300 flex items-center justify-center gap-2 whitespace-nowrap">
-                    <i class="fas fa-search"></i> Buscar no ML
+                    <i class="fas fa-search"></i> Pesquisar
                 </button>
             </form>
         </div>
@@ -152,7 +153,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         <!-- Feedback Area -->
         <div id="loading" class="hidden flex-col items-center justify-center py-12">
             <div class="loader mb-4"></div>
-            <p class="text-gray-500 font-semibold">Vasculhando o Mercado Livre...</p>
+            <p class="text-gray-500 font-semibold mt-2">Buscando na internet (isso pode levar alguns segundos)...</p>
         </div>
 
         <div id="alertArea" class="mb-6"></div>
@@ -170,6 +171,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         const resultsGrid = document.getElementById('resultsGrid');
         const loadingIndicator = document.getElementById('loading');
         const alertArea = document.getElementById('alertArea');
+        const csrfToken = document.getElementById('csrf_token').value;
 
         // Formatar Moeda (Real Brasileiro)
         const formatter = new Intl.NumberFormat('pt-BR', {
@@ -202,7 +204,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         searchForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const query = document.getElementById('query').value;
-            const sort = document.getElementById('sort').value;
 
             loadingIndicator.classList.remove('hidden');
             loadingIndicator.classList.add('flex');
@@ -210,26 +211,95 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             alertArea.innerHTML = '';
 
             try {
-                const response = await fetch(`api.php?action=search&q=${encodeURIComponent(query)}&sort=${sort}`);
+                // Ao invés de chamar um api.php bloqueado pela Hostinger IP, usamos o proxy CORS AllOrigins Client-Side
+                // com um navegador (Chrome/Safari) para raspar a versão mobile ou desktop do ML
+                const proxyUrl = 'https://api.allorigins.win/get?url=';
+                const mlUrl = encodeURIComponent(`https://lista.mercadolivre.com.br/${encodeURIComponent(query)}`);
 
-                if (!response.ok && response.status !== 403) {
-                    throw new Error(`Erro de rede ou servidor (${response.status})`);
+                const response = await fetch(proxyUrl + mlUrl);
+
+                if (!response.ok) {
+                    throw new Error(`Erro de proxy (${response.status})`);
                 }
 
                 const data = await response.json();
 
+                if(!data.contents) {
+                     throw new Error('Retorno vazio do Mercado Livre.');
+                }
+
+                // Parse HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(data.contents, 'text/html');
+
+                // Extração dos itens (UI Mobile/Desktop wrapper)
+                const items = doc.querySelectorAll('.ui-search-result__wrapper, .ui-search-layout__item');
+                let parsedResults = [];
+
+                for(let i=0; i<items.length; i++) {
+                     if(parsedResults.length >= 20) break;
+
+                     let item = items[i];
+
+                     // Título
+                     let titleEl = item.querySelector('.ui-search-item__title');
+                     if(!titleEl) titleEl = item.querySelector('a.ui-search-link h2');
+                     let title = titleEl ? titleEl.textContent.trim() : '';
+
+                     // Link
+                     let linkEl = item.querySelector('a.ui-search-link');
+                     let permalink = linkEl ? linkEl.href : '';
+                     if(permalink) {
+                         permalink = permalink.split('#')[0].split('?')[0]; // Clean query strings
+                     }
+
+                     // Preço
+                     let priceEl = item.querySelector('.andes-money-amount__fraction');
+                     let priceStr = priceEl ? priceEl.textContent : '0';
+                     let price = parseFloat(priceStr.replace(/\./g, '').replace(',', '.'));
+
+                     // Imagem (Lazy loading support)
+                     let imgEl = item.querySelector('img');
+                     let image = '';
+                     if(imgEl) {
+                         image = imgEl.getAttribute('data-src') || imgEl.getAttribute('src');
+                         if(image && !image.startsWith('data:image')) {
+                             image = image.replace('-I.jpg', '-O.jpg'); // Force High-Res
+                         }
+                     }
+
+                     // Frete
+                     let shippingEl = item.querySelector('.ui-pb-highlight');
+                     let free_shipping = shippingEl && shippingEl.textContent.includes('Frete grátis');
+
+                     // ID
+                     let match = permalink.match(/MLB-?(\d+)/);
+                     let id = match ? 'MLB' + match[1] : 'mlb_' + Math.floor(Math.random()*100000);
+
+                     if(title && price && permalink) {
+                          parsedResults.push({
+                              id: id,
+                              title: title,
+                              price: price,
+                              currency: 'BRL',
+                              permalink: permalink,
+                              image: image,
+                              is_catalog: false, // Cannot guarantee without deeper JSON inspection
+                              condition: 'new',
+                              sold_quantity: 0,
+                              free_shipping: free_shipping,
+                              is_proxy_search: false
+                          });
+                     }
+                }
+
                 loadingIndicator.classList.add('hidden');
                 loadingIndicator.classList.remove('flex');
 
-                if (data.error) {
-                    showAlert(data.error, 'red');
-                    return;
-                }
-
-                if (data.results && data.results.length > 0) {
-                    renderResults(data.results);
+                if (parsedResults.length > 0) {
+                    renderResults(parsedResults);
                 } else {
-                    showAlert('Nenhum produto encontrado com essa palavra-chave no Mercado Livre.', 'yellow');
+                    showAlert('Nenhum produto encontrado com essa palavra-chave (ou o Mercado Livre bloqueou a extração). Tente novamente mais tarde.', 'yellow');
                 }
 
             } catch (error) {
@@ -246,9 +316,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 const safePermalink = sanitizeHTML(product.permalink);
                 const safeImage = sanitizeHTML(product.image);
 
-                // Selo Catálogo (Proxy de boa avaliação)
-                let catalogBadge = product.is_catalog ? `<span class="absolute top-2 left-2 bg-destaque text-white text-xs font-bold px-2 py-1 rounded shadow"><i class="fas fa-star text-white"></i> Mais Vendido</span>` : '';
-
                 // Selo Frete Grátis
                 let shippingBadge = product.free_shipping ? `<span class="text-green-600 font-bold text-xs"><i class="fas fa-truck-fast"></i> Frete Grátis</span>` : '';
 
@@ -258,12 +325,11 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 // Botão de Importação (Opção B)
                 const encodedProduct = encodeURIComponent(JSON.stringify(product));
                 const importBtnHtml = `<button onclick="importToWooCommerce('${product.id}')" class="bg-primaria hover:bg-[#2A445D] text-white text-sm font-bold py-2 px-3 rounded w-full flex items-center justify-center gap-1 transition duration-200 mt-2 import-btn-${product.id}" data-product="${encodedProduct}">
-                    <i class="fas fa-download"></i> Importar para Site
+                    <i class="fas fa-download"></i> Criar Rascunho no Site
                 </button>`;
 
                 return `
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow relative">
-                    ${catalogBadge}
                     <a href="${safePermalink}" target="_blank" rel="noopener noreferrer" class="h-48 bg-white flex items-center justify-center p-4 border-b border-gray-100">
                         <img src="${safeImage}" alt="Imagem do produto" class="max-h-full max-w-full object-contain mix-blend-multiply" onerror="this.src='https://via.placeholder.com/150?text=Imagem+Indispon%C3%ADvel'">
                     </a>
@@ -273,11 +339,11 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                             ${safeTitle}
                         </h3>
                         <div class="mt-auto">
-                            <p class="text-2xl font-bold font-serif text-primaria mb-4">${formatter.format(product.price)}</p>
+                            <p class="text-xl font-bold font-serif text-primaria mb-4">${formatter.format(product.price)}</p>
 
                             <div class="flex flex-col gap-2">
                                 <a href="${safePermalink}" target="_blank" rel="noopener noreferrer" class="text-primaria border border-primaria hover:bg-primaria hover:text-white text-xs font-bold py-2 px-3 rounded text-center transition duration-200">
-                                    Ver no ML <i class="fas fa-external-link-alt ml-1"></i>
+                                    Abrir Anúncio ML <i class="fas fa-external-link-alt ml-1"></i>
                                 </a>
                                 ${copyBtnHtml}
                                 ${importBtnHtml}
@@ -303,6 +369,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             try {
                 const formData = new FormData();
                 formData.append('product', JSON.stringify(productData));
+                formData.append('csrf_token', csrfToken); // Envia o token de segurança para validar no backend
 
                 const response = await fetch('import.php', {
                     method: 'POST',

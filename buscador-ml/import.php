@@ -18,6 +18,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['product'])) {
     exit;
 }
 
+// Validação de CSRF Token (Segurança contra requisições forjadas)
+if (empty($_POST['csrf_token']) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Falha na validação de segurança (CSRF token inválido). Atualize a página e tente novamente.']);
+    exit;
+}
+
 $product_data = json_decode($_POST['product'], true);
 
 if (!$product_data || empty($product_data['title'])) {
@@ -50,11 +57,6 @@ $wc_payload = [
     ]
 ];
 
-// Opcional: Adicionar "Destaque" se for catálogo ML
-if (isset($product_data['is_catalog']) && $product_data['is_catalog']) {
-    $wc_payload['featured'] = true;
-}
-
 // Endpoint da API do WooCommerce
 $wc_endpoint = rtrim(WC_URL, '/') . '/wp-json/wc/v3/products';
 
@@ -73,6 +75,8 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'Content-Type: application/json',
     'Accept: application/json'
 ]);
+
+// Removido CURLOPT_SSL_VERIFYPEER, false para garantir comunicação segura com o WooCommerce
 
 // Executa
 $response = curl_exec($ch);
