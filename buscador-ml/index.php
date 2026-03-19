@@ -144,6 +144,12 @@ $csrf_token = $_SESSION['csrf_token'];
             <form id="searchForm" class="flex flex-col md:flex-row gap-4 justify-center max-w-3xl mx-auto">
                 <input type="text" id="query" name="query" class="flex-grow shadow-sm appearance-none border border-gray-300 rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:border-destaque focus:ring-1 focus:ring-destaque" placeholder="Ex: iPhone 13, Fritadeira Mondial, Notebook Gamer..." required>
 
+                <select id="sort" name="sort" class="shadow-sm border border-gray-300 rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:border-destaque bg-white">
+                    <option value="relevance">Mais Relevantes</option>
+                    <option value="price_asc">Menor Preço</option>
+                    <option value="price_desc">Maior Preço</option>
+                </select>
+
                 <button type="submit" class="bg-destaque hover:bg-[#A88152] text-white font-bold py-3 px-8 rounded focus:outline-none focus:shadow-outline transition duration-300 flex items-center justify-center gap-2 whitespace-nowrap">
                     <i class="fas fa-search"></i> Pesquisar
                 </button>
@@ -153,7 +159,7 @@ $csrf_token = $_SESSION['csrf_token'];
         <!-- Feedback Area -->
         <div id="loading" class="hidden flex-col items-center justify-center py-12">
             <div class="loader mb-4"></div>
-            <p class="text-gray-500 font-semibold mt-2">Buscando na internet (isso pode levar alguns segundos)...</p>
+            <p class="text-gray-500 font-semibold mt-2 text-center">O robô está burlando as defesas do Mercado Livre.<br>Isso pode levar de 10 a 30 segundos...</p>
         </div>
 
         <div id="alertArea" class="mb-6"></div>
@@ -187,10 +193,9 @@ $csrf_token = $_SESSION['csrf_token'];
                 'yellow': 'bg-yellow-100 border-yellow-400 text-yellow-700'
             };
             const theme = colors[type] || colors['blue'];
-            // Permite renderizar a div preta de debug sem problemas de escape HTML excessivo
             alertArea.innerHTML = `<div class="${theme} border-l-4 p-4 mb-4 rounded" role="alert"><div>${message}</div></div>`;
             if(type !== 'red') {
-                 setTimeout(() => { alertArea.innerHTML = ''; }, 5000);
+                 setTimeout(() => { alertArea.innerHTML = ''; }, 8000);
             }
         }
 
@@ -204,6 +209,7 @@ $csrf_token = $_SESSION['csrf_token'];
         searchForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const query = document.getElementById('query').value;
+            const sort = document.getElementById('sort').value;
 
             loadingIndicator.classList.remove('hidden');
             loadingIndicator.classList.add('flex');
@@ -211,102 +217,35 @@ $csrf_token = $_SESSION['csrf_token'];
             alertArea.innerHTML = '';
 
             try {
-                // Ao invés de chamar um api.php bloqueado pela Hostinger IP, usamos o proxy CORS AllOrigins Client-Side
-                // com um navegador (Chrome/Safari) para raspar a versão mobile ou desktop do ML
-                const proxyUrl = 'https://api.allorigins.win/get?url=';
-                const mlUrl = encodeURIComponent(`https://lista.mercadolivre.com.br/${encodeURIComponent(query)}`);
+                // Ao invés de lutar com proxies do navegador (que AdBlockers bloqueiam),
+                // delegamos para o nosso backend que usa a API profissional do ScraperAPI.
+                const response = await fetch(`api.php?action=search&q=${encodeURIComponent(query)}&sort=${encodeURIComponent(sort)}`);
 
-                const response = await fetch(proxyUrl + mlUrl);
-
-                if (!response.ok) {
-                    throw new Error(`Erro de proxy (${response.status})`);
+                if (!response.ok && response.status !== 403 && response.status !== 500) {
+                    throw new Error(`Erro de rede ou servidor (${response.status})`);
                 }
 
                 const data = await response.json();
 
-                if(!data.contents) {
-                     throw new Error('Retorno vazio do Mercado Livre.');
-                }
-
-                // Parse HTML
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(data.contents, 'text/html');
-
-                // Extração dos itens (UI Mobile/Desktop wrapper)
-                const items = doc.querySelectorAll('.ui-search-result__wrapper, .ui-search-layout__item');
-                let parsedResults = [];
-
-                for(let i=0; i<items.length; i++) {
-                     if(parsedResults.length >= 20) break;
-
-                     let item = items[i];
-
-                     // Título
-                     let titleEl = item.querySelector('.ui-search-item__title');
-                     if(!titleEl) titleEl = item.querySelector('a.ui-search-link h2');
-                     let title = titleEl ? titleEl.textContent.trim() : '';
-
-                     // Link
-                     let linkEl = item.querySelector('a.ui-search-link');
-                     let permalink = linkEl ? linkEl.href : '';
-                     if(permalink) {
-                         permalink = permalink.split('#')[0].split('?')[0]; // Clean query strings
-                     }
-
-                     // Preço
-                     let priceEl = item.querySelector('.andes-money-amount__fraction');
-                     let priceStr = priceEl ? priceEl.textContent : '0';
-                     let price = parseFloat(priceStr.replace(/\./g, '').replace(',', '.'));
-
-                     // Imagem (Lazy loading support)
-                     let imgEl = item.querySelector('img');
-                     let image = '';
-                     if(imgEl) {
-                         image = imgEl.getAttribute('data-src') || imgEl.getAttribute('src');
-                         if(image && !image.startsWith('data:image')) {
-                             image = image.replace('-I.jpg', '-O.jpg'); // Force High-Res
-                         }
-                     }
-
-                     // Frete
-                     let shippingEl = item.querySelector('.ui-pb-highlight');
-                     let free_shipping = shippingEl && shippingEl.textContent.includes('Frete grátis');
-
-                     // ID
-                     let match = permalink.match(/MLB-?(\d+)/);
-                     let id = match ? 'MLB' + match[1] : 'mlb_' + Math.floor(Math.random()*100000);
-
-                     if(title && price && permalink) {
-                          parsedResults.push({
-                              id: id,
-                              title: title,
-                              price: price,
-                              currency: 'BRL',
-                              permalink: permalink,
-                              image: image,
-                              is_catalog: false, // Cannot guarantee without deeper JSON inspection
-                              condition: 'new',
-                              sold_quantity: 0,
-                              free_shipping: free_shipping,
-                              is_proxy_search: false
-                          });
-                     }
-                }
-
                 loadingIndicator.classList.add('hidden');
                 loadingIndicator.classList.remove('flex');
 
-                if (parsedResults.length > 0) {
-                    renderResults(parsedResults);
+                if (data.error) {
+                    showAlert(data.error, 'red');
+                    return;
+                }
+
+                if (data.results && data.results.length > 0) {
+                    renderResults(data.results);
                 } else {
-                    showAlert('Nenhum produto encontrado com essa palavra-chave (ou o Mercado Livre bloqueou a extração). Tente novamente mais tarde.', 'yellow');
+                    showAlert('Nenhum produto encontrado com essa palavra-chave no Mercado Livre.', 'yellow');
                 }
 
             } catch (error) {
                 loadingIndicator.classList.add('hidden');
                 loadingIndicator.classList.remove('flex');
                 console.error("Erro Fetch:", error);
-                showAlert(`Ocorreu um erro ao buscar os dados: ${error.message}`, 'red');
+                showAlert(`<strong>Aviso:</strong> ${error.message}`, 'red');
             }
         });
 
