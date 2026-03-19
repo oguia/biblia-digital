@@ -199,11 +199,11 @@ $csrf_token = $_SESSION['csrf_token'];
             }
         }
 
-        // Função simples para sanitizar HTML e evitar XSS
+        // Função para sanitizar HTML e evitar XSS e quebra de atributos (ex: TV 50" polegadas)
         function sanitizeHTML(str) {
             var temp = document.createElement('div');
             temp.textContent = str;
-            return temp.innerHTML;
+            return temp.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
         searchForm.addEventListener('submit', async function(e) {

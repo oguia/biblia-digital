@@ -38,15 +38,16 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
 
     $ml_url = "https://lista.mercadolivre.com.br/{$query}{$sortSuffix}";
 
-    // ScraperAPI Render: Renderiza o Javascript (React) antes de retornar o HTML
-    $api_url = "http://api.scraperapi.com?api_key=" . SCRAPER_API_KEY . "&render=true&url=" . urlencode($ml_url);
+    // ScraperAPI: Usando IPs do Brasil para evitar bloqueios geográficos ou captchas infinitos.
+    // Removido &render=true pois Mercado Livre usa Server-Side Rendering (SSR) que entrega o HTML das listas de produtos sem precisar de execução de JS no navegador headless do proxy,
+    // o que também previne os erros de Timeout (HTTP 500) comuns no ScraperAPI ao renderizar sites muito pesados.
+    $api_url = "http://api.scraperapi.com?api_key=" . SCRAPER_API_KEY . "&country_code=br&url=" . urlencode($ml_url);
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $api_url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    // Timeout longo porque o ScraperAPI tenta várias vezes em IPs diferentes + Render JS
-    curl_setopt($ch, CURLOPT_TIMEOUT, 90);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 60);
 
     $html = curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -67,8 +68,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             echo json_encode(['error' => "Chave do ScraperAPI inválida ou cota mensal esgotada."]);
             exit;
         }
+
+        $debug_api = substr(strip_tags($html), 0, 300);
         http_response_code(500);
-        echo json_encode(['error' => "O ScraperAPI não conseguiu acessar o Mercado Livre (HTTP {$http_code})."]);
+        echo json_encode(['error' => "O ScraperAPI não conseguiu acessar o Mercado Livre (HTTP {$http_code}). Detalhe: {$debug_api}"]);
         exit;
     }
 
