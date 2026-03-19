@@ -57,6 +57,11 @@ $wc_payload = [
     ]
 ];
 
+// Opcional: Adicionar "Destaque" se for catálogo ML
+if (isset($product_data['is_catalog']) && $product_data['is_catalog']) {
+    $wc_payload['featured'] = true;
+}
+
 // Endpoint da API do WooCommerce
 $wc_endpoint = rtrim(WC_URL, '/') . '/wp-json/wc/v3/products';
 
@@ -76,7 +81,11 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'Accept: application/json'
 ]);
 
-// Removido CURLOPT_SSL_VERIFYPEER, false para garantir comunicação segura com o WooCommerce
+// Como o script está rodando no mesmo servidor que o WooCommerce (Hostinger),
+// a chamada cURL em loopback (HTTPS para si mesmo) falha com "tlsv1 alert internal error"
+// devido à configuração de SNI/proxy local. Desativamos a verificação de SSL apenas para este loopback.
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
 // Executa
 $response = curl_exec($ch);
