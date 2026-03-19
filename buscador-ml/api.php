@@ -3,7 +3,7 @@
 session_start();
 require_once 'config.php';
 
-// Verifica se o usuário está logado e o token CSRF confere para buscas (opcional, mas bom)
+// Verifica se o usuário está logado
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     http_response_code(401);
     echo json_encode(['error' => 'Não autorizado.']);
@@ -62,51 +62,44 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
     curl_close($ch);
 
     if ($http_code !== 200 || empty($html)) {
-        // Se a chave for inválida (401/403 do ScraperAPI)
         if ($http_code === 401 || $http_code === 403) {
             http_response_code($http_code);
             echo json_encode(['error' => "Chave do ScraperAPI inválida ou cota mensal esgotada."]);
             exit;
         }
-
         http_response_code(500);
         echo json_encode(['error' => "O ScraperAPI não conseguiu acessar o Mercado Livre (HTTP {$http_code})."]);
         exit;
     }
 
-    // Suprimir warnings do HTML mal formatado
     libxml_use_internal_errors(true);
-
     $dom = new DOMDocument();
     @$dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
     $xpath = new DOMXPath($dom);
 
     $results = [];
 
-    // O Mercado Livre usa a classe 'ui-search-result__wrapper' para cada card de produto
-    // 'ui-search-layout__item' ou 'andes-card' também aparecem dependendo de A/B tests do React deles
-    $items = $xpath->query("//div[contains(@class, 'ui-search-result__wrapper')] | //li[contains(@class, 'ui-search-layout__item')] | //div[contains(@class, 'andes-card')]");
+    // Método resiliente: Buscamos qualquer card que o Mercado Livre costuma usar.
+    // .poly-card é a estrutura mais recente (A/B Test) que tem causado "Nenhum produto encontrado"
+    $items = $xpath->query("//ol[contains(@class, 'ui-search-layout')]//li | //div[contains(@class, 'ui-search-result__wrapper')] | //div[contains(@class, 'andes-card')] | //div[contains(@class, 'poly-card')]");
 
     foreach ($items as $item) {
         if (count($results) >= 20) break; // Limitar a 20 resultados
 
         // 1. Título
-        $titleNode = $xpath->query(".//*[contains(@class, 'ui-search-item__title')]", $item);
+        // Nova estrutura usa poly-component__title-wrapper ou poly-component__title
+        $titleNode = $xpath->query(".//*[contains(@class, 'ui-search-item__title') or contains(@class, 'poly-component__title') or self::h2]", $item);
         $title = $titleNode->length > 0 ? trim($titleNode->item(0)->textContent) : '';
         if (empty($title)) {
             $titleNode = $xpath->query(".//a[contains(@class, 'ui-search-item__group__element')]", $item);
             $title = $titleNode->length > 0 ? trim($titleNode->item(0)->textContent) : '';
         }
-        if (empty($title)) {
-             $titleNode = $xpath->query(".//h2", $item);
-             $title = $titleNode->length > 0 ? trim($titleNode->item(0)->textContent) : '';
-        }
 
         // 2. Link
-        $linkNode = $xpath->query(".//a[contains(@class, 'ui-search-link')]", $item);
+        $linkNode = $xpath->query(".//a[contains(@class, 'ui-search-link') or contains(@class, 'poly-component__title')]", $item);
         $permalink = $linkNode->length > 0 ? $linkNode->item(0)->getAttribute('href') : '';
         if (empty($permalink)) {
-             $linkNode = $xpath->query(".//a", $item);
+             $linkNode = $xpath->query(".//a[contains(@href, 'mercadolivre.com.br/')]", $item);
              $permalink = $linkNode->length > 0 ? $linkNode->item(0)->getAttribute('href') : '';
         }
 
@@ -126,11 +119,14 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             $src = $img->getAttribute('data-src') ?: $img->getAttribute('src');
             $class = $img->getAttribute('class');
 
-            // Pega a primeira imagem de produto real (frequentemente .ui-search-result-image__element)
-            if (!empty($src) && strpos($src, 'data:image') === false && strpos($class, 'logo') === false) {
-                // Tentar pegar a versão O (Original) em vez de I (Thumbnail) se for da mlstatic
-                $image = str_replace('-I.jpg', '-O.jpg', $src);
+            // Pega a primeira imagem de produto real (ignora logo do ML ou selos)
+            if (!empty($src) && strpos($src, 'data:image') === false && strpos($class, 'logo') === false && strpos($src, 'mercadolibre') === false) {
+                // Tentar pegar a versão O (Original) em vez de I (Thumbnail) ou V
+                $image = preg_replace('/-[IV]\.jpg$/', '-O.jpg', $src);
                 break;
+            }
+            if (empty($image) && !empty($src) && strpos($src, 'data:image') === false) {
+                $image = $src; // Fallback
             }
         }
 
