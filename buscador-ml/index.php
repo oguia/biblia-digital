@@ -185,8 +185,11 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 'yellow': 'bg-yellow-100 border-yellow-400 text-yellow-700'
             };
             const theme = colors[type] || colors['blue'];
-            alertArea.innerHTML = `<div class="${theme} border-l-4 p-4 mb-4 rounded" role="alert"><p>${message}</p></div>`;
-            setTimeout(() => { alertArea.innerHTML = ''; }, 5000);
+            // Permite renderizar a div preta de debug sem problemas de escape HTML excessivo
+            alertArea.innerHTML = `<div class="${theme} border-l-4 p-4 mb-4 rounded" role="alert"><div>${message}</div></div>`;
+            if(type !== 'red') {
+                 setTimeout(() => { alertArea.innerHTML = ''; }, 5000);
+            }
         }
 
         // Função simples para sanitizar HTML e evitar XSS
@@ -219,12 +222,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 loadingIndicator.classList.remove('flex');
 
                 if (data.error) {
-                    if (data.auth_required) {
-                        const authLink = `<a href="auth.php" class="bg-[#1A2B3C] hover:bg-[#2A445D] text-white px-4 py-2 rounded font-bold ml-2 inline-block shadow">Autorizar Mercado Livre Agora</a>`;
-                        showAlert(`${data.error} <br><br> ${authLink}`, 'yellow');
-                    } else {
-                        showAlert(data.error, 'red');
-                    }
+                    showAlert(data.error, 'red');
                     return;
                 }
 
