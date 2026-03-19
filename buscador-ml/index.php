@@ -159,7 +159,7 @@ $csrf_token = $_SESSION['csrf_token'];
         <!-- Feedback Area -->
         <div id="loading" class="hidden flex-col items-center justify-center py-12">
             <div class="loader mb-4"></div>
-            <p class="text-gray-500 font-semibold mt-2 text-center">O robô está burlando as defesas do Mercado Livre.<br>Isso pode levar de 10 a 30 segundos...</p>
+            <p class="text-gray-500 font-semibold mt-2 text-center">O robô está processando a busca pelo ScraperAPI.<br>Isso pode levar de 5 a 20 segundos...</p>
         </div>
 
         <div id="alertArea" class="mb-6"></div>
@@ -194,7 +194,7 @@ $csrf_token = $_SESSION['csrf_token'];
             };
             const theme = colors[type] || colors['blue'];
             alertArea.innerHTML = `<div class="${theme} border-l-4 p-4 mb-4 rounded" role="alert"><div>${message}</div></div>`;
-            if(type !== 'red') {
+            if(type !== 'red' && type !== 'yellow') {
                  setTimeout(() => { alertArea.innerHTML = ''; }, 8000);
             }
         }
@@ -217,8 +217,7 @@ $csrf_token = $_SESSION['csrf_token'];
             alertArea.innerHTML = '';
 
             try {
-                // Ao invés de lutar com proxies do navegador (que AdBlockers bloqueiam),
-                // delegamos para o nosso backend que usa a API profissional do ScraperAPI.
+                // Delegamos para o nosso backend que usa a API profissional do ScraperAPI.
                 const response = await fetch(`api.php?action=search&q=${encodeURIComponent(query)}&sort=${encodeURIComponent(sort)}`);
 
                 if (!response.ok && response.status !== 403 && response.status !== 500) {
@@ -238,7 +237,8 @@ $csrf_token = $_SESSION['csrf_token'];
                 if (data.results && data.results.length > 0) {
                     renderResults(data.results);
                 } else {
-                    showAlert('Nenhum produto encontrado com essa palavra-chave no Mercado Livre.', 'yellow');
+                    let debugInfo = data.debug ? `<br><br><div class="bg-yellow-200 p-2 text-sm text-yellow-900 mt-2 rounded"><b>Debug Técnico:</b> ${data.debug}</div>` : '';
+                    showAlert(`Nenhum produto encontrado com essa palavra-chave no Mercado Livre. O layout do site pode estar bloqueando a visualização. ${debugInfo}`, 'yellow');
                 }
 
             } catch (error) {
