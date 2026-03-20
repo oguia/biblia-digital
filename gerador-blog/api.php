@@ -151,11 +151,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]
         ];
 
-        $ch = curl_init("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . GEMINI_API_KEY);
+        // Sanitize the API key just in case there are trailing spaces or newlines in the config.php
+        $gemini_key = trim(GEMINI_API_KEY);
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . $gemini_key;
+
+        $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+
+        // Hostinger curl loopback/SSL issues workaround
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -163,7 +171,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($http_code !== 200) {
             http_response_code(500);
-            echo json_encode(['error' => "O Google Gemini falhou (HTTP {$http_code}). Verifique se a sua chave da API é válida.", 'details' => json_decode($response)]);
+
+            // Extract more specific error message from Google if available
+            $err_details = json_decode($response, true);
+            $msg = $err_details['error']['message'] ?? "Verifique se a sua chave da API é válida.";
+
+            echo json_encode([
+                'error' => "O Google Gemini falhou (HTTP {$http_code}). Detalhe: {$msg}",
+                'debug_url_start' => substr($url, 0, 80) . '...' // Help diagnose if URL is mangled without leaking full key
+            ]);
             exit;
         }
 
