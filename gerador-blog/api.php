@@ -153,7 +153,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Sanitize the API key just in case there are trailing spaces or newlines in the config.php
         $gemini_key = trim(GEMINI_API_KEY);
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . $gemini_key;
+        // Switch to the stable v1 endpoint and gemini-1.5-flash-latest to maximize compatibility
+        // across different Google Cloud API Key tiers/regions that might block v1beta or specific tags.
+        $url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=" . $gemini_key;
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
