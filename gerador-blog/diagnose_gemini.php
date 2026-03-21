@@ -61,20 +61,23 @@ foreach ($data['models'] as $model) {
         $model_name = htmlspecialchars($model['name']);
 
         // Let's highlight the best ones
-        if (strpos($model_name, 'gemini-1.5-pro') !== false) {
+        if (preg_match('/gemini-2\.[0-5]-pro/', $model_name) || strpos($model_name, 'gemini-1.5-pro') !== false) {
             echo "<li><strong style='color:blue;'>{$model_name} (Recomendado/Excelente)</strong></li>";
             if(empty($recommended_model)) $recommended_model = $model_name;
             $found_compatible = true;
-        } elseif (strpos($model_name, 'gemini-1.5-flash') !== false) {
+        } elseif (preg_match('/gemini-2\.[0-5]-flash/', $model_name) || strpos($model_name, 'gemini-1.5-flash') !== false || strpos($model_name, 'gemini-flash-latest') !== false) {
             echo "<li><strong style='color:blue;'>{$model_name} (Recomendado/Rápido)</strong></li>";
             if(empty($recommended_model)) $recommended_model = $model_name;
             $found_compatible = true;
-        } elseif (strpos($model_name, 'gemini-1.0-pro') !== false) {
+        } elseif (strpos($model_name, 'gemini-1.0-pro') !== false || strpos($model_name, 'gemini-pro-latest') !== false) {
             echo "<li><strong>{$model_name} (Funciona bem)</strong></li>";
             if(empty($recommended_model)) $recommended_model = $model_name;
             $found_compatible = true;
         } else {
             echo "<li>{$model_name}</li>";
+            // Even if it's an unrecognized cutting edge model, we know it supports generateContent, so it's technically compatible
+            $found_compatible = true;
+            if(empty($recommended_model)) $recommended_model = $model_name;
         }
     }
 }

@@ -153,9 +153,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Sanitize the API key just in case there are trailing spaces or newlines in the config.php
         $gemini_key = trim(GEMINI_API_KEY);
-        // Fallback to the most widely supported model across all regions/tiers (gemini-1.5-pro on v1beta).
-        // The user's specific API key project does not have access to the gemini-1.5-flash alias.
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=" . $gemini_key;
+        // User's specific Google AI Studio project is on the cutting-edge track and has deprecated 1.5.
+        // It uses gemini-2.5-flash natively on v1beta.
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . $gemini_key;
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
