@@ -1,0 +1,8 @@
+# Bloquear acesso a arquivos de configuração e logs
+<FilesMatch "^(config\.php|ml_tokens\.json|ml_tokens\.php)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Opcional: Impedir listagem do diretório
+Options -Indexes
