@@ -8,6 +8,7 @@ import Projects from './pages/Projects';
 import History from './pages/History';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Profile from './pages/Profile';
 
 // Components
 import Layout from './components/Layout';
@@ -59,6 +60,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="projects" element={<Projects />} />
           <Route path="history" element={<History />} />
+          <Route path="profile" element={<Profile user={user} setUser={setUser} />} />
         </Route>
       </Routes>
     </Router>

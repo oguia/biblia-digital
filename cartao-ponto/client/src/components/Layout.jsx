@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Home, Briefcase, Clock, LogOut, Menu, X } from 'lucide-react';
+import { Home, Briefcase, Clock, LogOut, Menu, X, Settings } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Layout({ user, setUser }) {
@@ -23,6 +23,7 @@ export default function Layout({ user, setUser }) {
     { to: '/', icon: Home, label: 'Dashboard' },
     { to: '/projects', icon: Briefcase, label: 'Projetos / Serviços' },
     { to: '/history', icon: Clock, label: 'Histórico' },
+    { to: '/profile', icon: Settings, label: 'Meu Perfil' },
   ];
 
   return (
