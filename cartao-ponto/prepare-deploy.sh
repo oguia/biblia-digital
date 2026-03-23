@@ -10,7 +10,7 @@ mkdir deploy_tmp
 
 cp -r api deploy_tmp/
 cp -r client/dist/* deploy_tmp/
-cp client/dist/.htaccess deploy_tmp/ 2>/dev/null || true
+cp client/public/.htaccess deploy_tmp/.htaccess 2>/dev/null || true
 
 cd deploy_tmp
 zip -r ../cartao-ponto.zip .
