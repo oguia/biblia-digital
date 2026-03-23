@@ -17,9 +17,9 @@ if ($method === 'POST') {
 
     $plan_key = $data['plan'];
     $plans = [
-        'monthly' => ['title' => 'Plano Mensal - Cartão Ponto', 'price' => 29.90],
-        'quarterly' => ['title' => 'Plano Trimestral - Cartão Ponto', 'price' => 79.90],
-        'annual' => ['title' => 'Plano Anual - Cartão Ponto', 'price' => 249.90],
+        'monthly' => ['title' => 'Plano Mensal - Cartão Ponto', 'price' => 19.90],
+        'quarterly' => ['title' => 'Plano Trimestral - Cartão Ponto', 'price' => 49.90],
+        'annual' => ['title' => 'Plano Anual - Cartão Ponto', 'price' => 179.00],
     ];
 
     if (!isset($plans[$plan_key])) {
