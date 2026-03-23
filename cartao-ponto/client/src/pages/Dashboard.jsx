@@ -39,21 +39,31 @@ export default function Dashboard() {
   useEffect(() => {
     let interval;
     if (activeTimer) {
-      const start = new Date(activeTimer.start_time);
+      // Usar a mesma timezone (UTC ou local) para start e now é crítico.
+      // O banco envia no formato "YYYY-MM-DD HH:mm:ss" na timezone America/Sao_Paulo (agora)
+      // Se apenas passarmos pra new Date(), dependendo do browser, ele pode adicionar horas.
+      // Substituir ' ' por 'T' faz o parseISO assumir horário local.
+      const startStr = activeTimer.start_time.replace(' ', 'T');
+      const start = new Date(startStr);
+
       const pauseSeconds = parseInt(activeTimer.total_pause_seconds || 0, 10);
 
-      interval = setInterval(() => {
+      // Imediatamente calcular o tempo inicial para não esperar 1 seg pelo primeiro render
+      const calcTime = () => {
         if (activeTimer.status === 'running') {
           const now = new Date();
           const diff = differenceInSeconds(now, start) - pauseSeconds;
           setElapsedTime(diff > 0 ? diff : 0);
         } else if (activeTimer.status === 'paused') {
-          const pauseStart = new Date(activeTimer.pause_start);
-          const currentPauseDuration = differenceInSeconds(new Date(), pauseStart);
+          const pauseStartStr = activeTimer.pause_start.replace(' ', 'T');
+          const pauseStart = new Date(pauseStartStr);
           const diff = differenceInSeconds(pauseStart, start) - pauseSeconds;
           setElapsedTime(diff > 0 ? diff : 0);
         }
-      }, 1000);
+      };
+
+      calcTime();
+      interval = setInterval(calcTime, 1000);
     } else {
       setElapsedTime(0);
     }

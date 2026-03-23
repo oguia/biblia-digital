@@ -1,6 +1,9 @@
 <?php
 // api/db.php
 
+// Define fuso horário para o Brasil
+date_default_timezone_set('America/Sao_Paulo');
+
 $db_file = __DIR__ . '/cartao_ponto.sqlite';
 
 try {
