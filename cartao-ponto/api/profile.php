@@ -29,11 +29,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     }
 
     try {
-        $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ?, type = ? WHERE id = ?");
-        $stmt->execute([$input['name'], $input['email'], $input['type'], $user['id']]);
+        if (!empty($input['password'])) {
+            $hash = password_hash($input['password'], PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ?, type = ?, password = ? WHERE id = ?");
+            $stmt->execute([$input['name'], $input['email'], $input['type'], $hash, $user['id']]);
+        } else {
+            $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ?, type = ? WHERE id = ?");
+            $stmt->execute([$input['name'], $input['email'], $input['type'], $user['id']]);
+        }
 
         // Return updated user
-        $stmt = $pdo->prepare("SELECT id, name, email, type FROM users WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT id, name, email, type, is_admin, plan_expires_at FROM users WHERE id = ?");
         $stmt->execute([$user['id']]);
         $updatedUser = $stmt->fetch();
 

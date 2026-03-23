@@ -21,11 +21,7 @@ try {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
 
-        -- Adicionando colunas se a tabela já existir (migração simples)
-        BEGIN TRANSACTION;
-        ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0;
-        ALTER TABLE users ADD COLUMN plan_expires_at DATETIME;
-        COMMIT;
+        -- A migração de colunas é feita separadamente em blocos try/catch
 
         CREATE TABLE IF NOT EXISTS projects (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -73,12 +69,19 @@ try {
             FOREIGN KEY(used_by) REFERENCES users(id) ON DELETE SET NULL
         );
     ");
+
+    // Migrations
+    try {
+        $pdo->exec("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0;");
+    } catch (Exception $e) {}
+
+    try {
+        $pdo->exec("ALTER TABLE users ADD COLUMN plan_expires_at DATETIME;");
+    } catch (Exception $e) {}
+
 } catch (PDOException $e) {
-    // Ignora erro de coluna duplicada caso a migração do ALTER TABLE falhe por já existir
-    if (strpos($e->getMessage(), 'duplicate column name') === false) {
-        echo json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]);
-        exit;
-    }
+    echo json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]);
+    exit;
 } catch (Exception $e) {
     echo json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]);
     exit;

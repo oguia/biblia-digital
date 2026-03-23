@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Save, UserCircle } from 'lucide-react';
 
 export default function Profile({ user, setUser }) {
-  const [formData, setFormData] = useState({ name: '', email: '', type: 'pf' });
+  const [formData, setFormData] = useState({ name: '', email: '', type: 'pf', password: '' });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -12,7 +12,8 @@ export default function Profile({ user, setUser }) {
       setFormData({
         name: user.name || '',
         email: user.email || '',
-        type: user.type || 'pf'
+        type: user.type || 'pf',
+        password: '' // Keep empty for security
       });
     }
   }, [user]);
@@ -111,6 +112,22 @@ export default function Profile({ user, setUser }) {
               required
             />
             <p className="text-xs text-gray-500 mt-2">Este e-mail é usado para fazer login no sistema.</p>
+          </div>
+
+          <div className="pt-4 border-t border-gray-100">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Segurança</h3>
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Nova Senha</label>
+              <input
+                type="password"
+                name="password"
+                placeholder="Deixe em branco para não alterar"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                value={formData.password}
+                onChange={handleChange}
+              />
+              <p className="text-xs text-gray-500 mt-2">Se você não quiser mudar a senha atual, basta deixar este campo vazio.</p>
+            </div>
           </div>
 
           <div className="pt-4 border-t border-gray-100 flex justify-end">
