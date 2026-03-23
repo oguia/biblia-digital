@@ -68,6 +68,11 @@ try {
             FOREIGN KEY(created_by) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY(used_by) REFERENCES users(id) ON DELETE SET NULL
         );
+
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        );
     ");
 
     // Migrations

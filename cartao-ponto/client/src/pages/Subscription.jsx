@@ -43,9 +43,21 @@ export default function Subscription({ user, setUser }) {
     }
   };
 
-  const handleCheckout = (plan) => {
-    // This is a placeholder for actual payment gateway integration (Mercado Pago / Stripe)
-    alert(`Integração de pagamento para o plano ${plan} será implementada em breve.`);
+  const [processingPayment, setProcessingPayment] = useState(false);
+
+  const handleCheckout = async (planKey) => {
+    setProcessingPayment(true);
+    setMessage({ type: '', text: '' });
+    try {
+      const res = await axios.post('/checkout.php', { plan: planKey });
+      if (res.data.init_point) {
+        window.location.href = res.data.init_point;
+      }
+    } catch (err) {
+      alert(err.response?.data?.error || 'Erro ao gerar link de pagamento do Mercado Pago.');
+    } finally {
+      setProcessingPayment(false);
+    }
   };
 
   if (!user) return null;
@@ -141,8 +153,8 @@ export default function Subscription({ user, setUser }) {
                 </li>
               ))}
             </ul>
-            <button onClick={() => handleCheckout('Mensal')} className="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold py-4 rounded-xl flex items-center justify-center transition-colors">
-              <CreditCard className="mr-2 h-5 w-5" /> Assinar Mensal
+            <button disabled={processingPayment} onClick={() => handleCheckout('monthly')} className="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold py-4 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50">
+              <CreditCard className="mr-2 h-5 w-5" /> Pagar com Mercado Pago
             </button>
           </div>
 
@@ -165,8 +177,8 @@ export default function Subscription({ user, setUser }) {
                 </li>
               ))}
             </ul>
-            <button onClick={() => handleCheckout('Trimestral')} className="w-full bg-white text-blue-700 hover:bg-gray-50 font-bold py-4 rounded-xl flex items-center justify-center transition-colors shadow-md">
-              <CreditCard className="mr-2 h-5 w-5" /> Assinar Trimestral
+            <button disabled={processingPayment} onClick={() => handleCheckout('quarterly')} className="w-full bg-white text-blue-700 hover:bg-gray-50 font-bold py-4 rounded-xl flex items-center justify-center transition-colors shadow-md disabled:opacity-50">
+              <CreditCard className="mr-2 h-5 w-5" /> Pagar com Mercado Pago
             </button>
           </div>
 
@@ -186,8 +198,8 @@ export default function Subscription({ user, setUser }) {
                 </li>
               ))}
             </ul>
-            <button onClick={() => handleCheckout('Anual')} className="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold py-4 rounded-xl flex items-center justify-center transition-colors">
-              <CreditCard className="mr-2 h-5 w-5" /> Assinar Anual
+            <button disabled={processingPayment} onClick={() => handleCheckout('annual')} className="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold py-4 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50">
+              <CreditCard className="mr-2 h-5 w-5" /> Pagar com Mercado Pago
             </button>
           </div>
         </div>
