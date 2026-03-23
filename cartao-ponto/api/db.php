@@ -16,8 +16,16 @@ try {
             email TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL,
             type TEXT NOT NULL DEFAULT 'pf', -- pf or pj
+            is_admin INTEGER DEFAULT 0,
+            plan_expires_at DATETIME,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
+
+        -- Adicionando colunas se a tabela já existir (migração simples)
+        BEGIN TRANSACTION;
+        ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0;
+        ALTER TABLE users ADD COLUMN plan_expires_at DATETIME;
+        COMMIT;
 
         CREATE TABLE IF NOT EXISTS projects (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,8 +61,25 @@ try {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS invites (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT NOT NULL UNIQUE,
+            created_by INTEGER NOT NULL,
+            used_by INTEGER DEFAULT NULL,
+            used_at DATETIME DEFAULT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(created_by) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY(used_by) REFERENCES users(id) ON DELETE SET NULL
+        );
     ");
 } catch (PDOException $e) {
+    // Ignora erro de coluna duplicada caso a migração do ALTER TABLE falhe por já existir
+    if (strpos($e->getMessage(), 'duplicate column name') === false) {
+        echo json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]);
+        exit;
+    }
+} catch (Exception $e) {
     echo json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]);
     exit;
 }

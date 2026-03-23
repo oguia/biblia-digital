@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Home, Briefcase, Clock, LogOut, Menu, X, Settings } from 'lucide-react';
+import { Home, Briefcase, Clock, LogOut, Menu, X, Settings, Star, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Layout({ user, setUser }) {
@@ -23,8 +23,13 @@ export default function Layout({ user, setUser }) {
     { to: '/', icon: Home, label: 'Dashboard' },
     { to: '/projects', icon: Briefcase, label: 'Projetos / Serviços' },
     { to: '/history', icon: Clock, label: 'Histórico' },
+    { to: '/subscription', icon: Star, label: 'Assinatura & Planos' },
     { to: '/profile', icon: Settings, label: 'Meu Perfil' },
   ];
+
+  if (user && user.is_admin === 1) {
+    navLinks.push({ to: '/admin', icon: ShieldCheck, label: 'Painel Admin' });
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 flex-col md:flex-row">

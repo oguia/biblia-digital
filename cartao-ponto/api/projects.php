@@ -15,6 +15,11 @@ if (!$user) {
     sendJson(['error' => 'Unauthorized'], 401);
 }
 
+// Block access if plan expired
+if (intval($user['is_admin']) !== 1 && (!isset($user['plan_expires_at']) || strtotime($user['plan_expires_at']) < time())) {
+    sendJson(['error' => 'Sua assinatura expirou. Acesse a página de planos para renovar.'], 403);
+}
+
 $action = $_GET['action'] ?? '';
 $input = json_decode(file_get_contents('php://input'), true);
 

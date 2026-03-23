@@ -15,6 +15,14 @@ if (!$user) {
     sendJson(['error' => 'Unauthorized'], 401);
 }
 
+// Check plan status
+if (intval($user['is_admin']) !== 1 && (!isset($user['plan_expires_at']) || strtotime($user['plan_expires_at']) < time())) {
+    // Only allow GET history requests to succeed so they can view what they had, block everything else
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        sendJson(['error' => 'Sua assinatura expirou. Acesse a página de planos para renovar.'], 403);
+    }
+}
+
 $action = $_GET['action'] ?? '';
 $input = json_decode(file_get_contents('php://input'), true);
 

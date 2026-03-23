@@ -9,6 +9,8 @@ import History from './pages/History';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import Subscription from './pages/Subscription';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Components
 import Layout from './components/Layout';
@@ -57,10 +59,16 @@ function App() {
         <Route path="/register" element={!user ? <Register setUser={setUser} /> : <Navigate to="/" />} />
 
         <Route path="/" element={user ? <Layout user={user} setUser={setUser} /> : <Navigate to="/login" />}>
-          <Route index element={<Dashboard />} />
+          <Route index element={
+            user && user.is_admin !== 1 && (!user.plan_expires_at || new Date(user.plan_expires_at) < new Date())
+              ? <Navigate to="/subscription" />
+              : <Dashboard />
+          } />
           <Route path="projects" element={<Projects />} />
           <Route path="history" element={<History />} />
           <Route path="profile" element={<Profile user={user} setUser={setUser} />} />
+          <Route path="subscription" element={<Subscription user={user} setUser={setUser} />} />
+          <Route path="admin" element={<AdminDashboard user={user} />} />
         </Route>
       </Routes>
     </Router>

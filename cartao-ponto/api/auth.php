@@ -22,15 +22,18 @@ if ($action === 'register') {
     $hash = password_hash($input['password'], PASSWORD_DEFAULT);
 
     try {
-        $stmt = $pdo->prepare("INSERT INTO users (name, email, password, type) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$input['name'], $input['email'], $hash, $type]);
+        // Default plan expires in 7 days (trial)
+        $expires = date('Y-m-d H:i:s', strtotime('+7 days'));
+
+        $stmt = $pdo->prepare("INSERT INTO users (name, email, password, type, plan_expires_at) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$input['name'], $input['email'], $hash, $type, $expires]);
         $user_id = $pdo->lastInsertId();
 
         $token = bin2hex(random_bytes(32));
         $stmt = $pdo->prepare("INSERT INTO sessions (user_id, token) VALUES (?, ?)");
         $stmt->execute([$user_id, $token]);
 
-        sendJson(['token' => $token, 'user' => ['id' => $user_id, 'name' => $input['name'], 'email' => $input['email'], 'type' => $type]]);
+        sendJson(['token' => $token, 'user' => ['id' => $user_id, 'name' => $input['name'], 'email' => $input['email'], 'type' => $type, 'is_admin' => 0, 'plan_expires_at' => $expires]]);
     } catch (PDOException $e) {
         if ($e->getCode() == 23000) { // UNIQUE constraint failed
             sendJson(['error' => 'Email already registered'], 400);
@@ -51,7 +54,7 @@ if ($action === 'register') {
         $stmt = $pdo->prepare("INSERT INTO sessions (user_id, token) VALUES (?, ?)");
         $stmt->execute([$user['id'], $token]);
 
-        sendJson(['token' => $token, 'user' => ['id' => $user['id'], 'name' => $user['name'], 'email' => $user['email'], 'type' => $user['type']]]);
+        sendJson(['token' => $token, 'user' => ['id' => $user['id'], 'name' => $user['name'], 'email' => $user['email'], 'type' => $user['type'], 'is_admin' => intval($user['is_admin']), 'plan_expires_at' => $user['plan_expires_at']]]);
     } else {
         sendJson(['error' => 'Invalid credentials'], 401);
     }
