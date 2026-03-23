@@ -16,10 +16,12 @@ if ($method === 'POST') {
     }
 
     $plan_key = $data['plan'];
+    $payment_type = $data['payment_type'] ?? 'one_time';
+
     $plans = [
-        'monthly' => ['title' => 'Plano Mensal - Cartão Ponto', 'price' => 19.90],
-        'quarterly' => ['title' => 'Plano Trimestral - Cartão Ponto', 'price' => 49.90],
-        'annual' => ['title' => 'Plano Anual - Cartão Ponto', 'price' => 179.00],
+        'monthly' => ['title' => 'Plano Mensal - Cartão Ponto', 'price' => 19.90, 'frequency' => 1, 'frequency_type' => 'months'],
+        'quarterly' => ['title' => 'Plano Trimestral - Cartão Ponto', 'price' => 49.90, 'frequency' => 3, 'frequency_type' => 'months'],
+        'annual' => ['title' => 'Plano Anual - Cartão Ponto', 'price' => 179.00, 'frequency' => 1, 'frequency_type' => 'years'],
     ];
 
     if (!isset($plans[$plan_key])) {
@@ -46,40 +48,66 @@ if ($method === 'POST') {
     // Depending on where this is hosted, this needs to be accessible from outside.
     $notification_url = $baseUrl . '/api/webhook_mp.php';
 
-    // Create Preference
-    $preferenceData = [
-        "items" => [
-            [
-                "id" => $plan_key,
-                "title" => $plan['title'],
-                "description" => "Assinatura do sistema Cartão Ponto",
-                "quantity" => 1,
-                "currency_id" => "BRL",
-                "unit_price" => (float) $plan['price']
-            ]
-        ],
-        "payer" => [
-            "email" => $user['email'],
-            "name" => $user['name']
-        ],
-        "back_urls" => [
-            "success" => $baseUrl . "/#/subscription",
-            "failure" => $baseUrl . "/#/subscription",
-            "pending" => $baseUrl . "/#/subscription"
-        ],
-        "auto_return" => "approved",
-        "external_reference" => json_encode(['user_id' => $user['id'], 'plan' => $plan_key]),
-        "notification_url" => $notification_url
-    ];
+    if ($payment_type === 'subscription') {
+        // Create Preapproval Plan (Recurring Subscription)
+        $preapprovalData = [
+            "reason" => $plan['title'],
+            "auto_recurring" => [
+                "frequency" => $plan['frequency'],
+                "frequency_type" => $plan['frequency_type'],
+                "transaction_amount" => (float) $plan['price'],
+                "currency_id" => "BRL"
+            ],
+            "payer_email" => $user['email'],
+            "back_url" => $baseUrl . "/#/subscription",
+            "external_reference" => json_encode(['user_id' => $user['id'], 'plan' => $plan_key, 'type' => 'subscription'])
+        ];
 
-    $ch = curl_init("https://api.mercadopago.com/checkout/preferences");
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($preferenceData));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        "Authorization: Bearer " . $access_token,
-        "Content-Type: application/json"
-    ]);
+        $ch = curl_init("https://api.mercadopago.com/preapproval");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($preapprovalData));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer " . $access_token,
+            "Content-Type: application/json"
+        ]);
+
+    } else {
+        // Create Preference (One-time Payment)
+        $preferenceData = [
+            "items" => [
+                [
+                    "id" => $plan_key,
+                    "title" => $plan['title'],
+                    "description" => "Assinatura do sistema Cartão Ponto",
+                    "quantity" => 1,
+                    "currency_id" => "BRL",
+                    "unit_price" => (float) $plan['price']
+                ]
+            ],
+            "payer" => [
+                "email" => $user['email'],
+                "name" => $user['name']
+            ],
+            "back_urls" => [
+                "success" => $baseUrl . "/#/subscription",
+                "failure" => $baseUrl . "/#/subscription",
+                "pending" => $baseUrl . "/#/subscription"
+            ],
+            "auto_return" => "approved",
+            "external_reference" => json_encode(['user_id' => $user['id'], 'plan' => $plan_key, 'type' => 'one_time']),
+            "notification_url" => $notification_url
+        ];
+
+        $ch = curl_init("https://api.mercadopago.com/checkout/preferences");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($preferenceData));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer " . $access_token,
+            "Content-Type: application/json"
+        ]);
+    }
 
     // Bypass SSL issues if any on shared hosting
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);

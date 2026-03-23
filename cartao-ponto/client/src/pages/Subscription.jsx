@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { CreditCard, Gift, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
+import { CreditCard, Gift, ShieldCheck, CheckCircle2, AlertCircle, X, RefreshCw, Smartphone } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +10,7 @@ export default function Subscription({ user, setUser }) {
   const [inviteCode, setInviteCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [selectedPlanModal, setSelectedPlanModal] = useState(null);
 
   const isExpired = user && (!user.plan_expires_at || new Date(user.plan_expires_at) < new Date());
 
@@ -45,11 +46,25 @@ export default function Subscription({ user, setUser }) {
 
   const [processingPayment, setProcessingPayment] = useState(false);
 
-  const handleCheckout = async (planKey) => {
+  const openPaymentModal = (planKey) => {
+    setSelectedPlanModal(planKey);
+  };
+
+  const closePaymentModal = () => {
+    setSelectedPlanModal(null);
+  };
+
+  const handleCheckout = async (paymentType) => {
+    if (!selectedPlanModal) return;
     setProcessingPayment(true);
     setMessage({ type: '', text: '' });
+
     try {
-      const res = await axios.post('/checkout.php', { plan: planKey });
+      const res = await axios.post('/checkout.php', {
+        plan: selectedPlanModal,
+        payment_type: paymentType
+      });
+
       if (res.data.init_point) {
         window.location.href = res.data.init_point;
       }
@@ -57,6 +72,7 @@ export default function Subscription({ user, setUser }) {
       alert(err.response?.data?.error || 'Erro ao gerar link de pagamento do Mercado Pago.');
     } finally {
       setProcessingPayment(false);
+      closePaymentModal();
     }
   };
 
@@ -153,7 +169,7 @@ export default function Subscription({ user, setUser }) {
                 </li>
               ))}
             </ul>
-            <button disabled={processingPayment} onClick={() => handleCheckout('monthly')} className="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold py-4 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50">
+            <button disabled={processingPayment} onClick={() => openPaymentModal('monthly')} className="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold py-4 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50">
               <CreditCard className="mr-2 h-5 w-5" /> Pagar com Mercado Pago
             </button>
           </div>
@@ -177,7 +193,7 @@ export default function Subscription({ user, setUser }) {
                 </li>
               ))}
             </ul>
-            <button disabled={processingPayment} onClick={() => handleCheckout('quarterly')} className="w-full bg-white text-blue-700 hover:bg-gray-50 font-bold py-4 rounded-xl flex items-center justify-center transition-colors shadow-md disabled:opacity-50">
+            <button disabled={processingPayment} onClick={() => openPaymentModal('quarterly')} className="w-full bg-white text-blue-700 hover:bg-gray-50 font-bold py-4 rounded-xl flex items-center justify-center transition-colors shadow-md disabled:opacity-50">
               <CreditCard className="mr-2 h-5 w-5" /> Pagar com Mercado Pago
             </button>
           </div>
@@ -198,12 +214,70 @@ export default function Subscription({ user, setUser }) {
                 </li>
               ))}
             </ul>
-            <button disabled={processingPayment} onClick={() => handleCheckout('annual')} className="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold py-4 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50">
+            <button disabled={processingPayment} onClick={() => openPaymentModal('annual')} className="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold py-4 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50">
               <CreditCard className="mr-2 h-5 w-5" /> Pagar com Mercado Pago
             </button>
           </div>
         </div>
       </div>
+
+      {/* Payment Method Modal */}
+      {selectedPlanModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden relative">
+            <button
+              onClick={closePaymentModal}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1"
+            >
+              <X className="h-6 w-6" />
+            </button>
+
+            <div className="p-6 md:p-8">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Como deseja pagar?</h3>
+              <p className="text-gray-600 mb-8">Escolha a forma que faz mais sentido para você. Fique tranquilo, é seguro.</p>
+
+              <div className="space-y-4">
+                {/* One-time Payment Option */}
+                <button
+                  onClick={() => handleCheckout('one_time')}
+                  disabled={processingPayment}
+                  className="w-full flex items-start p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-left group"
+                >
+                  <div className="bg-gray-100 group-hover:bg-blue-100 p-3 rounded-full mr-4">
+                    <Smartphone className="h-6 w-6 text-gray-600 group-hover:text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900">Pagamento Único (PIX / Boleto)</h4>
+                    <p className="text-sm text-gray-500 mt-1">Você paga apenas o plano atual. Quando expirar, você precisará renovar manualmente pelo site.</p>
+                  </div>
+                </button>
+
+                {/* Subscription Payment Option */}
+                <button
+                  onClick={() => handleCheckout('subscription')}
+                  disabled={processingPayment}
+                  className="w-full flex items-start p-4 border-2 border-green-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all text-left group"
+                >
+                  <div className="bg-green-100 group-hover:bg-green-200 p-3 rounded-full mr-4">
+                    <RefreshCw className="h-6 w-6 text-green-600 group-hover:text-green-700" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900">Assinatura Automática</h4>
+                    <p className="text-sm text-gray-500 mt-1">Ideal para não se preocupar! Cadastre o cartão de crédito e a cobrança será automática todo mês/ano.</p>
+                  </div>
+                </button>
+              </div>
+
+              {processingPayment && (
+                <div className="mt-6 text-center text-blue-600 font-medium">
+                  Gerando pagamento seguro... Aguarde.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
