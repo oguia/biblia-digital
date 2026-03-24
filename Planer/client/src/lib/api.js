@@ -24,7 +24,9 @@ export async function fetchWithAuth(url, options = {}) {
 
     // Ensure URL doesn't have double slashes if API_BASE is relative
     const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
-    const res = await fetch(`${API_BASE}/${cleanUrl}`, options);
+    const fetchUrl = `${API_BASE}/${cleanUrl}`;
+
+    const res = await fetch(fetchUrl, options);
 
     if (res.status === 401) {
         // Logout logic if token expired
@@ -34,9 +36,18 @@ export async function fetchWithAuth(url, options = {}) {
         throw new Error('Unauthorized');
     }
 
-    const json = await res.json();
+    // Wrap JSON parsing to catch and throw meaningful errors instead of syntax errors
+    let json;
+    const text = await res.text();
+    try {
+        json = JSON.parse(text);
+    } catch (err) {
+        console.error("API response is not valid JSON:", text);
+        throw new Error(`O servidor retornou um erro inesperado. Resposta: ${text.substring(0, 50)}...`);
+    }
+
     if (!res.ok) {
-        throw new Error(json.error || 'API Error');
+        throw new Error(json?.error || 'Erro na API');
     }
 
     return json;

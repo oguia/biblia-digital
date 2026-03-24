@@ -1,5 +1,8 @@
 <?php
 // /Planer/api/db.php
+error_reporting(0); // Prevent PHP notices/warnings from corrupting JSON output on Hostinger
+ini_set('display_errors', 0);
+
 $dbFile = __DIR__ . '/database.sqlite';
 
 try {
