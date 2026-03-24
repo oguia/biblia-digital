@@ -44,12 +44,12 @@ export default function Profile() {
      }
   };
 
-  const handleSubscribe = async (planType) => {
+  const handleSubscribe = async (planType, billingType) => {
     setPaymentLoading(true);
     try {
       const res = await fetchWithAuth('/payments.php?action=create_preference', {
         method: 'POST',
-        body: { plan_type: planType }
+        body: { plan_type: planType, billing_type: billingType }
       });
       if (res.init_point) {
         window.location.href = res.init_point;
@@ -199,25 +199,43 @@ export default function Profile() {
                   <h4 className="font-bold text-navy-900">Plano Anual</h4>
                   <p className="text-2xl font-bold text-highlight my-1">R$ 149<span className="text-sm text-slate-500 font-normal">/ano</span></p>
                   <p className="text-xs text-slate-500 mb-3">Apenas R$ 12,41 por mês.</p>
-                  <button
-                     onClick={() => handleSubscribe('yearly')}
-                     disabled={paymentLoading}
-                     className="w-full flex items-center justify-center gap-2 py-2 bg-navy-800 text-white rounded hover:bg-navy-900 font-medium transition-colors text-sm disabled:opacity-50"
-                  >
-                     {paymentLoading ? 'Aguarde...' : 'Assinar Anual (Mercado Pago)'} <ExternalLink size={14} />
-                  </button>
+                  <div className="flex flex-col gap-2 mt-3">
+                     <button
+                        onClick={() => handleSubscribe('yearly', 'automatic')}
+                        disabled={paymentLoading}
+                        className="w-full flex items-center justify-center gap-2 py-2 bg-navy-800 text-white rounded hover:bg-navy-900 font-medium transition-colors text-sm disabled:opacity-50"
+                     >
+                        {paymentLoading ? 'Aguarde...' : 'Renovação Automática (Cartão)'} <ExternalLink size={14} />
+                     </button>
+                     <button
+                        onClick={() => handleSubscribe('yearly', 'manual')}
+                        disabled={paymentLoading}
+                        className="w-full flex items-center justify-center gap-2 py-2 bg-slate-100 text-navy-800 border border-navy-800 rounded hover:bg-slate-200 font-medium transition-colors text-sm disabled:opacity-50"
+                     >
+                        {paymentLoading ? 'Aguarde...' : 'Renovação Manual (Pix/Boleto)'} <ExternalLink size={14} />
+                     </button>
+                  </div>
                </div>
 
                <div className="border border-slate-200 rounded-lg p-4">
                   <h4 className="font-bold text-navy-900">Plano Mensal</h4>
                   <p className="text-2xl font-bold text-slate-700 my-1">R$ 19,90<span className="text-sm text-slate-500 font-normal">/mês</span></p>
-                  <button
-                     onClick={() => handleSubscribe('monthly')}
-                     disabled={paymentLoading}
-                     className="w-full flex items-center justify-center gap-2 py-2 bg-slate-100 text-slate-700 rounded hover:bg-slate-200 font-medium transition-colors text-sm mt-3 disabled:opacity-50"
-                  >
-                     {paymentLoading ? 'Aguarde...' : 'Assinar Mensal (Mercado Pago)'} <ExternalLink size={14} />
-                  </button>
+                  <div className="flex flex-col gap-2 mt-3">
+                     <button
+                        onClick={() => handleSubscribe('monthly', 'automatic')}
+                        disabled={paymentLoading}
+                        className="w-full flex items-center justify-center gap-2 py-2 bg-slate-100 text-slate-700 rounded hover:bg-slate-200 font-medium transition-colors text-sm disabled:opacity-50"
+                     >
+                        {paymentLoading ? 'Aguarde...' : 'Renovação Automática (Cartão)'} <ExternalLink size={14} />
+                     </button>
+                     <button
+                        onClick={() => handleSubscribe('monthly', 'manual')}
+                        disabled={paymentLoading}
+                        className="w-full flex items-center justify-center gap-2 py-2 bg-white text-slate-700 border border-slate-300 rounded hover:bg-slate-50 font-medium transition-colors text-sm disabled:opacity-50"
+                     >
+                        {paymentLoading ? 'Aguarde...' : 'Renovação Manual (Pix/Boleto)'} <ExternalLink size={14} />
+                     </button>
+                  </div>
                </div>
             </div>
          </div>
