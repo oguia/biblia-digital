@@ -1,0 +1,6 @@
+# Planer/api/uploads/.htaccess
+# Prevent execution of any scripts in this directory
+<FilesMatch "\.(php|phtml|php3|php4|php5|pl|py|jsp|asp|html|htm|shtml|sh|cgi)$">
+    Require all denied
+</FilesMatch>
+Options -Indexes
