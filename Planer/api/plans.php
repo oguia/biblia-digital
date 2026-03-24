@@ -89,6 +89,19 @@ if ($method === 'GET') {
         $skills = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         echo json_encode(['skills' => $skills]);
+    } elseif ($action === 'list' || $action === '') {
+        // Default to list if action is empty or list
+        $stmt = $db->prepare("SELECT * FROM lesson_plans WHERE user_id = ? ORDER BY lesson_date DESC, created_at DESC");
+        $stmt->execute([$user['id']]);
+        $plans = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($plans as &$plan) {
+            $skillStmt = $db->prepare("SELECT s.* FROM bncc_skills s JOIN lesson_plan_skills ps ON s.id = ps.skill_id WHERE ps.lesson_plan_id = ?");
+            $skillStmt->execute([$plan['id']]);
+            $plan['skills'] = $skillStmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        echo json_encode(['plans' => $plans]);
     } else {
         http_response_code(404);
         echo json_encode(['error' => 'Unknown GET action']);

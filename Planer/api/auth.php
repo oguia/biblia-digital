@@ -96,7 +96,7 @@ if ($action === 'login') {
     $user = verify_auth_token($db);
     unset($user['password']);
     echo json_encode(['user' => $user]);
-} else {
+} elseif ($action !== '') {
     http_response_code(404);
     echo json_encode(['error' => 'Unknown action']);
 }

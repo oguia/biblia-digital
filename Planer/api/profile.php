@@ -58,6 +58,45 @@ if ($action === 'redeem_code') {
         http_response_code(500);
         echo json_encode(['error' => 'Erro interno ao resgatar código.']);
     }
+} elseif ($action === 'update_profile') {
+    if (!isset($input['name']) || !isset($input['email'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Nome e Email são obrigatórios.']);
+        exit;
+    }
+
+    $name = trim($input['name']);
+    $email = trim($input['email']);
+    $password = $input['password'] ?? '';
+
+    // Check if email is being changed and if it already exists
+    if ($email !== $user['email']) {
+        $stmt = $db->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+        $stmt->execute([$email, $user['id']]);
+        if ($stmt->fetch()) {
+            http_response_code(409);
+            echo json_encode(['error' => 'Este email já está em uso por outra conta.']);
+            exit;
+        }
+    }
+
+    try {
+        if (!empty($password)) {
+            // Update with new password
+            $hashed = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $db->prepare("UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?");
+            $stmt->execute([$name, $email, $hashed, $user['id']]);
+        } else {
+            // Update without changing password
+            $stmt = $db->prepare("UPDATE users SET name = ?, email = ? WHERE id = ?");
+            $stmt->execute([$name, $email, $user['id']]);
+        }
+
+        echo json_encode(['success' => true, 'message' => 'Perfil atualizado com sucesso.']);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Erro ao atualizar perfil.']);
+    }
 } else {
     http_response_code(404);
     echo json_encode(['error' => 'Unknown action']);

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import useSWR from 'swr';
 import { fetchWithAuth } from '../lib/api';
-import { User, Key, CreditCard, CheckCircle, ExternalLink } from 'lucide-react';
+import { User, Key, CreditCard, CheckCircle, ExternalLink, Save } from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -11,6 +12,37 @@ export default function Profile() {
   const [redeemLoading, setRedeemLoading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [redeemMessage, setRedeemMessage] = useState({ type: '', text: '' });
+
+  // Profile Form state
+  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileMessage, setProfileMessage] = useState({ type: '', text: '' });
+
+  useEffect(() => {
+    if (data?.user) {
+       setFormData({ name: data.user.name, email: data.user.email, password: '' });
+    }
+  }, [data]);
+
+  const handleProfileUpdate = async (e) => {
+     e.preventDefault();
+     setProfileLoading(true);
+     setProfileMessage({ type: '', text: '' });
+
+     try {
+        const res = await fetchWithAuth('/profile.php?action=update_profile', {
+           method: 'POST',
+           body: formData
+        });
+        setProfileMessage({ type: 'success', text: res.message });
+        setFormData(prev => ({ ...prev, password: '' })); // Clear password field
+        mutate(); // refresh user data globally
+     } catch (err) {
+        setProfileMessage({ type: 'error', text: err.message });
+     } finally {
+        setProfileLoading(false);
+     }
+  };
 
   const handleSubscribe = async (planType) => {
     setPaymentLoading(true);
@@ -80,21 +112,73 @@ export default function Profile() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <h2 className="text-2xl font-bold text-navy-900 flex items-center gap-2">
-        <User size={24} className="text-highlight" /> Meu Perfil
-      </h2>
+      <div className="flex items-center justify-between mb-2">
+         <h2 className="text-2xl font-bold text-navy-900 flex items-center gap-2">
+           <User size={24} className="text-highlight" /> Meu Perfil
+         </h2>
+         <span className={`px-3 py-1 rounded-full text-xs font-bold ${status.bg} ${status.color}`}>
+            {status.text}
+         </span>
+      </div>
 
-      {/* User Info */}
+      {/* Personal Data Form */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-        <div className="flex items-start justify-between">
-           <div>
-              <h3 className="text-lg font-bold text-navy-900">{user.name}</h3>
-              <p className="text-slate-500">{user.email}</p>
-           </div>
-           <span className={`px-3 py-1 rounded-full text-xs font-bold ${status.bg} ${status.color}`}>
-              {status.text}
-           </span>
-        </div>
+         <h3 className="text-lg font-bold text-navy-900 mb-4 border-b border-slate-100 pb-2">
+            Dados Pessoais
+         </h3>
+
+         {profileMessage.text && (
+            <div className={`p-3 mb-4 rounded text-sm ${profileMessage.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+               {profileMessage.text}
+            </div>
+         )}
+
+         <form onSubmit={handleProfileUpdate} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Nome</label>
+                  <input
+                     type="text"
+                     value={formData.name}
+                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                     required
+                     className="w-full rounded-md border-slate-300 shadow-sm focus:border-highlight focus:ring focus:ring-highlight focus:ring-opacity-50 py-2 px-3 border text-slate-900"
+                  />
+               </div>
+               <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                  <input
+                     type="email"
+                     value={formData.email}
+                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                     required
+                     className="w-full rounded-md border-slate-300 shadow-sm focus:border-highlight focus:ring focus:ring-highlight focus:ring-opacity-50 py-2 px-3 border text-slate-900"
+                  />
+               </div>
+            </div>
+
+            <div>
+               <label className="block text-sm font-medium text-slate-700 mb-1">Nova Senha (deixe em branco para manter a atual)</label>
+               <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                  placeholder="********"
+                  className="w-full md:w-1/2 rounded-md border-slate-300 shadow-sm focus:border-highlight focus:ring focus:ring-highlight focus:ring-opacity-50 py-2 px-3 border text-slate-900"
+               />
+            </div>
+
+            <div className="pt-2">
+               <button
+                  type="submit"
+                  disabled={profileLoading}
+                  className="flex items-center gap-2 px-4 py-2 bg-navy-800 text-white rounded hover:bg-navy-900 font-medium transition-colors disabled:opacity-50"
+               >
+                  <Save size={18} />
+                  {profileLoading ? 'Salvando...' : 'Salvar Alterações'}
+               </button>
+            </div>
+         </form>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
