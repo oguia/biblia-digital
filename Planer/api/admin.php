@@ -99,6 +99,38 @@ if ($action === 'generate_invite') {
         'total_lesson_plans' => $plansCount,
         'total_bncc_skills' => $skillsCount
     ]);
+} elseif ($action === 'get_settings') {
+    $stmt = $db->query("SELECT * FROM settings");
+    $settingsRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $settings = [];
+    foreach ($settingsRaw as $row) {
+        $settings[$row['key']] = $row['value'];
+    }
+    echo json_encode(['settings' => $settings]);
+} elseif ($action === 'save_settings') {
+    if (!isset($input['mp_access_token']) || !isset($input['site_url'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Configurações incompletas']);
+        exit;
+    }
+
+    $db->beginTransaction();
+    try {
+        $stmt = $db->prepare("UPDATE settings SET value = ? WHERE key = 'mp_access_token'");
+        $stmt->execute([trim($input['mp_access_token'])]);
+
+        $stmt2 = $db->prepare("UPDATE settings SET value = ? WHERE key = 'site_url'");
+        // Ensure site url doesn't end with slash
+        $site_url = rtrim(trim($input['site_url']), '/');
+        $stmt2->execute([$site_url]);
+
+        $db->commit();
+        echo json_encode(['success' => true, 'message' => 'Configurações salvas com sucesso!']);
+    } catch (Exception $e) {
+        $db->rollBack();
+        http_response_code(500);
+        echo json_encode(['error' => 'Erro ao salvar configurações']);
+    }
 } else {
     http_response_code(404);
     echo json_encode(['error' => 'Unknown admin action']);

@@ -89,7 +89,19 @@ try {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(user_id) REFERENCES users(id)
         );
+
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        );
     ");
+
+    // Default settings
+    $stmt = $db->query("SELECT COUNT(*) FROM settings");
+    if ($stmt->fetchColumn() == 0) {
+        $db->exec("INSERT INTO settings (key, value) VALUES ('mp_access_token', '')");
+        $db->exec("INSERT INTO settings (key, value) VALUES ('site_url', 'https://seusite.com.br')");
+    }
 
     // Default admin user if empty
     $stmt = $db->query("SELECT COUNT(*) FROM users");

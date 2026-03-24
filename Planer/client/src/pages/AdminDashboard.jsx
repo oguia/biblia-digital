@@ -1,15 +1,50 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import useSWR from 'swr';
 import { fetchWithAuth } from '../lib/api';
-import { Download, Plus, Upload, Users, BookOpen, CheckCircle, Clock } from 'lucide-react';
+import { Download, Plus, Upload, Users, BookOpen, CheckCircle, Clock, Settings, Save } from 'lucide-react';
 
 export default function AdminDashboard() {
   const [csvFile, setCsvFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const { data: stats, error: statsError } = useSWR('/admin.php?action=stats', fetchWithAuth);
+  // Settings state
+  const [settingsForm, setSettingsForm] = useState({ mp_access_token: '', site_url: '' });
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsMessage, setSettingsMessage] = useState({ type: '', text: '' });
+
+  const { data: stats } = useSWR('/admin.php?action=stats', fetchWithAuth);
   const { data: invites, mutate: mutateInvites } = useSWR('/admin.php?action=list_invites', fetchWithAuth);
+  const { data: settingsData, mutate: mutateSettings } = useSWR('/admin.php?action=get_settings', fetchWithAuth);
+
+  useEffect(() => {
+    if (settingsData?.settings) {
+      setSettingsForm({
+        mp_access_token: settingsData.settings.mp_access_token || '',
+        site_url: settingsData.settings.site_url || ''
+      });
+    }
+  }, [settingsData]);
+
+  const handleSaveSettings = async (e) => {
+    e.preventDefault();
+    setSettingsLoading(true);
+    setSettingsMessage({ type: '', text: '' });
+
+    try {
+      const res = await fetchWithAuth('/admin.php?action=save_settings', {
+        method: 'POST',
+        body: settingsForm
+      });
+      setSettingsMessage({ type: 'success', text: res.message });
+      mutateSettings();
+    } catch (e) {
+      setSettingsMessage({ type: 'error', text: e.message });
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
 
   const handleGenerateInvite = async () => {
     try {
@@ -153,6 +188,64 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Settings Panel */}
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mt-6">
+        <h3 className="text-lg font-semibold text-navy-900 mb-4 flex items-center gap-2">
+          <Settings size={20} className="text-highlight" />
+          Configurações do Sistema
+        </h3>
+
+        {settingsMessage.text && (
+          <div className={`p-3 mb-4 rounded text-sm ${settingsMessage.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+             {settingsMessage.text}
+          </div>
+        )}
+
+        <form onSubmit={handleSaveSettings} className="space-y-4 max-w-3xl">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Mercado Pago Access Token (Produção)</label>
+            <input
+              type="password"
+              value={settingsForm.mp_access_token}
+              onChange={(e) => setSettingsForm(prev => ({ ...prev, mp_access_token: e.target.value }))}
+              placeholder="APP_USR-123456789..."
+              className="w-full rounded-md border-slate-300 shadow-sm focus:border-highlight focus:ring focus:ring-highlight focus:ring-opacity-50 py-2 px-3 border text-slate-900"
+              required
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Necessário para cobrar assinaturas. Obtenha no painel de desenvolvedores do Mercado Pago.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">URL Base do Site</label>
+            <input
+              type="url"
+              value={settingsForm.site_url}
+              onChange={(e) => setSettingsForm(prev => ({ ...prev, site_url: e.target.value }))}
+              placeholder="https://meusite.com.br/planer"
+              className="w-full rounded-md border-slate-300 shadow-sm focus:border-highlight focus:ring focus:ring-highlight focus:ring-opacity-50 py-2 px-3 border text-slate-900"
+              required
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Sem a barra final. Usado para redirecionar o usuário após o pagamento (Webhook / Callbacks).
+            </p>
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={settingsLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-navy-800 text-white rounded hover:bg-navy-900 font-medium transition-colors disabled:opacity-50"
+            >
+              <Save size={18} />
+              {settingsLoading ? 'Salvando...' : 'Salvar Configurações'}
+            </button>
+          </div>
+        </form>
+      </div>
+
     </div>
   );
 }

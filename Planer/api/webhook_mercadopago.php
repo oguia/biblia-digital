@@ -2,7 +2,16 @@
 // Planer/api/webhook_mercadopago.php
 header('Content-Type: application/json');
 require_once 'db.php';
-require_once 'config.php';
+// require_once 'config.php'; -- Now using DB settings
+
+// Fetch settings
+$stmt = $db->query("SELECT * FROM settings");
+$settingsRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$settings = [];
+foreach ($settingsRaw as $row) {
+    $settings[$row['key']] = $row['value'];
+}
+$mp_access_token = $settings['mp_access_token'] ?? '';
 
 // Log incoming request
 file_put_contents('mp_webhook.log', file_get_contents('php://input') . "\n", FILE_APPEND);
@@ -17,7 +26,7 @@ if (isset($input['type']) && $input['type'] === 'payment') {
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        "Authorization: Bearer " . MP_ACCESS_TOKEN
+        "Authorization: Bearer " . $mp_access_token
     ]);
 
     $response = curl_exec($ch);

@@ -7,11 +7,21 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 require_once 'db.php';
 require_once 'auth.php';
-require_once 'config.php';
+// require_once 'config.php'; -- Now using DB settings
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
+
+// Fetch settings
+$stmt = $db->query("SELECT * FROM settings");
+$settingsRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$settings = [];
+foreach ($settingsRaw as $row) {
+    $settings[$row['key']] = $row['value'];
+}
+$mp_access_token = $settings['mp_access_token'] ?? '';
+$site_url = $settings['site_url'] ?? '';
 
 $user = verify_auth_token($db);
 $action = $_GET['action'] ?? '';
@@ -47,9 +57,9 @@ if ($action === 'create_preference') {
             ]
         ],
         "back_urls" => [
-            "success" => SITE_URL . "/#/profile?payment=success",
-            "failure" => SITE_URL . "/#/profile?payment=failure",
-            "pending" => SITE_URL . "/#/profile?payment=pending"
+            "success" => $site_url . "/#/profile?payment=success",
+            "failure" => $site_url . "/#/profile?payment=failure",
+            "pending" => $site_url . "/#/profile?payment=pending"
         ],
         "auto_return" => "approved",
         "external_reference" => "user_" . $user['id'] . "_plan_" . $plan_type,
@@ -67,7 +77,7 @@ if ($action === 'create_preference') {
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         "Content-Type: application/json",
-        "Authorization: Bearer " . MP_ACCESS_TOKEN
+        "Authorization: Bearer " . $mp_access_token
     ]);
 
     $response = curl_exec($ch);
