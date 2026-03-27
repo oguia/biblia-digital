@@ -6,8 +6,9 @@ require_once 'gemini.php';
 // Verify Webhook Authenticity
 $headers = getallheaders();
 $authHeader = $headers['Authorization'] ?? '';
-$authFile = __DIR__ . '/bot_auth.txt';
-$validToken = file_exists($authFile) ? trim(file_get_contents($authFile)) : '';
+
+$stmt = $db->query("SELECT value_data FROM settings WHERE key_name = 'bot_token'");
+$validToken = $stmt->fetchColumn();
 
 if (empty($validToken) || $authHeader !== "Bearer " . $validToken) {
     http_response_code(401);
@@ -51,15 +52,6 @@ if ($contact['bot_paused'] == 1 || $contact['stage'] === 'humano' || $contact['s
     // Human is taking care of this, so the bot should not respond.
     http_response_code(200);
     echo json_encode(['status' => 'ignored (paused/human stage)']);
-    die();
-}
-
-// Ensure the bot is "online" via settings
-$stmt = $db->query("SELECT value_data FROM settings WHERE key_name = 'bot_status'");
-$status = $stmt->fetchColumn();
-if ($status !== 'online') {
-    http_response_code(200);
-    echo json_encode(['status' => 'bot is offline in settings']);
     die();
 }
 

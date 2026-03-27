@@ -86,15 +86,19 @@ if (strpos($uri, '/contacts') !== false) {
             $stmtPhone->execute([$contactId]);
             $phone = $stmtPhone->fetchColumn();
 
-            // Call node.js bot to send message dynamically
-            $portFile = __DIR__ . '/bot_port.txt';
-            $authFile = __DIR__ . '/bot_auth.txt';
+            // Fetch bot config from DB
+            $stmtUrl = $db->query("SELECT value_data FROM settings WHERE key_name = 'bot_url'");
+            $botBaseUrl = rtrim($stmtUrl->fetchColumn(), '/');
 
-            $botPort = file_exists($portFile) ? trim(file_get_contents($portFile)) : '3000';
-            $botToken = file_exists($authFile) ? trim(file_get_contents($authFile)) : '';
+            $stmtToken = $db->query("SELECT value_data FROM settings WHERE key_name = 'bot_token'");
+            $botToken = $stmtToken->fetchColumn();
 
-            $botUrl = "http://127.0.0.1:{$botPort}/send";
+            if (empty($botBaseUrl)) {
+                 http_response_code(400);
+                 die(json_encode(['error' => 'URL do Bot não configurada.']));
+            }
 
+            $botUrl = $botBaseUrl . "/send";
             $postData = json_encode(['to' => $phone, 'message' => $content]);
 
             $ch = curl_init($botUrl);
@@ -106,6 +110,11 @@ if (strpos($uri, '/contacts') !== false) {
                 "Authorization: Bearer {$botToken}"
             ]);
             curl_setopt($ch, CURLOPT_TIMEOUT, 5); // Don't hang if bot offline
+
+            // Bypass SSL for hostinger subdomains if needed
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+
             $result = curl_exec($ch);
             curl_close($ch);
 

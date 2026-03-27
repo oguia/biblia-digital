@@ -71,10 +71,12 @@ try {
     $stmt = $db->query("SELECT COUNT(*) FROM settings");
     if ($stmt->fetchColumn() == 0) {
         $db->exec("INSERT INTO settings (key_name, value_data) VALUES ('gemini_api_key', '')");
-        $db->exec("INSERT INTO settings (key_name, value_data) VALUES ('bot_status', 'offline')");
+        $db->exec("INSERT INTO settings (key_name, value_data) VALUES ('bot_url', '')");
         $db->exec("INSERT INTO settings (key_name, value_data) VALUES ('handoff_message', 'Vou te transferir para um de nossos especialistas. Aguarde um momento!')");
         $jwtSecret = bin2hex(random_bytes(32)); // Secure random secret for JWT
         $db->exec("INSERT INTO settings (key_name, value_data) VALUES ('jwt_secret', '$jwtSecret')");
+        $botToken = bin2hex(random_bytes(16)); // Secure token for Webhook
+        $db->exec("INSERT INTO settings (key_name, value_data) VALUES ('bot_token', '$botToken')");
     }
 
 } catch (PDOException $e) {

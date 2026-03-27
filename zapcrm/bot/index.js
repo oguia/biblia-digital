@@ -8,20 +8,18 @@ const path = require('path');
 const axios = require('axios');
 const http = require('http');
 
+// Support reading .env locally
+require('dotenv').config();
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 let sock;
+let currentQR = null;
 
-// Depending on if run from esbuild or dev, the qr code path changes
-// When compiled via esbuild, this script runs in api/bot/bot.cjs
-// So __dirname is api/bot. We want api/qr.png
-const IS_COMPILED = __dirname.endsWith('bot');
-const API_DIR = IS_COMPILED ? path.join(__dirname, '..') : path.join(__dirname, '../api');
-
-const QR_PATH = path.join(API_DIR, 'qr.png');
-const PORT_FILE = path.join(API_DIR, 'bot_port.txt');
+// The Hostinger Node.js app environment uses process.env.PORT
+const PORT = process.env.PORT || 3000;
 const SESSION_DIR = path.join(__dirname, 'auth_info_baileys');
 
 async function connectToWhatsApp() {
@@ -33,9 +31,9 @@ async function connectToWhatsApp() {
     sock = makeWASocket({
         version,
         logger: pino({ level: 'silent' }), // reduce console spam on hostinger
-        printQRInTerminal: false,
+        printQRInTerminal: true,
         auth: state,
-        browser: ['ZapCRM', 'Chrome', '1.0.0']
+        browser: ['ZapCRM Bot', 'Chrome', '1.0.0']
     });
 
     sock.ev.on('creds.update', saveCreds);
@@ -44,10 +42,10 @@ async function connectToWhatsApp() {
         const { connection, lastDisconnect, qr } = update;
 
         if (qr) {
-            console.log('Got QR code, saving to ' + QR_PATH);
+            console.log('Got new QR Code');
             try {
-                // Save QR to file so PHP can serve it in the admin panel
-                await qrcode.toFile(QR_PATH, qr);
+                // Generate base64 Data URI for HTML display
+                currentQR = await qrcode.toDataURL(qr);
             } catch (err) {
                 console.error("Failed to generate QR code image", err);
             }
@@ -57,24 +55,18 @@ async function connectToWhatsApp() {
             const shouldReconnect = lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut;
             console.log('Connection closed due to ', lastDisconnect.error, ', reconnecting ', shouldReconnect);
 
-            // Delete QR image if disconnected
-            if (fs.existsSync(QR_PATH)) {
-                fs.unlinkSync(QR_PATH);
-            }
-
             if (shouldReconnect) {
                 connectToWhatsApp();
             } else {
-                console.log('Logged out. Please delete the auth_info_baileys folder and restart to get a new QR code.');
-                // Delete session
+                console.log('Logged out. Session deleted.');
                 fs.rmSync(SESSION_DIR, { recursive: true, force: true });
+                currentQR = null;
+                // Wait 3 seconds and restart QR generation
+                setTimeout(connectToWhatsApp, 3000);
             }
         } else if (connection === 'open') {
             console.log('WhatsApp connection opened!');
-            // Delete QR code file now that we are connected
-            if (fs.existsSync(QR_PATH)) {
-                fs.unlinkSync(QR_PATH);
-            }
+            currentQR = null; // Clear QR code when connected
         }
     });
 
@@ -82,16 +74,14 @@ async function connectToWhatsApp() {
         const msg = m.messages[0];
         if (!msg.message || msg.key.fromMe) return;
 
-        // Parse message
+        // Parse message robustly
         let text = '';
-
         if (msg.message.conversation) {
             text = msg.message.conversation;
         } else if (msg.message.extendedTextMessage && msg.message.extendedTextMessage.text) {
             text = msg.message.extendedTextMessage.text;
         } else {
-            // Not a text message we care about (images, audio, etc) for this simple bot
-            return;
+            return; // Ignore images/audio for now
         }
 
         const senderId = msg.key.remoteJid;
@@ -99,10 +89,15 @@ async function connectToWhatsApp() {
 
         console.log(`Received message from ${senderId}: ${text}`);
 
-        // Send to PHP Webhook
+        // Send to PHP Webhook (configured via .env on Hostinger)
         try {
-            const webhookUrl = process.env.WEBHOOK_URL || 'http://127.0.0.1:8000/zapcrm/api/index.php/webhook';
-            const botToken = process.env.BOT_TOKEN || '';
+            const webhookUrl = process.env.WEBHOOK_URL;
+            const botToken = process.env.BOT_TOKEN;
+
+            if (!webhookUrl || !botToken) {
+                console.error('WEBHOOK_URL or BOT_TOKEN missing in .env');
+                return;
+            }
 
             const response = await axios.post(webhookUrl, {
                 from: senderId.replace('@s.whatsapp.net', ''),
@@ -115,7 +110,6 @@ async function connectToWhatsApp() {
             });
 
             if (response.data && response.data.reply && response.data.message) {
-                // PHP webhook asked us to send a reply (Gemini generated it)
                 await sock.sendMessage(senderId, { text: response.data.message });
                 console.log("Sent reply via webhook command:", response.data.message);
             }
@@ -125,15 +119,86 @@ async function connectToWhatsApp() {
     });
 }
 
-// HTTP API endpoints for PHP CRM to trigger sending messages
+// Visual Dashboard for the Node.js App
+app.get('/', (req, res) => {
+    const isConnected = !!(sock && sock.user);
+    const webhook = process.env.WEBHOOK_URL || 'Não configurado (configure o arquivo .env)';
+
+    let html = `
+    <html>
+        <head>
+            <title>Painel do Robô - ZapCRM</title>
+            <style>
+                body { font-family: sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+                .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 100%; }
+                .status { margin: 20px 0; padding: 10px; border-radius: 6px; font-weight: bold; }
+                .online { background: #dcf8c6; color: #128c7e; }
+                .offline { background: #ffebee; color: #c62828; }
+                img { max-width: 100%; border-radius: 8px; margin: 20px 0; border: 1px solid #ddd; padding: 10px; }
+                .info { font-size: 12px; color: #666; margin-top: 20px; text-align: left; padding-top: 20px; border-top: 1px solid #eee; word-break: break-all; }
+                .btn-logout { background: #c62828; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px;}
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <h2>Servidor WhatsApp Node.js</h2>
+                <div class="status ${isConnected ? 'online' : 'offline'}">
+                    Status: ${isConnected ? '🟢 CONECTADO' : '🔴 DESCONECTADO'}
+                </div>
+
+                ${isConnected ?
+                    `<p>O seu robô está rodando 24h/dia.</p>
+                     <p>Telefone conectado: <b>${sock.user.id.split(':')[0]}</b></p>
+                     <form action="/logout" method="POST">
+                        <button type="submit" class="btn-logout">Desconectar WhatsApp</button>
+                     </form>`
+                    :
+                    (currentQR ?
+                        `<p>Escaneie o QR Code abaixo com seu WhatsApp:</p><img src="${currentQR}" alt="QR Code" />`
+                        :
+                        `<p>Gerando QR Code... Aguarde alguns segundos e atualize a página.</p>`
+                    )
+                }
+
+                <div class="info">
+                    <b>Webhook Destino (CRM PHP):</b><br>
+                    ${webhook}
+                </div>
+            </div>
+            <script>
+                // Atualiza a página sozinho se não estiver conectado, para mostrar o QR Code mais novo
+                ${!isConnected ? 'setTimeout(() => window.location.reload(), 5000);' : ''}
+            </script>
+        </body>
+    </html>
+    `;
+    res.send(html);
+});
+
+// Endpoint to logout session manually via dashboard
+app.post('/logout', (req, res) => {
+    if (sock) {
+        sock.logout('user_initiated');
+    }
+    res.redirect('/');
+});
+
 
 // Middleware to verify calls from PHP API
 app.use((req, res, next) => {
+    if (req.path === '/' || req.path === '/ping' || req.path === '/logout') return next();
+
     const authHeader = req.headers.authorization || '';
     const botToken = process.env.BOT_TOKEN || '';
-    if (botToken && authHeader !== `Bearer ${botToken}`) {
-        return res.status(401).json({ error: 'Unauthorized local call' });
+
+    if (!botToken) {
+        return res.status(500).json({ error: 'BOT_TOKEN is not set on Node.js server .env' });
     }
+
+    if (authHeader !== `Bearer ${botToken}`) {
+        return res.status(401).json({ error: 'Unauthorized call from CRM. Tokens mismatch.' });
+    }
+
     next();
 });
 
@@ -162,14 +227,9 @@ app.post('/send', async (req, res) => {
     }
 });
 
-// Start the server with dynamic port to prevent EADDRINUSE
+// Start the server
 const server = http.createServer(app);
-server.listen(0, '127.0.0.1', () => {
-    const port = server.address().port;
-    console.log(`Bot Server running on http://127.0.0.1:${port}`);
-
-    // Write port to file for PHP to read
-    fs.writeFileSync(PORT_FILE, port.toString());
-
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Node.js Web App running on port ${PORT}`);
     connectToWhatsApp();
 });

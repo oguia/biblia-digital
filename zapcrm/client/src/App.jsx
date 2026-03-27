@@ -10,7 +10,6 @@ import MyProfile from './components/MyProfile';
 
 // Determine API URL (dynamic relative for hostinger)
 const apiUrl = window.location.hostname === 'localhost' ? 'http://127.0.0.1:8000/zapcrm/api/index.php' : './api/index.php';
-const botUrl = window.location.hostname === 'localhost' ? 'http://127.0.0.1:8000/zapcrm/api/bot_controller.php' : './api/bot_controller.php';
 
 axios.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
@@ -158,7 +157,7 @@ export default function App() {
                                     <>
                                         <Route path="/team" element={<TeamPanel apiUrl={apiUrl} />} />
                                         <Route path="/knowledge" element={<KnowledgeBase apiUrl={apiUrl} />} />
-                                        <Route path="/settings" element={<SettingsPanel apiUrl={apiUrl} botUrl={botUrl} />} />
+                                        <Route path="/settings" element={<SettingsPanel apiUrl={apiUrl} />} />
                                     </>
                                 )}
                                 <Route path="*" element={<Navigate to="/kanban" />} />

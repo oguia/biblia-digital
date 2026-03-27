@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Settings, Check, Smartphone, Key, AlertTriangle, RefreshCw, Power } from 'lucide-react';
+import { Settings, Smartphone, Key, AlertTriangle, ExternalLink, Copy } from 'lucide-react';
 
-export default function SettingsPanel({ apiUrl, botUrl }) {
+export default function SettingsPanel({ apiUrl }) {
     const [settings, setSettings] = useState({
         gemini_api_key: '',
-        bot_status: 'offline',
+        bot_url: '',
+        bot_token: '',
         handoff_message: ''
     });
     const [saving, setSaving] = useState(false);
-    const [botRunning, setBotRunning] = useState(false);
-    const [qrCode, setQrCode] = useState(null);
-    const [statusLoading, setStatusLoading] = useState(true);
+    const [webhookUrl, setWebhookUrl] = useState('');
 
     const fetchSettings = async () => {
         try {
@@ -26,24 +25,17 @@ export default function SettingsPanel({ apiUrl, botUrl }) {
         }
     };
 
-    const fetchBotStatus = async () => {
-        setStatusLoading(true);
-        try {
-            const res = await axios.get(`${botUrl}?action=status`);
-            setBotRunning(res.data.running);
-            setQrCode(res.data.qr);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setStatusLoading(false);
-        }
-    };
-
     useEffect(() => {
         fetchSettings();
-        fetchBotStatus();
-        const interval = setInterval(fetchBotStatus, 5000);
-        return () => clearInterval(interval);
+
+        // Generate webhook URL to show to the user
+        const currentUrl = window.location.href;
+        let base = currentUrl.split('#')[0];
+        if (base.endsWith('/')) base = base.slice(0, -1);
+        if (base.endsWith('index.html')) base = base.replace('/index.html', '');
+
+        setWebhookUrl(`${base}/api/index.php/webhook`);
+
     }, []);
 
     const handleChange = (e) => {
@@ -63,86 +55,81 @@ export default function SettingsPanel({ apiUrl, botUrl }) {
         }
     };
 
-    const toggleBot = async () => {
-        const action = botRunning ? 'stop' : 'start';
-        setStatusLoading(true);
-        try {
-            await axios.get(`${botUrl}?action=${action}`);
-            fetchBotStatus();
-        } catch (err) {
-            console.error(err);
-            setStatusLoading(false);
-        }
+    const copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text);
+        alert('Copiado para a área de transferência!');
     };
 
     return (
-        <div className="p-8 max-w-4xl mx-auto">
+        <div className="p-8 max-w-5xl mx-auto">
             <div className="flex items-center gap-3 mb-8">
                 <div className="w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center">
                     <Settings className="w-6 h-6 text-slate-700" />
                 </div>
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800">Configurações do Sistema</h1>
-                    <p className="text-slate-500">Gerencie a conexão do WhatsApp e as chaves de API.</p>
+                    <p className="text-slate-500">Gerencie a conexão da API do WhatsApp e as chaves de Inteligência Artificial.</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Bot Connection */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
                     <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <Smartphone className="w-5 h-5 text-emerald-500" /> Conexão WhatsApp
+                        <Smartphone className="w-5 h-5 text-emerald-500" /> Servidor WhatsApp (Node.js)
                     </h2>
 
-                    <div className="flex flex-col items-center justify-center space-y-6">
-                        <div className={`px-4 py-2 rounded-full font-medium flex items-center gap-2 text-sm ${
-                            botRunning ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                            <div className={`w-2.5 h-2.5 rounded-full ${botRunning ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></div>
-                            Status: {botRunning ? 'Conectado / Rodando' : 'Desconectado / Parado'}
+                    <div className="space-y-6 flex-1">
+                        <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-sm text-slate-700">
+                            <strong>Instruções para Hostinger:</strong><br/>
+                            1. Crie um subdomínio no painel (ex: <i>robo.seusite.com</i>).<br/>
+                            2. Crie um <b>Web app Node.js</b> apontando para a pasta extraída do <code>zapcrm-bot.zip</code>.<br/>
+                            3. Configure o arquivo <code>.env</code> no Node.js com os dados abaixo.<br/>
+                            4. Cole a URL do subdomínio Node.js no campo abaixo.
                         </div>
 
-                        {!botRunning ? (
-                            <div className="text-center text-slate-500 text-sm max-w-xs">
-                                Clique no botão abaixo para iniciar o robô do WhatsApp. Se for a primeira vez, um QR Code será gerado.
-                            </div>
-                        ) : qrCode ? (
-                            <div className="text-center space-y-4">
-                                <p className="text-slate-600 font-medium">Escaneie o QR Code com seu WhatsApp:</p>
-                                <div className="p-2 bg-white border border-slate-200 rounded-xl inline-block shadow-sm">
-                                    <img src={qrCode} alt="WhatsApp QR Code" className="w-64 h-64" />
-                                </div>
-                                <p className="text-xs text-amber-600 max-w-xs mx-auto">
-                                    Se o QR Code sumir e o status continuar verde, a conexão foi realizada com sucesso!
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="text-center space-y-4">
-                                <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto text-emerald-500">
-                                    <Check className="w-10 h-10" />
-                                </div>
-                                <p className="text-emerald-700 font-medium">WhatsApp Conectado e Pronto!</p>
-                            </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">URL do Subdomínio Node.js (bot_url)</label>
+                            <input
+                                type="text"
+                                name="bot_url"
+                                value={settings.bot_url || ''}
+                                onChange={handleChange}
+                                placeholder="https://robo.meusite.com.br"
+                                className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                            />
+                        </div>
+
+                        {settings.bot_url && (
+                            <a
+                                href={settings.bot_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center justify-center gap-2 w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-medium transition-colors"
+                            >
+                                Abrir Painel do Robô (QR Code) <ExternalLink className="w-4 h-4" />
+                            </a>
                         )}
 
-                        <button
-                            onClick={toggleBot}
-                            disabled={statusLoading}
-                            className={`w-full py-3 px-6 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-sm ${
-                                botRunning
-                                    ? 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200'
-                                    : 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                            } disabled:opacity-50`}
-                        >
-                            {statusLoading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Power className="w-5 h-5" />}
-                            {statusLoading ? 'Aguarde...' : botRunning ? 'Desligar Robô' : 'Ligar Robô'}
-                        </button>
+                        <div className="pt-4 border-t border-slate-100">
+                            <h3 className="font-semibold text-slate-800 mb-3 text-sm">Dados para o arquivo .env do Node.js:</h3>
 
-                        <div className="flex bg-blue-50 text-blue-800 p-3 rounded-lg text-xs gap-2 items-start text-left">
-                            <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                            <span>
-                                Na Hostinger Compartilhada, mantenha o robô <b>LIGADO</b> apenas durante o horário de atendimento para evitar suspensão por uso contínuo de recursos em background.
-                            </span>
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="block text-xs text-slate-500 mb-1">WEBHOOK_URL</label>
+                                    <div className="flex">
+                                        <input type="text" readOnly value={webhookUrl} className="flex-1 bg-slate-100 p-2 border border-slate-200 rounded-l-lg text-xs font-mono text-slate-600 outline-none" />
+                                        <button type="button" onClick={() => copyToClipboard(webhookUrl)} className="bg-slate-200 px-3 rounded-r-lg hover:bg-slate-300 border border-l-0 border-slate-200 text-slate-600"><Copy className="w-4 h-4" /></button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-500 mb-1">BOT_TOKEN</label>
+                                    <div className="flex">
+                                        <input type="text" readOnly value={settings.bot_token || ''} className="flex-1 bg-slate-100 p-2 border border-slate-200 rounded-l-lg text-xs font-mono text-slate-600 outline-none" />
+                                        <button type="button" onClick={() => copyToClipboard(settings.bot_token || '')} className="bg-slate-200 px-3 rounded-r-lg hover:bg-slate-300 border border-l-0 border-slate-200 text-slate-600"><Copy className="w-4 h-4" /></button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -179,7 +166,7 @@ export default function SettingsPanel({ apiUrl, botUrl }) {
                                 className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-24 resize-y text-sm"
                             />
                             <p className="text-xs text-slate-500 mt-2">
-                                Mensagem que a IA envia antes de transferir o contato para a coluna "Atendimento Humano".
+                                Mensagem que a IA envia antes de transferir o contato para a coluna "Falar com Humano".
                             </p>
                         </div>
                     </div>
