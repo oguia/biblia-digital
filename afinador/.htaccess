@@ -1,0 +1,37 @@
+# Disable directory browsing
+Options -Indexes
+
+# Enable Rewrite Engine
+RewriteEngine On
+
+# --- Security: Block Common Scrapers & Download Tools (HTTrack, Wget, Curl) ---
+RewriteCond %{HTTP_USER_AGENT} ^.*(HTTrack|Wget|libwww|curl|wget|python|nikto|wikto|sqlmap|bsqlbf|w3af|acunetix|havij|appscan).*$ [NC]
+RewriteRule .* - [F,L]
+
+# --- Security: Prevent Hotlinking of Images/CSS ---
+# RewriteCond %{HTTP_REFERER} !^$
+# RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?masideus.com [NC]
+# RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?localhost [NC]
+# RewriteRule \.(jpg|jpeg|png|gif|css|js)$ - [NC,F,L]
+
+# --- Security Headers ---
+<IfModule mod_headers.c>
+    # Prevent clickjacking (embedding in iframe on other sites)
+    Header set X-Frame-Options "SAMEORIGIN"
+    # Enable XSS protection in browser
+    Header set X-XSS-Protection "1; mode=block"
+    # Prevent MIME sniffing
+    Header set X-Content-Type-Options "nosniff"
+    # Referrer Policy (Strict Origin When Cross Origin)
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# --- Performance: Enable Gzip Compression ---
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json
+</IfModule>
+
+# --- Pretty URLs (Optional - for future use) ---
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule ^(.*)$ index.php?route=$1 [L,QSA]
