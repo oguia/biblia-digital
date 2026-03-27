@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php/$1 [L]
+</IfModule>
+
+# PROTECT SENSITIVE FILES FROM DIRECT DOWNLOAD
+<FilesMatch "\.(sqlite|log|txt|cjs|sh|json)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# EXCEPTION: Allow QR code to be served
+<FilesMatch "qr\.png$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
