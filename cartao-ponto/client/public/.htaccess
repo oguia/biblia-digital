@@ -1,0 +1,49 @@
+# ----------------------------------------------------------------------
+# 1. Bloqueia navegadores em diretorios sem index
+# ----------------------------------------------------------------------
+Options -Indexes
+
+# ----------------------------------------------------------------------
+# 2. Roteamento SPA (Single Page Application) e HashRouter support
+# ----------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /cartaoponto/
+
+  # Se o arquivo ou diretório existir (ex: imagens, CSS, JS), serve ele
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # Se não existir, envia para o index.html do React
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# ----------------------------------------------------------------------
+# 3. Proteção Anti-Scraping (HTTrack, wget, curl, bots maliciosos)
+# ----------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Bloqueia User-Agents de ferramentas de extração/cópia de sites
+  RewriteCond %{HTTP_USER_AGENT} (Wget|HTTrack|WebZIP|Teleport|Offline\sExplorer|WebCopier|Zeus|python-requests|Scrapy|Bot|Crawl|Spider) [NC,OR]
+  RewriteCond %{HTTP_USER_AGENT} ^$ [OR]
+  RewriteCond %{HTTP_USER_AGENT} ^-?$
+  RewriteRule ^.* - [F,L]
+</IfModule>
+
+# ----------------------------------------------------------------------
+# 4. Cabeçalhos de Segurança Essenciais (Anti-Hacker Básicos)
+# ----------------------------------------------------------------------
+<IfModule mod_headers.c>
+  # Previne Clickjacking (iframes)
+  Header always set X-Frame-Options "SAMEORIGIN"
+
+  # Previne MIME-Sniffing (ataques XSS disfarçados de imagem)
+  Header always set X-Content-Type-Options "nosniff"
+
+  # Ativa Filtro XSS do navegador
+  Header always set X-XSS-Protection "1; mode=block"
+
+  # Opcional: Strict-Transport-Security (apenas se tiver HTTPS configurado certinho)
+  # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
