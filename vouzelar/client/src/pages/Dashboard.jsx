@@ -59,9 +59,12 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <header className="bg-primary-600 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-10">
-        <div>
-          <h1 className="text-xl font-bold">VouZelar</h1>
-          <p className="text-sm opacity-90">Olá, {user.name} ({user.plan})</p>
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" alt="VouZelar" className="h-10 bg-white p-1 rounded-lg" />
+          <div>
+            <h1 className="text-xl font-bold">VouZelar</h1>
+            <p className="text-sm opacity-90">Olá, {user.name} ({user.plan})</p>
+          </div>
         </div>
         <div className="flex gap-2">
           <button onClick={() => setView('profile')} className="p-2 hover:bg-primary-700 rounded-full" title="Configurações de Perfil">

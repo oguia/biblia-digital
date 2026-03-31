@@ -11,9 +11,7 @@ export default function Landing() {
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="bg-primary-500 text-white p-2 rounded-lg">
-              <Pill size={24} />
-            </div>
+            <img src="/logo.png" alt="VouZelar" className="h-10" />
             <span className="text-2xl font-bold text-primary-700 tracking-tight">VouZelar</span>
           </div>
           <div className="flex gap-4">

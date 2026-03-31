@@ -1,5 +1,6 @@
 <?php
 require_once 'db.php';
+require_once 'jwt.php';
 
 session_start();
 
@@ -44,7 +45,7 @@ if ($method === 'POST' && $action === 'register') {
         $stmtUpdate->execute([$userId, $userId]);
 
         // Generate simple auth token (stateless for API)
-        $token = base64_encode(json_encode(['user_id' => $userId, 'role' => 'admin', 'exp' => time() + 86400 * 30]));
+        $token = JWT::encode(['user_id' => $userId, 'role' => 'admin', 'exp' => time() + 86400 * 30]);
 
         respond([
             'message' => 'Conta criada com sucesso!',
@@ -75,7 +76,7 @@ if ($method === 'POST' && $action === 'login') {
     $user = $stmt->fetch();
 
     if ($user && password_verify($password, $user['password_hash'])) {
-        $token = base64_encode(json_encode(['user_id' => $user['id'], 'role' => $user['role'], 'exp' => time() + 86400 * 30]));
+        $token = JWT::encode(['user_id' => $user['id'], 'role' => $user['role'], 'exp' => time() + 86400 * 30]);
 
         unset($user['password_hash']); // Don't send hash to client
 

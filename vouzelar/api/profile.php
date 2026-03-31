@@ -1,5 +1,6 @@
 <?php
 require_once 'db.php';
+require_once 'jwt.php';
 
 function respond($data, $status = 200) {
     http_response_code($status);
@@ -13,7 +14,8 @@ $token = str_replace('Bearer ', '', $authHeader);
 
 if (!$token) respond(['error' => 'Não autorizado'], 401);
 
-$payload = json_decode(base64_decode($token), true);
+$payload = JWT::decode($token);
+if (!$payload) respond(['error' => 'Token inválido ou expirado.'], 401);
 if (!$payload || !isset($payload['user_id'])) respond(['error' => 'Token inválido'], 401);
 
 $userId = $payload['user_id'];

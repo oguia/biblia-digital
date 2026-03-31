@@ -1,5 +1,6 @@
 <?php
 require_once 'db.php';
+require_once 'jwt.php';
 
 // We simulate MP for the MVP
 define('MP_ACCESS_TOKEN', 'TEST-7468165518055562-xxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxx');
@@ -19,7 +20,8 @@ $input = json_decode(file_get_contents('php://input'), true);
 if ($action === 'create_preference' && $method === 'POST') {
     $headers = getallheaders();
     $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
-    $payload = json_decode(base64_decode($token), true);
+    $payload = JWT::decode($token);
+if (!$payload) respond(['error' => 'Token inválido ou expirado.'], 401);
     if (!$payload) respond(['error' => 'Unauthorized'], 401);
 
     $userId = $payload['user_id'];
