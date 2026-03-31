@@ -30,11 +30,11 @@ function App() {
           <Route path="/register" component={Register} />
 
           <Route path="/dashboard">
-             {() => <PrivateRoute component={Dashboard} allowedRoles={['admin', 'caregiver']} />}
+             {() => <PrivateRoute component={Dashboard} allowedRoles={['admin', 'caregiver', 'superadmin']} />}
           </Route>
 
           <Route path="/patient">
-             {() => <PrivateRoute component={PatientDashboard} allowedRoles={['patient', 'admin']} />}
+             {() => <PrivateRoute component={PatientDashboard} allowedRoles={['patient', 'admin', 'superadmin']} />}
           </Route>
 
           <Route path="/" component={Landing} />
