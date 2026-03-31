@@ -3,6 +3,9 @@ import { useLocation } from 'wouter';
 import { LogOut, Bell, Pill, Users } from 'lucide-react';
 import Medications from '../components/Medications';
 import Patients from '../components/Patients';
+import Profile from '../components/Profile';
+import SuperAdmin from '../components/SuperAdmin';
+import { Settings, Shield } from 'lucide-react';
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -21,12 +24,17 @@ export default function Dashboard() {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
           alert('Notificações ativadas! Você receberá alertas do VouZelar.');
+        } else if (permission === 'denied') {
+          alert('Você negou a permissão ou o navegador bloqueou automaticamente. Nota: Notificações Push requerem conexão segura (HTTPS). Se estiver testando localmente sem HTTPS, o navegador bloqueará o pedido automaticamente.');
         } else {
-          alert('Você negou a permissão. Não receberá alertas.');
+           alert('Permissão de notificação não foi concedida (' + permission + ').');
         }
+      } else {
+         alert('Seu navegador não suporta notificações Push.');
       }
     } catch (e) {
       console.error(e);
+      alert('Erro ao solicitar notificações: ' + e.message);
     }
   };
 
@@ -40,6 +48,14 @@ export default function Dashboard() {
     return <Patients setView={setView} />;
   }
 
+  if (view === 'profile') {
+    return <Profile setView={setView} />;
+  }
+
+  if (view === 'superadmin') {
+    return <SuperAdmin setView={setView} />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <header className="bg-primary-600 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-10">
@@ -47,12 +63,27 @@ export default function Dashboard() {
           <h1 className="text-xl font-bold">VouZelar</h1>
           <p className="text-sm opacity-90">Olá, {user.name} ({user.plan})</p>
         </div>
-        <button onClick={handleLogout} className="p-2 hover:bg-primary-700 rounded-full">
-          <LogOut size={20} />
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => setView('profile')} className="p-2 hover:bg-primary-700 rounded-full" title="Configurações de Perfil">
+            <Settings size={20} />
+          </button>
+          <button onClick={handleLogout} className="p-2 hover:bg-primary-700 rounded-full" title="Sair">
+            <LogOut size={20} />
+          </button>
+        </div>
       </header>
 
       <main className="p-4 max-w-lg mx-auto space-y-4">
+
+        {/* Super Admin Secret Button */}
+        {user.role === 'superadmin' && (
+           <button
+             onClick={() => setView('superadmin')}
+             className="w-full bg-gray-900 text-yellow-400 p-3 rounded-xl shadow-md flex items-center justify-center gap-2 font-bold mb-4 hover:bg-black transition-colors"
+           >
+             <Shield size={20} /> Acessar Painel Global (Super Admin)
+           </button>
+        )}
 
         {/* Trial Notice */}
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded shadow-sm">

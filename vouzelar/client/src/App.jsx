@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import PatientDashboard from './pages/PatientDashboard';
+import Landing from './pages/Landing';
 
 // Simple PrivateRoute wrapper component
 const PrivateRoute = ({ component: Component, allowedRoles }) => {
@@ -36,9 +37,7 @@ function App() {
              {() => <PrivateRoute component={PatientDashboard} allowedRoles={['patient', 'admin']} />}
           </Route>
 
-          <Route path="/">
-            <Redirect to="/login" />
-          </Route>
+          <Route path="/" component={Landing} />
 
           <Route>
             <div className="p-8 text-center text-red-500">404 - Página não encontrada</div>

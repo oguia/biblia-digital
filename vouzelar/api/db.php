@@ -46,7 +46,7 @@ class DB {
                 name TEXT NOT NULL,
                 email TEXT UNIQUE, -- Optional for patients
                 password_hash TEXT, -- Optional for patients
-                role TEXT CHECK(role IN ('admin', 'caregiver', 'patient')) NOT NULL DEFAULT 'admin',
+                role TEXT CHECK(role IN ('admin', 'caregiver', 'patient', 'superadmin')) NOT NULL DEFAULT 'admin',
                 plan TEXT CHECK(plan IN ('free', 'individual', 'family')) NOT NULL DEFAULT 'free',
                 trial_ends_at DATETIME,
                 subscription_status TEXT DEFAULT 'active', -- active, past_due, canceled
@@ -105,6 +105,14 @@ class DB {
 
         foreach ($queries as $query) {
             $this->pdo->exec($query);
+        }
+
+        // Seed the initial Super Admin account if the users table is empty
+        $stmt = $this->pdo->query("SELECT COUNT(*) FROM users");
+        if ($stmt->fetchColumn() == 0) {
+            $hash = password_hash('admin123', PASSWORD_DEFAULT);
+            $trialEndsAt = date('Y-m-d H:i:s', strtotime('+365 days'));
+            $this->pdo->exec("INSERT INTO users (family_group_id, name, email, password_hash, role, plan, trial_ends_at) VALUES (1, 'Super Admin', 'admin@vouzelar.com', '$hash', 'superadmin', 'family', '$trialEndsAt')");
         }
     }
 }
