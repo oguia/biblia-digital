@@ -123,7 +123,7 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 py-12 text-center">
-        <p>© {new Date().getFullYear()} VouZelar. Todos os direitos reservados.</p>
+        <p>© {new Date().getFullYear()} VouZelar. Todos os direitos reservados. Feito com amor para a sua família.</p>
       </footer>
     </div>
   );
