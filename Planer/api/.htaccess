@@ -1,0 +1,16 @@
+# Planer/api/.htaccess
+# Prevent direct access to SQLite database files
+<FilesMatch "\.(sqlite|sqlite3|db)$">
+    Require all denied
+</FilesMatch>
+
+# Prevent directory listing
+Options -Indexes
+
+# If someone tries to access /uploads directly, forbid it (or we can use a separate .htaccess in uploads)
+<Directory "uploads">
+    # Force download or prevent execution of scripts
+    <FilesMatch "\.(php|phtml|php3|php4|php5|pl|py|jsp|asp|html|htm|shtml|sh|cgi)$">
+        Require all denied
+    </FilesMatch>
+</Directory>
