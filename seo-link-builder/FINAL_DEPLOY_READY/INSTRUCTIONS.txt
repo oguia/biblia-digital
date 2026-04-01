@@ -1,0 +1,50 @@
+# INSTRUCTIONS FOR HOSTINGER DEPLOYMENT
+
+This folder contains everything you need to upload to your Hostinger `public_html` folder.
+
+## 1. Upload Files
+Upload all files and folders inside this `FINAL_DEPLOY_READY` folder to your `public_html` directory using File Manager or FTP.
+
+Your `public_html` should look like this:
+- api/
+- assets/
+- index.html
+- database.sql
+- INSTRUCTIONS.txt (this file)
+
+## 2. Setup Database
+1. Go to your Hostinger Control Panel -> Databases -> MySQL Databases.
+2. Create a new database and user. Note down the Database Name, Username, and Password.
+3. Open phpMyAdmin for your new database.
+4. Click "Import" and select the `database.sql` file from this folder.
+5. Click "Go".
+
+## 3. Configure Backend
+1. Go to File Manager -> public_html -> api.
+2. Edit the file named `config.php`.
+3. Change the following lines with your database details:
+   define('DB_HOST', 'localhost');
+   define('DB_NAME', 'u123456789_seo_db'); // Replace with your DB Name
+   define('DB_USER', 'u123456789_seo_user'); // Replace with your DB User
+   define('DB_PASS', 'ChangeMe123!'); // Replace with your DB Password
+   define('GEMINI_API_KEY', 'YOUR_API_KEY_HERE'); // Your Google Gemini API Key
+   define('MERCADO_PAGO_ACCESS_TOKEN', 'YOUR_TOKEN_HERE'); // Your Mercado Pago Token
+
+## 4. Setup .htaccess (Required for Navigation)
+Create a `.htaccess` file in `public_html` with this content to fix 404 errors on refresh:
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+
+## 5. Done!
+Open your domain in the browser.
+- The site now supports English and Portuguese (auto-detected).
+- Use the flag button in the sidebar to switch languages.
+- Login with the admin account created (check `users` table in phpMyAdmin or register a new one).
+- Note: If you register a new user, change their `role` to `admin` in the `users` table manually via phpMyAdmin to access Admin features.
