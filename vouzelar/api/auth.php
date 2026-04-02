@@ -89,9 +89,13 @@ if ($method === 'POST' && $action === 'register') {
             'user' => [
                 'id' => $userId,
                 'name' => $name,
+                'email' => $email,
                 'role' => 'admin',
                 'plan' => $plan,
-                'trial_ends_at' => $trialEndsAt
+                'trial_ends_at' => $trialEndsAt,
+                'cep' => $cep,
+                'city' => $city,
+                'state' => $state
             ]
         ]);
     } else {
