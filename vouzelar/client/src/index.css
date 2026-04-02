@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #f0fdf4;
+  --color-primary-100: #dcfce7;
+  --color-primary-500: #22c55e;
+  --color-primary-600: #16a34a;
+  --color-primary-700: #15803d;
+  --color-primary-900: #14532d;
+
+  --color-accent-500: #eab308;
+  --color-accent-600: #ca8a04;
+
+  --color-surface: #ffffff;
+  --color-background: #f8fafc;
+}
+
+body {
+  background-color: var(--color-background);
+  color: #1e293b;
+}
+
+/* Patient UI specific classes */
+.patient-btn {
+  @apply w-full py-6 rounded-2xl text-2xl font-bold shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-4;
+}
+.patient-text {
+  @apply text-2xl md:text-3xl font-semibold leading-relaxed;
+}
