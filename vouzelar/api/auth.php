@@ -29,7 +29,30 @@ if ($method === 'POST' && $action === 'register') {
          respond(['error' => 'Formato de email inválido.'], 400);
     }
 
-    $domain = substr(strrchr($email, "@"), 1);
+    $emailLower = strtolower($email);
+
+    // Blacklist of exact fake emails
+    $blacklistedEmails = [
+        'teste@teste.com', 'teste@teste.com.br', 'admin@admin.com',
+        '123@123.com', 'abc@abc.com', 'user@user.com'
+    ];
+
+    if (in_array($emailLower, $blacklistedEmails)) {
+        respond(['error' => 'Por favor, utilize um email real.'], 400);
+    }
+
+    $domain = substr(strrchr($emailLower, "@"), 1);
+
+    // Blacklist of disposable/temporary email domains
+    $blacklistedDomains = [
+        'yopmail.com', 'mailinator.com', 'guerrillamail.com', '10minutemail.com',
+        'tempmail.com', 'temp-mail.org', 'throwawaymail.com', 'sharklasers.com'
+    ];
+
+    if (in_array($domain, $blacklistedDomains)) {
+        respond(['error' => 'Emails temporários não são permitidos.'], 400);
+    }
+
     if (!checkdnsrr($domain, "MX")) {
         respond(['error' => 'O domínio do email não parece ser válido ou não aceita emails.'], 400);
     }
