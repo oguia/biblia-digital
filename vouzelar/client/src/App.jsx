@@ -6,6 +6,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import PatientDashboard from './pages/PatientDashboard';
 import Landing from './pages/Landing';
+import InstallPWA from './components/InstallPWA';
 
 // Simple PrivateRoute wrapper component
 const PrivateRoute = ({ component: Component, allowedRoles }) => {
@@ -43,6 +44,7 @@ function App() {
             <div className="p-8 text-center text-red-500">404 - Página não encontrada</div>
           </Route>
         </Switch>
+        <InstallPWA />
       </div>
     </Router>
   );

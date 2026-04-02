@@ -9,16 +9,16 @@ export default function Landing() {
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap md:flex-nowrap justify-between items-center gap-y-3">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="VouZelar" className="h-10" />
-            <span className="text-2xl font-bold text-primary-700 tracking-tight">VouZelar</span>
+            <img src="/logo.png" alt="VouZelar" className="h-8 md:h-10" />
+            <span className="text-xl md:text-2xl font-bold text-primary-700 tracking-tight">VouZelar</span>
           </div>
-          <div className="flex gap-4">
-            <button onClick={() => setLocation('/login')} className="text-gray-600 font-medium hover:text-primary-600 transition-colors">
+          <div className="flex gap-2 md:gap-4 w-full md:w-auto justify-end">
+            <button onClick={() => setLocation('/login')} className="text-sm md:text-base text-gray-600 font-medium hover:text-primary-600 transition-colors px-2">
               Entrar
             </button>
-            <button onClick={() => setLocation('/register')} className="bg-primary-600 text-white px-5 py-2 rounded-full font-medium hover:bg-primary-700 transition-colors shadow-sm">
+            <button onClick={() => setLocation('/register')} className="text-sm md:text-base bg-primary-600 text-white px-4 md:px-5 py-1.5 md:py-2 rounded-full font-medium hover:bg-primary-700 transition-colors shadow-sm">
               Começar Grátis
             </button>
           </div>

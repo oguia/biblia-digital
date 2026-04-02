@@ -26,8 +26,20 @@ if ($payload['role'] !== 'superadmin') {
 
 $db = DB::getInstance()->getConnection();
 $method = $_SERVER['REQUEST_METHOD'];
+$action = $_GET['action'] ?? 'stats';
 
-if ($method === 'GET') {
+if ($action === 'generate_code' && $method === 'POST') {
+    // Generate a random 6 char alphanumeric code
+    $code = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 6));
+
+    $stmt = $db->prepare("INSERT INTO invite_codes (code, created_by) VALUES (?, ?)");
+    if ($stmt->execute([$code, $payload['user_id']])) {
+        respond(['message' => 'Código gerado com sucesso', 'code' => $code]);
+    }
+    respond(['error' => 'Erro ao gerar código'], 500);
+}
+
+if ($action === 'stats' && $method === 'GET') {
     // 1. Total users
     $stmt = $db->query("SELECT COUNT(*) FROM users");
     $totalUsers = $stmt->fetchColumn();
@@ -50,12 +62,17 @@ if ($method === 'GET') {
     $stmt = $db->query("SELECT name, COUNT(*) as tracking_count FROM medications GROUP BY name ORDER BY tracking_count DESC LIMIT 5");
     $topMeds = $stmt->fetchAll();
 
+    // 6. Recent Invite Codes
+    $stmtCodes = $db->query("SELECT code, is_used, created_at FROM invite_codes ORDER BY created_at DESC LIMIT 10");
+    $codes = $stmtCodes->fetchAll();
+
     respond([
         'total_users' => $totalUsers,
         'users_by_role' => $usersByRole,
         'users_by_plan' => $usersByPlan,
         'estimated_mrr' => $mrr,
-        'top_meds' => $topMeds
+        'top_meds' => $topMeds,
+        'recent_codes' => $codes
     ]);
 }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { ArrowLeft, TrendingUp, Users, Activity, Pill } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Users, Activity, Pill, Gift, Copy } from 'lucide-react';
 
 export default function SuperAdmin({ setView }) {
   const [, setLocation] = useLocation();
@@ -16,7 +16,8 @@ export default function SuperAdmin({ setView }) {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch('./api/superadmin.php', {
+      const baseUrl = window.location.href.includes('localhost') ? 'http://localhost:8000' : 'api';
+      const res = await fetch(`${baseUrl}/superadmin.php`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -28,6 +29,30 @@ export default function SuperAdmin({ setView }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGenerateCode = async () => {
+    try {
+      const baseUrl = window.location.href.includes('localhost') ? 'http://localhost:8000' : 'api';
+      const res = await fetch(`${baseUrl}/superadmin.php?action=generate_code`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(`Código gerado: ${data.code}`);
+        fetchStats(); // recarregar a lista de códigos
+      } else {
+        alert(data.error);
+      }
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    alert('Código copiado!');
   };
 
   if (error) {
@@ -105,6 +130,41 @@ export default function SuperAdmin({ setView }) {
                       <div className="bg-primary-100 text-primary-800 px-3 py-1 rounded-full text-sm font-bold">
                         {med.tracking_count} usos
                       </div>
+                   </div>
+                 ))}
+               </div>
+             )}
+          </div>
+
+          {/* Invites */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+             <div className="flex justify-between items-center mb-4">
+               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <Gift className="text-primary-500" /> Gerador de Acessos
+               </h2>
+               <button onClick={handleGenerateCode} className="bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-primary-700 transition-colors shadow-sm">
+                 + Gerar Código Vitalício
+               </button>
+             </div>
+             <p className="text-sm text-gray-500 mb-6">Crie códigos únicos para dar acesso "Família Vitalício" aos usuários para testarem ou comprarem fora do sistema.</p>
+
+             {(!stats.recent_codes || stats.recent_codes.length === 0) ? (
+               <p className="text-gray-400 text-center py-4 bg-gray-50 rounded-xl border border-dashed">Nenhum código gerado.</p>
+             ) : (
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                 {stats.recent_codes.map((codeObj, index) => (
+                   <div key={index} className={`flex justify-between items-center p-4 rounded-xl border ${codeObj.is_used ? 'bg-gray-100 border-gray-200 opacity-60' : 'bg-green-50 border-green-200'}`}>
+                      <div>
+                        <div className={`text-xl font-black tracking-widest ${codeObj.is_used ? 'text-gray-500 line-through' : 'text-green-700'}`}>{codeObj.code}</div>
+                        <div className="text-xs mt-1 text-gray-500 font-medium">
+                          {codeObj.is_used ? 'Já Resgatado' : 'Disponível'}
+                        </div>
+                      </div>
+                      {!codeObj.is_used && (
+                        <button onClick={() => copyToClipboard(codeObj.code)} className="p-2 bg-white text-green-700 rounded-lg hover:bg-green-100 shadow-sm border border-green-200" title="Copiar">
+                          <Copy size={20} />
+                        </button>
+                      )}
                    </div>
                  ))}
                </div>

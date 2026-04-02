@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { ArrowLeft, User, Mail, Lock, CheckCircle } from 'lucide-react';
+import { ArrowLeft, User, Mail, Lock, CheckCircle, CreditCard } from 'lucide-react';
+import SubscriptionBlock from './SubscriptionBlock';
 
 export default function Profile({ setView }) {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('vouzelar_user')));
@@ -120,6 +121,66 @@ export default function Profile({ setView }) {
             >
               {loading ? 'Salvando...' : 'Atualizar Perfil'}
             </button>
+          </form>
+        </div>
+
+        <div className="mt-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+            <CreditCard className="text-primary-600" /> Assinatura Ativa
+          </h2>
+
+          <div className="mb-6">
+            <p className="text-sm text-gray-600">Seu plano atual é:</p>
+            <p className="text-xl font-bold capitalize text-primary-700">{user.plan || 'Free'}</p>
+          </div>
+
+          <div className="space-y-6">
+            <SubscriptionBlock plan="individual" />
+            <SubscriptionBlock plan="family" />
+          </div>
+        </div>
+
+        <div className="mt-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+             Possui um código de convite?
+          </h2>
+          <p className="text-sm text-gray-500 mb-4">Insira o código fornecido pela clínica ou suporte para liberar o plano Família vitalício.</p>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const code = e.target.elements.code.value;
+              const baseUrl = window.location.href.includes('localhost') ? 'http://localhost:8000' : 'api';
+              try {
+                const res = await fetch(`${baseUrl}/checkout.php?action=redeem_code`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                  body: JSON.stringify({ code })
+                });
+                const data = await res.json();
+                if(res.ok) {
+                   alert(data.message);
+                   // Update local user object
+                   const updatedUser = { ...user, plan: 'family', role: user.role, subscription_status: 'lifetime' };
+                   localStorage.setItem('vouzelar_user', JSON.stringify(updatedUser));
+                   setUser(updatedUser);
+                   e.target.reset();
+                } else {
+                   alert(data.error);
+                }
+              } catch(err) {
+                alert('Erro de conexão: ' + err.message);
+              }
+            }}
+            className="flex gap-2"
+          >
+            <input
+              type="text"
+              name="code"
+              placeholder="Ex: A1B2C3"
+              required
+              className="flex-1 border border-gray-300 rounded-xl p-3 bg-gray-50 uppercase font-mono tracking-widest focus:bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
+            />
+            <button type="submit" className="bg-gray-900 text-white font-bold px-6 py-3 rounded-xl hover:bg-black transition-colors whitespace-nowrap">Resgatar</button>
           </form>
         </div>
       </main>

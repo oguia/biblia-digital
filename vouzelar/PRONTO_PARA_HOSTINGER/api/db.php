@@ -55,6 +55,17 @@ class DB {
                 FOREIGN KEY (family_group_id) REFERENCES users(id) ON DELETE CASCADE
             );",
 
+            "CREATE TABLE IF NOT EXISTS invite_codes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT UNIQUE NOT NULL,
+                created_by INTEGER NOT NULL,
+                is_used BOOLEAN DEFAULT 0,
+                used_by INTEGER,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (created_by) REFERENCES users(id),
+                FOREIGN KEY (used_by) REFERENCES users(id)
+            );",
+
             "CREATE TABLE IF NOT EXISTS medications (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 patient_id INTEGER NOT NULL,
