@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, Plus, UserPlus } from 'lucide-react';
+import { ArrowLeft, Users, Plus, UserPlus, FileText } from 'lucide-react';
 
 export default function Patients({ setView }) {
   const [patients, setPatients] = useState([]);
@@ -91,25 +91,121 @@ export default function Patients({ setView }) {
                 <p className="text-gray-500">Nenhum paciente cadastrado.</p>
               </div>
             ) : patients.map(p => (
-              <div key={p.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="bg-primary-50 p-3 rounded-full text-primary-600">
-                    <Users size={24} />
+              <div key={p.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary-50 p-3 rounded-full text-primary-600">
+                      <Users size={24} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900">{p.name}</h3>
+                      <p className="text-sm text-gray-500">Login: {p.email}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">{p.name}</h3>
-                    <p className="text-sm text-gray-500">Login: {p.email}</p>
-                  </div>
+                  <button
+                    onClick={() => setView('medications')}
+                    className="text-primary-600 text-sm font-medium"
+                  >
+                    Ver Remédios
+                  </button>
                 </div>
-                <button
-                  onClick={() => {
-                     // Hacky jump to medications, could be better managed
-                     setView('medications');
-                  }}
-                  className="text-primary-600 text-sm font-medium"
-                >
-                  Ver Remédios
-                </button>
+
+                <div className="border-t border-gray-100 pt-3 flex justify-end">
+                   <button
+                     onClick={async () => {
+                        try {
+                           const baseUrl = window.location.href.includes('localhost') ? 'http://localhost:8000' : 'api';
+                           const res = await fetch(`${baseUrl}/caregiver.php?action=report&patient_id=${p.id}`, {
+                             headers: { 'Authorization': `Bearer ${token}` }
+                           });
+                           if (res.ok) {
+                              const data = await res.json();
+
+                              // Generate simple HTML for printing (acting as PDF)
+                              const printWindow = window.open('', '_blank');
+                              printWindow.document.write(`
+                                <html>
+                                  <head>
+                                    <title>Relatório de Saúde - ${data.patient_name}</title>
+                                    <style>
+                                      body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+                                      h1 { color: #1a56db; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
+                                      .stats { display: flex; gap: 20px; margin-bottom: 30px; }
+                                      .stat-box { background: #f3f4f6; padding: 15px; border-radius: 8px; flex: 1; text-align: center; }
+                                      .stat-box h2 { margin: 0; font-size: 24px; color: #111827; }
+                                      .stat-box p { margin: 5px 0 0; font-size: 14px; color: #6b7280; }
+                                      table { w-full; border-collapse: collapse; margin-top: 20px; width: 100%; }
+                                      th, td { border: 1px solid #d1d5db; padding: 10px; text-align: left; }
+                                      th { background: #f9fafb; font-weight: bold; }
+                                      .taken { color: #059669; font-weight: bold; }
+                                      .missed { color: #dc2626; font-weight: bold; }
+                                    </style>
+                                  </head>
+                                  <body>
+                                    <h1>Relatório de Adesão ao Tratamento</h1>
+
+                                    <div class="stats">
+                                      <div class="stat-box">
+                                        <p>Paciente</p>
+                                        <h2>${data.patient_name}</h2>
+                                      </div>
+                                      <div class="stat-box">
+                                        <p>Taxa de Adesão Geral</p>
+                                        <h2>${data.adherence_rate}%</h2>
+                                      </div>
+                                      <div class="stat-box">
+                                        <p>Período de Análise</p>
+                                        <h2>Últimas 100 doses</h2>
+                                      </div>
+                                    </div>
+
+                                    <h3>Histórico de Doses</h3>
+                                    <table>
+                                      <thead>
+                                        <tr>
+                                          <th>Data/Hora Programada</th>
+                                          <th>Medicamento</th>
+                                          <th>Status</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        ${data.history.length === 0 ? '<tr><td colspan="3" style="text-align:center">Nenhum histórico encontrado.</td></tr>' :
+                                          data.history.map(h => `
+                                            <tr>
+                                              <td>${new Date(h.scheduled_time).toLocaleString('pt-BR')}</td>
+                                              <td>${h.medication_name}</td>
+                                              <td class="${h.status === 'taken' ? 'taken' : (h.status === 'missed' ? 'missed' : '')}">
+                                                ${h.status === 'taken' ? 'Tomado' : (h.status === 'missed' ? 'Esquecido' : 'Pendente')}
+                                              </td>
+                                            </tr>
+                                          `).join('')
+                                        }
+                                      </tbody>
+                                    </table>
+
+                                    <p style="margin-top: 40px; text-align: center; font-size: 12px; color: #9ca3af;">
+                                      Gerado por VouZelar App em ${new Date().toLocaleDateString('pt-BR')}
+                                    </p>
+                                  </body>
+                                </html>
+                              `);
+                              printWindow.document.close();
+                              setTimeout(() => {
+                                printWindow.print();
+                              }, 500);
+                           } else {
+                              alert("Erro ao gerar relatório.");
+                           }
+                        } catch(e) {
+                           console.error(e);
+                           alert("Erro de conexão.");
+                        }
+                     }}
+                     className="flex items-center gap-1 text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors"
+                   >
+                     <FileText size={16} /> Gerar PDF do Histórico
+                   </button>
+                </div>
               </div>
             ))}
           </div>

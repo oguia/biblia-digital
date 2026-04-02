@@ -80,8 +80,10 @@ class DB {
                 stock_current INTEGER DEFAULT 0,
                 stock_minimum INTEGER DEFAULT 5, -- Alert threshold
                 photo_url TEXT,
+                assigned_buyer_id INTEGER,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (patient_id) REFERENCES users(id) ON DELETE CASCADE
+                FOREIGN KEY (patient_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (assigned_buyer_id) REFERENCES users(id)
             );",
 
             "CREATE TABLE IF NOT EXISTS dose_history (

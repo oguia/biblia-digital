@@ -32,6 +32,79 @@ $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 $input = json_decode(file_get_contents('php://input'), true);
 
+if ($action === 'family_members') {
+    $stmtGroup = $db->prepare("SELECT family_group_id FROM users WHERE id = ?");
+    $stmtGroup->execute([$userId]);
+    $familyGroupId = $stmtGroup->fetchColumn();
+
+    if ($method === 'GET') {
+        $stmt = $db->prepare("SELECT id, name, email, role, plan FROM users WHERE family_group_id = ? AND role IN ('admin', 'caregiver')");
+        $stmt->execute([$familyGroupId]);
+        respond($stmt->fetchAll());
+    }
+
+    if ($method === 'POST') {
+        $name = $input['name'] ?? '';
+        $email = $input['email'] ?? '';
+
+        if (!$name || !$email) respond(['error' => 'Nome e email são obrigatórios.'], 400);
+
+        // Check plan limits
+        $stmtAdmin = $db->prepare("SELECT plan FROM users WHERE id = ?");
+        $stmtAdmin->execute([$familyGroupId]);
+        $plan = $stmtAdmin->fetchColumn();
+
+        if ($plan !== 'family' && $plan !== 'superadmin') {
+            respond(['error' => 'Upgrade para o plano Família para adicionar mais cuidadores.'], 403);
+        }
+
+        $stmtCount = $db->prepare("SELECT COUNT(*) FROM users WHERE family_group_id = ? AND role IN ('admin', 'caregiver')");
+        $stmtCount->execute([$familyGroupId]);
+        if ($stmtCount->fetchColumn() >= 5) {
+             respond(['error' => 'Limite de 5 cuidadores atingido.'], 400);
+        }
+
+        $hash = password_hash('123456', PASSWORD_DEFAULT); // Default password for invited users
+        $stmt = $db->prepare("INSERT INTO users (family_group_id, name, email, password_hash, role, plan) VALUES (?, ?, ?, ?, 'caregiver', 'family')");
+        if ($stmt->execute([$familyGroupId, $name, $email, $hash])) {
+             respond(['message' => 'Cuidador adicionado. A senha padrão é 123456.']);
+        } else {
+             respond(['error' => 'Erro ao adicionar cuidador. Verifique se o e-mail já existe.'], 500);
+        }
+    }
+}
+
+if ($action === 'report') {
+    if ($method === 'GET') {
+        $patientId = $_GET['patient_id'] ?? null;
+        if (!$patientId) respond(['error' => 'Patient ID required'], 400);
+
+        $stmt = $db->prepare("SELECT dh.*, m.name as medication_name
+                              FROM dose_history dh
+                              JOIN medications m ON dh.medication_id = m.id
+                              WHERE dh.patient_id = ?
+                              ORDER BY dh.scheduled_time DESC
+                              LIMIT 100");
+        $stmt->execute([$patientId]);
+        $history = $stmt->fetchAll();
+
+        // Calculate adherence
+        $total = count($history);
+        $taken = count(array_filter($history, function($h) { return $h['status'] === 'taken'; }));
+        $adherence = $total > 0 ? round(($taken / $total) * 100) : 0;
+
+        $stmtPatient = $db->prepare("SELECT name FROM users WHERE id = ?");
+        $stmtPatient->execute([$patientId]);
+        $patientName = $stmtPatient->fetchColumn();
+
+        respond([
+            'patient_name' => $patientName,
+            'adherence_rate' => $adherence,
+            'history' => $history
+        ]);
+    }
+}
+
 // Endpoint to manage patients (elderly profile)
 if ($action === 'patients') {
     if ($method === 'GET') {

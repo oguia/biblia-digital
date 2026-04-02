@@ -5,6 +5,7 @@ import Medications from '../components/Medications';
 import Patients from '../components/Patients';
 import Profile from '../components/Profile';
 import SuperAdmin from '../components/SuperAdmin';
+import Caregivers from '../components/Caregivers';
 import { Settings, Shield } from 'lucide-react';
 import { registerServiceWorker, subscribeUserToPush } from '../lib/pwa';
 
@@ -114,6 +115,10 @@ export default function Dashboard() {
     return <SuperAdmin setView={setView} />;
   }
 
+  if (view === 'caregivers') {
+    return <Caregivers setView={setView} />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <header className="bg-primary-600 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-10">
@@ -218,6 +223,16 @@ export default function Dashboard() {
               <Users size={24} />
             </div>
             <span className="font-medium text-gray-700 text-sm">Pacientes</span>
+          </button>
+
+          <button
+             onClick={() => setView('caregivers')}
+             className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-2 hover:border-primary-300 transition-colors col-span-2"
+          >
+            <div className="bg-primary-50 p-3 rounded-full text-primary-600 flex items-center justify-center">
+              <Users size={20} className="mr-1" /> +
+            </div>
+            <span className="font-medium text-gray-700 text-sm">Rede de Apoio (Cuidadores)</span>
           </button>
         </div>
 

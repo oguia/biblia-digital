@@ -9,7 +9,10 @@ export default function Medications({ setView }) {
 
   // New medication form
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: '', dosage: '', stock_current: 30, times_per_day: 1, photo_url: '' });
+  const [form, setForm] = useState({ name: '', dosage: '', stock_current: 30, times_per_day: 1, photo_url: '', assigned_buyer_id: '' });
+
+  // Family members for assignments
+  const [familyMembers, setFamilyMembers] = useState([]);
 
   // Price search modal
   const [searchModal, setSearchModal] = useState({ show: false, medName: '', results: null, loading: false });
@@ -33,6 +36,16 @@ export default function Medications({ setView }) {
       } else {
         setLoading(false);
       }
+    }
+
+    const user = JSON.parse(localStorage.getItem('vouzelar_user') || '{}');
+    if (user.plan === 'family' || user.role === 'superadmin') {
+       const resFamily = await fetch('./api/caregiver.php?action=family_members', {
+         headers: { 'Authorization': `Bearer ${token}` }
+       });
+       if(resFamily.ok) {
+         setFamilyMembers(await resFamily.json());
+       }
     }
   };
 
@@ -101,7 +114,7 @@ export default function Medications({ setView }) {
       body: JSON.stringify({ ...form, patient_id: selectedPatient })
     });
     if (res.ok) {
-      setForm({ name: '', dosage: '', stock_current: 30, times_per_day: 1, photo_url: '' });
+      setForm({ name: '', dosage: '', stock_current: 30, times_per_day: 1, photo_url: '', assigned_buyer_id: '' });
       setShowForm(false);
       fetchMedications(selectedPatient);
     }
@@ -182,6 +195,22 @@ export default function Medications({ setView }) {
                       </div>
                     )}
                   </div>
+                  {familyMembers.length > 0 && (
+                    <div>
+                       <label className="block text-sm text-gray-600 mb-1">Escala de Compras (Opcional):</label>
+                       <select
+                         className="w-full border p-2 rounded text-sm bg-white"
+                         value={form.assigned_buyer_id}
+                         onChange={e => setForm({...form, assigned_buyer_id: e.target.value})}
+                       >
+                         <option value="">Quem vai comprar este remédio?</option>
+                         {familyMembers.map(m => (
+                           <option key={m.id} value={m.id}>{m.name}</option>
+                         ))}
+                       </select>
+                       <p className="text-[11px] text-gray-500 mt-1">Plano Família: Atribua este remédio a um cuidador da rede.</p>
+                    </div>
+                  )}
                   <button type="submit" className="w-full bg-primary-600 text-white p-2 rounded font-medium mt-2">Salvar</button>
                 </div>
               </form>
@@ -213,6 +242,12 @@ export default function Medications({ setView }) {
                       ) : (
                         <p className="text-xs text-green-600 font-medium mt-1">
                           Calculadora: Dura aprox. {med.days_remaining} dias
+                        </p>
+                      )}
+
+                      {med.assigned_buyer_id && familyMembers.length > 0 && (
+                        <p className="text-xs text-purple-700 bg-purple-50 inline-block px-2 py-1 rounded mt-2 border border-purple-100 font-medium">
+                           Comprador: {familyMembers.find(m => m.id == med.assigned_buyer_id)?.name || 'Desconhecido'}
                         </p>
                       )}
 
