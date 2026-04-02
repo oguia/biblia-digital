@@ -122,10 +122,27 @@ if ($action === 'patients') {
 
         if (!$name || !$login || !$password) respond(['error' => 'Preencha todos os campos.'], 400);
 
-        // Find family_group_id
-        $stmtGrp = $db->prepare("SELECT family_group_id FROM users WHERE id = ?");
+        // Find family_group_id and plan
+        $stmtGrp = $db->prepare("SELECT family_group_id, plan FROM users WHERE id = ?");
         $stmtGrp->execute([$userId]);
-        $familyId = $stmtGrp->fetchColumn();
+        $adminUser = $stmtGrp->fetch();
+        $familyId = $adminUser['family_group_id'];
+        $plan = $adminUser['plan'];
+
+        // Count existing patients in this family group
+        $stmtCount = $db->prepare("SELECT COUNT(*) FROM users WHERE family_group_id = ? AND role = 'patient'");
+        $stmtCount->execute([$familyId]);
+        $patientCount = $stmtCount->fetchColumn();
+
+        // Enforce plan limits
+        if ($plan === 'individual' && $patientCount >= 1) {
+            respond(['error' => 'O plano Individual permite apenas 1 paciente. Faça upgrade para o plano Família.'], 403);
+        }
+
+        // Let's assume family plan allows up to 5 patients max for sanity
+        if ($plan === 'family' && $patientCount >= 5) {
+             respond(['error' => 'O plano Família atingiu o limite de 5 pacientes.'], 403);
+        }
 
         $hash = password_hash($password, PASSWORD_DEFAULT);
         $stmt = $db->prepare("INSERT INTO users (family_group_id, name, email, password_hash, role) VALUES (?, ?, ?, ?, 'patient')");
