@@ -147,7 +147,7 @@ export default function Dashboard() {
         )}
 
         {/* Trial Notice */}
-        {user.subscription_status !== 'lifetime' && user.plan !== 'family' && (
+        {user.subscription_status !== 'lifetime' && user.subscription_status !== 'paid' && (
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded shadow-sm">
             <div className="flex items-start">
               <div className="flex-shrink-0">
@@ -155,8 +155,8 @@ export default function Dashboard() {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-yellow-700">
-                  Seu período de testes de 7 dias termina em breve.
-                  <button onClick={() => setView('profile')} className="font-medium underline ml-1 cursor-pointer">Assinar Agora</button>
+                  Seu período de testes de 7 dias está ativo.
+                  <button onClick={() => setView('profile')} className="font-bold underline ml-1 cursor-pointer hover:text-yellow-900">Ativar Assinatura Definitiva</button>
                 </p>
               </div>
             </div>
