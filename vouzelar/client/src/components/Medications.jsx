@@ -246,7 +246,16 @@ export default function Medications({ setView }) {
             </div>
 
             <div className="p-4 md:p-6 overflow-y-auto">
-              <p className="text-sm text-gray-600 mb-4">Procurando por: <strong className="text-gray-900">{searchModal.medName}</strong> nas farmácias próximas à sua localização.</p>
+              <p className="text-sm text-gray-600 mb-4">
+                Procurando por: <strong className="text-gray-900">{searchModal.medName}</strong>
+                {(() => {
+                  const user = JSON.parse(localStorage.getItem('vouzelar_user') || '{}');
+                  if (user.city && user.state) {
+                    return ` nas farmácias próximas a ${user.city} - ${user.state}.`;
+                  }
+                  return ' nas farmácias próximas à sua localização.';
+                })()}
+              </p>
 
               {searchModal.loading ? (
                 <div className="flex flex-col items-center justify-center py-10 space-y-4">
@@ -265,7 +274,8 @@ export default function Medications({ setView }) {
                       <div className="flex justify-between items-start">
                         <div>
                           <h4 className="font-bold text-gray-900">{pharmacy.pharmacy}</h4>
-                          <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5"><MapPin size={12}/> A {pharmacy.distance} de você</p>
+                          {pharmacy.product_name && <p className="text-xs text-gray-700 mt-1 line-clamp-2">{pharmacy.product_name}</p>}
+                          <p className="text-xs text-gray-500 flex items-center gap-1 mt-1"><MapPin size={12}/> {pharmacy.distance}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-gray-500">Por</p>

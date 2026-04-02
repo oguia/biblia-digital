@@ -51,6 +51,9 @@ class DB {
                 trial_ends_at DATETIME,
                 subscription_status TEXT DEFAULT 'active', -- active, past_due, canceled
                 mercado_pago_id TEXT,
+                cep TEXT,
+                city TEXT,
+                state TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (family_group_id) REFERENCES users(id) ON DELETE CASCADE
             );",

@@ -5,8 +5,36 @@ import SubscriptionBlock from './SubscriptionBlock';
 
 export default function Profile({ setView }) {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('vouzelar_user')));
-  const [form, setForm] = useState({ name: user.name, email: user.email, password: '' });
+  const [form, setForm] = useState({
+    name: user.name,
+    email: user.email,
+    password: '',
+    cep: user.cep || '',
+    city: user.city || '',
+    state: user.state || ''
+  });
   const [loading, setLoading] = useState(false);
+
+  const handleCepChange = async (e) => {
+    let cep = e.target.value.replace(/\D/g, '');
+    setForm({...form, cep});
+
+    if (cep.length === 8) {
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await res.json();
+        if (!data.erro) {
+          setForm(prev => ({
+            ...prev,
+            city: data.localidade,
+            state: data.uf
+          }));
+        }
+      } catch (err) {
+        console.error("Erro ao buscar CEP", err);
+      }
+    }
+  };
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -32,7 +60,7 @@ export default function Profile({ setView }) {
       setForm({ ...form, password: '' }); // Clear password field after update
 
       // Update local storage
-      const updatedUser = { ...user, name: form.name, email: form.email };
+      const updatedUser = { ...user, name: form.name, email: form.email, cep: form.cep, city: form.city, state: form.state };
       localStorage.setItem('vouzelar_user', JSON.stringify(updatedUser));
       setUser(updatedUser);
 
@@ -110,6 +138,41 @@ export default function Profile({ setView }) {
                   className="pl-10 w-full border border-gray-300 rounded-xl p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none transition-colors"
                   value={form.password}
                   onChange={e => setForm({...form, password: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">CEP</label>
+                <input
+                  type="text"
+                  required
+                  maxLength="8"
+                  placeholder="Somente números"
+                  className="w-full border border-gray-300 rounded-xl p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none transition-colors"
+                  value={form.cep}
+                  onChange={handleCepChange}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full border border-gray-300 rounded-xl p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none transition-colors"
+                  value={form.city}
+                  onChange={e => setForm({...form, city: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full border border-gray-300 rounded-xl p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none transition-colors"
+                  value={form.state}
+                  onChange={e => setForm({...form, state: e.target.value})}
                 />
               </div>
             </div>

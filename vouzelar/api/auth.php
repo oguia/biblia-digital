@@ -25,6 +25,15 @@ if ($method === 'POST' && $action === 'register') {
         respond(['error' => 'Preencha todos os campos.'], 400);
     }
 
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+         respond(['error' => 'Formato de email inválido.'], 400);
+    }
+
+    $domain = substr(strrchr($email, "@"), 1);
+    if (!checkdnsrr($domain, "MX")) {
+        respond(['error' => 'O domínio do email não parece ser válido ou não aceita emails.'], 400);
+    }
+
     // Check if email exists
     $stmt = $db->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->execute([$email]);
@@ -32,13 +41,17 @@ if ($method === 'POST' && $action === 'register') {
         respond(['error' => 'Email já cadastrado.'], 400);
     }
 
+    $cep = $input['cep'] ?? '';
+    $city = $input['city'] ?? '';
+    $state = $input['state'] ?? '';
+
     // 7 days trial
     $trialEndsAt = date('Y-m-d H:i:s', strtotime('+7 days'));
     $hash = password_hash($password, PASSWORD_DEFAULT);
 
-    $stmt = $db->prepare("INSERT INTO users (name, email, password_hash, role, plan, trial_ends_at) VALUES (?, ?, ?, 'admin', ?, ?)");
+    $stmt = $db->prepare("INSERT INTO users (name, email, password_hash, role, plan, trial_ends_at, cep, city, state) VALUES (?, ?, ?, 'admin', ?, ?, ?, ?, ?)");
 
-    if ($stmt->execute([$name, $email, $hash, $plan, $trialEndsAt])) {
+    if ($stmt->execute([$name, $email, $hash, $plan, $trialEndsAt, $cep, $city, $state])) {
         $userId = $db->lastInsertId();
         // The admin is their own family group
         $stmtUpdate = $db->prepare("UPDATE users SET family_group_id = ? WHERE id = ?");

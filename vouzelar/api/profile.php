@@ -27,6 +27,9 @@ if ($method === 'POST') {
     $newName = $input['name'] ?? null;
     $newEmail = $input['email'] ?? null;
     $newPassword = $input['password'] ?? null;
+    $newCep = $input['cep'] ?? null;
+    $newCity = $input['city'] ?? null;
+    $newState = $input['state'] ?? null;
 
     if (!$newName || !$newEmail) respond(['error' => 'Nome e Email são obrigatórios'], 400);
 
@@ -39,15 +42,15 @@ if ($method === 'POST') {
 
     if ($newPassword) {
         $hash = password_hash($newPassword, PASSWORD_DEFAULT);
-        $stmt = $db->prepare("UPDATE users SET name = ?, email = ?, password_hash = ? WHERE id = ?");
-        $stmt->execute([$newName, $newEmail, $hash, $userId]);
+        $stmt = $db->prepare("UPDATE users SET name = ?, email = ?, password_hash = ?, cep = ?, city = ?, state = ? WHERE id = ?");
+        $stmt->execute([$newName, $newEmail, $hash, $newCep, $newCity, $newState, $userId]);
     } else {
-        $stmt = $db->prepare("UPDATE users SET name = ?, email = ? WHERE id = ?");
-        $stmt->execute([$newName, $newEmail, $userId]);
+        $stmt = $db->prepare("UPDATE users SET name = ?, email = ?, cep = ?, city = ?, state = ? WHERE id = ?");
+        $stmt->execute([$newName, $newEmail, $newCep, $newCity, $newState, $userId]);
     }
 
     // Fetch updated user to send back
-    $stmt = $db->prepare("SELECT id, name, email, role, plan, trial_ends_at FROM users WHERE id = ?");
+    $stmt = $db->prepare("SELECT id, name, email, role, plan, trial_ends_at, cep, city, state FROM users WHERE id = ?");
     $stmt->execute([$userId]);
     $updatedUser = $stmt->fetch();
 

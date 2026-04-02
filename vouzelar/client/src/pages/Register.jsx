@@ -8,10 +8,34 @@ export default function Register() {
     name: '',
     email: '',
     password: '',
+    cep: '',
+    city: '',
+    state: '',
     plan: 'individual' // default
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleCepChange = async (e) => {
+    let cep = e.target.value.replace(/\D/g, '');
+    setFormData({...formData, cep});
+
+    if (cep.length === 8) {
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await res.json();
+        if (!data.erro) {
+          setFormData(prev => ({
+            ...prev,
+            city: data.localidade,
+            state: data.uf
+          }));
+        }
+      } catch (err) {
+        console.error("Erro ao buscar CEP", err);
+      }
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -91,6 +115,47 @@ export default function Register() {
                   value={formData.password}
                   onChange={e => setFormData({...formData, password: e.target.value})}
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700">CEP</label>
+                <div className="mt-1">
+                  <input
+                    type="text"
+                    required
+                    maxLength="8"
+                    placeholder="Somente números"
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                    value={formData.cep}
+                    onChange={handleCepChange}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Cidade</label>
+                <div className="mt-1">
+                  <input
+                    type="text"
+                    required
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 bg-gray-50 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                    value={formData.city}
+                    onChange={e => setFormData({...formData, city: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Estado</label>
+                <div className="mt-1">
+                  <input
+                    type="text"
+                    required
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 bg-gray-50 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                    value={formData.state}
+                    onChange={e => setFormData({...formData, state: e.target.value})}
+                  />
+                </div>
               </div>
             </div>
 
