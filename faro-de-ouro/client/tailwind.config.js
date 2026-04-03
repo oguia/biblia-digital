@@ -7,8 +7,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        'brand-dark': '#333333', // Cinza Escuro
-        'brand-orange': '#FF8A00', // Laranja Alerta
+        'brand-dark': '#000000', // Black
+        'brand-orange': '#bc9d64', // Gold Ochre
         'brand-white': '#FFFFFF',
         'brand-gray-light': '#F5F5F5',
       }

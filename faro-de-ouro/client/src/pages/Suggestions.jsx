@@ -22,7 +22,7 @@ const Suggestions = ({ user }) => {
     <Layout user={user}>
       <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-sm">
         <h1 className="text-2xl font-bold text-brand-dark mb-4">Enviar Sugestão</h1>
-        <p className="text-gray-600 mb-6">Sua opinião é muito importante para melhorarmos o Estoque One. Envie suas sugestões, ideias de novas funcionalidades ou relate algum problema diretamente para a nossa equipe.</p>
+        <p className="text-gray-600 mb-6">Sua opinião é muito importante para melhorarmos o Faro de Ouro. Envie suas sugestões, ideias de novas funcionalidades ou relate algum problema diretamente para a nossa equipe.</p>
 
         {status && <div className="p-4 mb-4 bg-green-50 text-green-700 rounded-lg">{status}</div>}
 

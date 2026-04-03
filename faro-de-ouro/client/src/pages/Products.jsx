@@ -46,8 +46,8 @@ const Products = ({ user }) => {
       Categoria: p.category_name,
       Fornecedor: p.supplier_name,
       Preço: p.price,
-      Estoque_Atual: p.current_stock,
-      Estoque_Min: p.min_stock
+      Faro_Atual: p.current_stock,
+      Faro_Min: p.min_stock
     }));
     exportToCSV('produtos.csv', exportData);
   };
@@ -73,7 +73,7 @@ const Products = ({ user }) => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estoque</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Faro</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Preço</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
             </tr>

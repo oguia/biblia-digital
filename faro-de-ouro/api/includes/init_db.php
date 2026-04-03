@@ -101,5 +101,5 @@ $stmt = $db->prepare("SELECT COUNT(*) FROM users WHERE role = 'superadmin'");
 $stmt->execute();
 if ($stmt->fetchColumn() == 0) {
     $password = password_hash('admin123', PASSWORD_DEFAULT);
-    $db->exec("INSERT INTO users (name, email, password, role) VALUES ('Super Admin', 'admin@estoqueone.com', '$password', 'superadmin')");
+    $db->exec("INSERT INTO users (name, email, password, role) VALUES ('Super Admin', 'admin@farodeouro.com', '$password', 'superadmin')");
 }

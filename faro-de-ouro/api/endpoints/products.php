@@ -68,7 +68,7 @@ if ($method == 'GET') {
 
         // Initial movement if stock > 0
         if (($data['current_stock'] ?? 0) > 0) {
-             $stmt_mov = $db->prepare("INSERT INTO movements (tenant_id, product_id, user_id, type, quantity, reason) VALUES (?, ?, ?, 'in', ?, 'Estoque inicial')");
+             $stmt_mov = $db->prepare("INSERT INTO movements (tenant_id, product_id, user_id, type, quantity, reason) VALUES (?, ?, ?, 'in', ?, 'Faro inicial')");
              $stmt_mov->execute([$tenant_id, $product_id, $user['id'], $data['current_stock']]);
         }
 

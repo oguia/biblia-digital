@@ -36,8 +36,8 @@ HTACCESS
 
 echo "Zipping for deployment..."
 cd hostinger_deploy
-zip -r ../estoque-one-hostinger.zip .
+zip -r ../faro-de-ouro-hostinger.zip .
 cd ..
 rm -rf hostinger_deploy
 
-echo "Done! Upload 'estoque-one-hostinger.zip' to Hostinger's public_html."
+echo "Done! Upload 'faro-de-ouro-hostinger.zip' to Hostinger's public_html."

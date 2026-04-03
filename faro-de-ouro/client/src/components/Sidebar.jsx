@@ -8,7 +8,7 @@ const Sidebar = ({ user }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem('estoque_token');
+    localStorage.removeItem('faro_token');
     navigate('/login');
   };
 
@@ -26,8 +26,8 @@ const Sidebar = ({ user }) => {
   return (
     <div className="w-64 bg-brand-dark text-white min-h-screen p-4 flex flex-col">
       <div className="flex items-center gap-3 mb-8 px-2">
-        <img src="/logo.png" alt="Estoque One" className="w-10 h-10 object-contain bg-white rounded p-1" />
-        <span className="font-bold text-xl text-brand-orange">Estoque One</span>
+        <img src="/logo.png" alt="Faro de Ouro" className="w-10 h-10 object-contain bg-white rounded p-1" />
+        <span className="font-bold text-xl text-brand-orange">Faro de Ouro</span>
       </div>
 
       <nav className="flex-1 space-y-2">

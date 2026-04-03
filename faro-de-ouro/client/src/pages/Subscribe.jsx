@@ -11,7 +11,7 @@ const Subscribe = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('estoque_token');
+    localStorage.removeItem('faro_token');
     navigate('/login');
   };
 
@@ -19,9 +19,9 @@ const Subscribe = () => {
     <div className="min-h-screen bg-brand-gray-light py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
-          <img className="mx-auto h-20 w-auto object-contain mb-4" src="/logo.png" alt="Estoque One" />
+          <img className="mx-auto h-20 w-auto object-contain mb-4" src="/logo.png" alt="Faro de Ouro" />
           <h2 className="text-3xl font-extrabold text-brand-dark">Seu acesso expirou</h2>
-          <p className="mt-4 text-lg text-gray-600">Escolha um plano abaixo para continuar gerenciando seu estoque com o Estoque One.</p>
+          <p className="mt-4 text-lg text-gray-600">Escolha um plano abaixo para continuar gerenciando seu estoque com o Faro de Ouro.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">

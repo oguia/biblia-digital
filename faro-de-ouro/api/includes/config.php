@@ -2,7 +2,7 @@
 define('DB_FILE', __DIR__ . '/../database.sqlite');
 // Read JWT secret from env, or use a default for local development
 $env_secret = getenv('JWT_SECRET');
-define('JWT_SECRET', $env_secret ? $env_secret : 'dev-secret-estoque-one-123!');
+define('JWT_SECRET', $env_secret ? $env_secret : 'dev-secret-faro-de-ouro-123!');
 
 function getDB() {
     $dsn = "sqlite:" . DB_FILE;

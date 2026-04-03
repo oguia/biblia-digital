@@ -15,7 +15,7 @@ const Register = () => {
       await api.post('auth&action=register', formData);
       // Auto login after register
       const loginRes = await api.post('auth&action=login', { email: formData.email, password: formData.password });
-      localStorage.setItem('estoque_token', loginRes.data.token);
+      localStorage.setItem('faro_token', loginRes.data.token);
       navigate('/app');
     } catch (err) {
       setError(err.response?.data?.error || 'Erro ao cadastrar');
@@ -26,7 +26,7 @@ const Register = () => {
     <div className="min-h-screen flex items-center justify-center bg-brand-gray-light py-12 px-4">
       <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-lg">
         <div className="text-center mb-8">
-          <img className="mx-auto h-20 w-auto object-contain" src="/logo.png" alt="Estoque One" />
+          <img className="mx-auto h-20 w-auto object-contain" src="/logo.png" alt="Faro de Ouro" />
           <h2 className="mt-4 text-2xl font-bold text-brand-dark">Criar Conta (7 dias grátis)</h2>
         </div>
 

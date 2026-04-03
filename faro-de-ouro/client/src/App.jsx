@@ -18,7 +18,7 @@ const ProtectedRoute = ({ children, requireRole }) => {
   const [expired, setExpired] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('estoque_token');
+    const token = localStorage.getItem('faro_token');
     if (!token) {
       setLoading(false);
       return;
@@ -33,7 +33,7 @@ const ProtectedRoute = ({ children, requireRole }) => {
         }
       })
       .catch(() => {
-        localStorage.removeItem('estoque_token');
+        localStorage.removeItem('faro_token');
       })
       .finally(() => setLoading(false));
   }, []);
@@ -46,7 +46,7 @@ const ProtectedRoute = ({ children, requireRole }) => {
          <h2 className="text-2xl font-bold text-red-600 mb-4">Acesso Expirado</h2>
          <p className="mb-6 text-gray-600">Seu período de teste ou assinatura chegou ao fim. Assine um de nossos planos para continuar gerenciando seu estoque!</p>
          <button onClick={() => window.location.href = '#/subscribe'} className="bg-brand-orange text-white px-6 py-2 rounded-lg hover:bg-orange-600">Ver Planos</button>
-         <div className="mt-4"><button onClick={() => { localStorage.removeItem('estoque_token'); window.location.href = '#/login'; }} className="text-sm text-gray-500 underline">Sair</button></div>
+         <div className="mt-4"><button onClick={() => { localStorage.removeItem('faro_token'); window.location.href = '#/login'; }} className="text-sm text-gray-500 underline">Sair</button></div>
        </div>
     </div>
   );

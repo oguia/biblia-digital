@@ -12,7 +12,7 @@ const Login = () => {
     e.preventDefault();
     try {
       const res = await api.post('auth&action=login', { email, password });
-      localStorage.setItem('estoque_token', res.data.token);
+      localStorage.setItem('faro_token', res.data.token);
 
       if (res.data.user.role === 'superadmin') {
         navigate('/admin');
@@ -30,7 +30,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-brand-gray-light py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
         <div className="text-center">
-          <img className="mx-auto h-24 w-auto object-contain" src="/logo.png" alt="Estoque One" />
+          <img className="mx-auto h-24 w-auto object-contain" src="/logo.png" alt="Faro de Ouro" />
           <h2 className="mt-6 text-3xl font-extrabold text-brand-dark">Entrar no Sistema</h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
