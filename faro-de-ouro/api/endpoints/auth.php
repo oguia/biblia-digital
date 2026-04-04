@@ -85,6 +85,22 @@ if ($method == 'POST' && $action == 'register') {
         http_response_code(401);
         echo json_encode(['error' => 'Invalid credentials', 'debug_user_found' => !!$user, 'debug_email' => $email]);
     }
+} elseif ($method == 'POST' && $action == 'apply_coupon') {
+    $user = require_auth();
+    $code = $data['code'] ?? '';
+    $stmt = $db->prepare("SELECT * FROM coupons WHERE code = ? AND is_active = 1");
+    $stmt->execute([$code]);
+    $coupon = $stmt->fetch();
+    if ($coupon) {
+        $months = $coupon['free_months'];
+        $days = $months * 30;
+        $stmt = $db->prepare("UPDATE tenants SET plan_expires_at = datetime('now', '+$days days') WHERE id = ?");
+        $stmt->execute([$user['tenant_id']]);
+        echo json_encode(['success' => true]);
+    } else {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid coupon']);
+    }
 } elseif ($method == 'GET' && $action == 'me') {
     $user = require_auth();
     if ($user['role'] !== 'superadmin') {

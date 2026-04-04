@@ -4,6 +4,7 @@ import api from '../api';
 
 const Subscribe = () => {
   const [plans, setPlans] = useState([]);
+  const [coupon, setCoupon] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,6 +51,22 @@ const Subscribe = () => {
             </div>
           ))}
           {plans.length === 0 && <div className="col-span-3 text-center text-gray-500">Nenhum plano configurado no momento. Entre em contato com o suporte.</div>}
+        </div>
+
+        <div className="max-w-md mx-auto mb-12">
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            try {
+              await api.post('auth&action=apply_coupon', { code: coupon });
+              alert('Cupom aplicado! Seu acesso foi liberado.');
+              navigate('/app');
+            } catch (err) {
+              alert('Cupom inválido ou expirado.');
+            }
+          }} className="flex gap-2">
+            <input type="text" placeholder="Possui um cupom?" required value={coupon} onChange={e => setCoupon(e.target.value.toUpperCase())} className="flex-1 px-4 py-2 border rounded-lg focus:ring-brand-orange" />
+            <button type="submit" className="bg-brand-dark text-white px-4 py-2 rounded-lg font-bold">Aplicar</button>
+          </form>
         </div>
 
         <div className="text-center">

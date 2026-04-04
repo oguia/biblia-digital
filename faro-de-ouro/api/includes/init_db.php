@@ -87,6 +87,11 @@ CREATE TABLE IF NOT EXISTS coupons (
     is_active INTEGER DEFAULT 1
 );
 
+CREATE TABLE IF NOT EXISTS settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mp_access_token TEXT
+);
+
 CREATE TABLE IF NOT EXISTS suggestions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -100,6 +105,9 @@ CREATE TABLE IF NOT EXISTS suggestions (
 $stmt = $db->prepare("SELECT COUNT(*) FROM users WHERE email = 'admin@farodeouro.com'");
 $stmt->execute();
 if ($stmt->fetchColumn() == 0) {
+    $db->exec("INSERT INTO tenants (name, type, document, plan_expires_at) VALUES ('Faro de Ouro HQ', 'PJ', '00000000000000', '2099-12-31 23:59:59')");
+    $tenant_id = $db->lastInsertId();
+
     $password = password_hash('admin123', PASSWORD_DEFAULT);
-    $db->exec("INSERT INTO users (name, email, password, role) VALUES ('Super Admin', 'admin@farodeouro.com', '$password', 'superadmin')");
+    $db->exec("INSERT INTO users (tenant_id, name, email, password, role) VALUES ('$tenant_id', 'Super Admin', 'admin@farodeouro.com', '$password', 'superadmin')");
 }

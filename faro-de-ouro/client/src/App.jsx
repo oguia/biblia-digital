@@ -9,6 +9,9 @@ import Kardex from './pages/Kardex';
 import Suggestions from './pages/Suggestions';
 import SuperAdmin from './pages/SuperAdmin';
 import AdminPlans from './pages/AdminPlans';
+import AdminSettings from './pages/AdminSettings';
+import AdminCoupons from './pages/AdminCoupons';
+
 import Subscribe from './pages/Subscribe';
 import Categories from './pages/Categories';
 
@@ -73,6 +76,8 @@ function App() {
 
         <Route path="/admin" element={<ProtectedRoute requireRole="superadmin"><SuperAdmin /></ProtectedRoute>} />
         <Route path="/admin/plans" element={<ProtectedRoute requireRole="superadmin"><AdminPlans /></ProtectedRoute>} />
+          <Route path="/admin/coupons" element={<ProtectedRoute requireRole="superadmin"><AdminCoupons /></ProtectedRoute>} />
+          <Route path="/admin/settings" element={<ProtectedRoute requireRole="superadmin"><AdminSettings /></ProtectedRoute>} />
       </Routes>
     </HashRouter>
   );

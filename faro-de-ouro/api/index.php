@@ -36,6 +36,9 @@ switch ($route) {
     case 'suggestions':
         require 'endpoints/suggestions.php';
         break;
+    case 'webhook':
+        require 'endpoints/webhook.php';
+        break;
     default:
         http_response_code(404);
         echo json_encode(['error' => 'Endpoint not found']);

@@ -30,7 +30,7 @@ const AdminPlans = ({ user }) => {
             <input type="text" required placeholder="Nome (ex: Mensal)" className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
             <input type="number" required placeholder="Duração (Meses)" min="1" className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.duration_months} onChange={e => setFormData({...formData, duration_months: e.target.value})} />
             <input type="number" step="0.01" required placeholder="Preço (R$)" className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
-            <input type="url" placeholder="Link Mercado Pago (Preapproval)" className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.mp_link} onChange={e => setFormData({...formData, mp_link: e.target.value})} />
+            <input type="url" placeholder="Link Mercado Pago (Opcional - Gerado automaticamente se vazio)" className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.mp_link} onChange={e => setFormData({...formData, mp_link: e.target.value})} />
             <button type="submit" className="w-full bg-brand-orange text-white py-2 rounded hover:bg-orange-600 transition">Salvar Plano</button>
           </form>
         </div>

@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import api from '../api';
 import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 const SuperAdmin = ({ user }) => {
+  const navigate = useNavigate();
   const [tenants, setTenants] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
 
@@ -50,6 +52,13 @@ const SuperAdmin = ({ user }) => {
                         </span>
                       </td>
                       <td className="px-4 py-2 text-right text-sm">
+                         <button onClick={() => {
+                            api.post('superadmin&action=login_as', { tenant_id: t.id }).then(r => {
+                              localStorage.setItem('faro_token', r.data.token);
+                              window.location.href = '#/app';
+                              window.location.reload();
+                            }).catch(e => alert('Nenhum owner encontrado'));
+                         }} className="text-xs bg-brand-dark hover:bg-gray-800 px-2 py-1 rounded text-white mr-2">Acessar App</button>
                          <button onClick={() => grantAccess(t.id, 30)} className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded text-gray-700">+30d</button>
                       </td>
                     </tr>

@@ -1,64 +1,74 @@
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, History, Settings, LogOut, MessageSquare, Tags } from 'lucide-react';
-import clsx from 'clsx';
+import { Link, useLocation } from 'react-router-dom';
+import { LayoutDashboard, Package, RefreshCw, Tags, Users, LogOut, MessageSquare, ShoppingBag, Settings, Ticket } from 'lucide-react';
 
 const Sidebar = ({ user }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const location = useLocation().pathname;
 
   const handleLogout = () => {
     localStorage.removeItem('faro_token');
-    navigate('/login');
+    window.location.href = '#/login';
   };
 
-  const navItems = user?.role === 'superadmin' ? [
-    { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
-    { name: 'Planos', path: '/admin/plans', icon: Settings },
-  ] : [
-    { name: 'Dashboard', path: '/app', icon: LayoutDashboard },
-    { name: 'Categorias', path: '/app/categories', icon: Tags },
-    { name: 'Produtos', path: '/app/products', icon: Package },
-    { name: 'Movimentações', path: '/app/kardex', icon: History },
-    { name: 'Sugestões', path: '/app/suggestions', icon: MessageSquare },
-  ];
-
   return (
-    <div className="w-64 bg-brand-dark text-white min-h-screen p-4 flex flex-col">
-      <div className="flex items-center gap-3 mb-8 px-2">
-        <img src="/logo.png" alt="Faro de Ouro" className="w-10 h-10 object-contain bg-white rounded p-1" />
-        <span className="font-bold text-xl text-brand-orange">Faro de Ouro</span>
+    <div className="w-64 bg-black text-white min-h-screen flex flex-col fixed left-0 top-0">
+      <div className="p-6 border-b border-gray-800 bg-white">
+        <img src="/logo.png" alt="Faro de Ouro" className="h-10 mx-auto" />
       </div>
 
-      <nav className="flex-1 space-y-2">
-        {navItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={clsx(
-              "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-              location.pathname === item.path
-                ? "bg-brand-orange text-white"
-                : "text-gray-300 hover:bg-gray-800"
-            )}
-          >
-            <item.icon size={20} />
-            <span>{item.name}</span>
-          </Link>
-        ))}
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <Link to="/app" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${location === '/app' ? 'bg-brand-orange text-brand-dark font-bold' : 'text-gray-300 hover:bg-gray-800'}`}>
+          <LayoutDashboard size={20} />
+          Dashboard
+        </Link>
+        <Link to="/app/products" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${location === '/app/products' ? 'bg-brand-orange text-brand-dark font-bold' : 'text-gray-300 hover:bg-gray-800'}`}>
+          <Package size={20} />
+          Produtos
+        </Link>
+        <Link to="/app/kardex" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${location === '/app/kardex' ? 'bg-brand-orange text-brand-dark font-bold' : 'text-gray-300 hover:bg-gray-800'}`}>
+          <RefreshCw size={20} />
+          Kardex (Movimentações)
+        </Link>
+        <Link to="/app/categories" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${location === '/app/categories' ? 'bg-brand-orange text-brand-dark font-bold' : 'text-gray-300 hover:bg-gray-800'}`}>
+          <Tags size={20} />
+          Categorias & Fornecedores
+        </Link>
+        <Link to="/app/suggestions" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${location === '/app/suggestions' ? 'bg-brand-orange text-brand-dark font-bold' : 'text-gray-300 hover:bg-gray-800'}`}>
+          <MessageSquare size={20} />
+          Sugestões
+        </Link>
+
+        {user?.role === 'superadmin' && (
+          <div className="pt-6 mt-6 border-t border-gray-800 space-y-2">
+            <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">Super Admin</div>
+            <Link to="/admin" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${location === '/admin' ? 'bg-brand-orange text-brand-dark font-bold' : 'text-gray-300 hover:bg-gray-800'}`}>
+              <Users size={20} />
+              Painel
+            </Link>
+            <Link to="/admin/plans" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${location === '/admin/plans' ? 'bg-brand-orange text-brand-dark font-bold' : 'text-gray-300 hover:bg-gray-800'}`}>
+              <ShoppingBag size={20} />
+              Planos
+            </Link>
+            <Link to="/admin/coupons" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${location === '/admin/coupons' ? 'bg-brand-orange text-brand-dark font-bold' : 'text-gray-300 hover:bg-gray-800'}`}>
+              <Ticket size={20} />
+              Cupons
+            </Link>
+            <Link to="/admin/settings" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${location === '/admin/settings' ? 'bg-brand-orange text-brand-dark font-bold' : 'text-gray-300 hover:bg-gray-800'}`}>
+              <Settings size={20} />
+              Configurações
+            </Link>
+          </div>
+        )}
       </nav>
 
-      <div className="mt-auto border-t border-gray-700 pt-4">
-        <div className="px-4 py-2 text-sm text-gray-400 mb-2">
-          {user?.name}
-          <div className="text-xs">{user?.role === 'superadmin' ? 'Super Admin' : 'Empresa/PF'}</div>
+      <div className="p-4 border-t border-gray-800">
+        <div className="mb-4 px-4">
+          <div className="text-sm font-bold text-white">{user?.name}</div>
+          <div className="text-xs text-brand-orange capitalize">{user?.role}</div>
         </div>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg w-full transition-colors"
-        >
+        <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-2 w-full text-left text-red-400 hover:text-red-300 hover:bg-gray-800 rounded-lg transition-colors">
           <LogOut size={20} />
-          <span>Sair</span>
+          Sair
         </button>
       </div>
     </div>
