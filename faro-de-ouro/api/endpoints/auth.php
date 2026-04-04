@@ -83,7 +83,7 @@ if ($method == 'POST' && $action == 'register') {
         ]);
     } else {
         http_response_code(401);
-        echo json_encode(['error' => 'Invalid credentials', 'debug_user_found' => !!$user, 'debug_email' => $email]);
+        echo json_encode(['error' => 'Invalid credentials', 'debug' => ['email' => $email, 'password_length' => strlen($password), 'user_exists_in_db' => !!$user, 'db_hash' => $user['password'] ?? 'none']]);
     }
 } elseif ($method == 'POST' && $action == 'apply_coupon') {
     $user = require_auth();

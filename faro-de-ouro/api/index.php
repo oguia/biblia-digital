@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 
 header('Content-Type: application/json');
 
-$route = $_GET['route'] ?? '';
+$route = ltrim($_GET['route'] ?? '', '/');
 
 // Simple router
 switch ($route) {
