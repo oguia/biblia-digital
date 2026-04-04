@@ -83,7 +83,7 @@ if ($method == 'POST' && $action == 'register') {
         ]);
     } else {
         http_response_code(401);
-        echo json_encode(['error' => 'Invalid credentials']);
+        echo json_encode(['error' => 'Invalid credentials', 'debug_user_found' => !!$user, 'debug_email' => $email]);
     }
 } elseif ($method == 'GET' && $action == 'me') {
     $user = require_auth();

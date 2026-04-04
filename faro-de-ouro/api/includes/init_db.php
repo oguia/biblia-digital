@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS suggestions (
 ");
 
 // Inserir superadmin se nao existir
-$stmt = $db->prepare("SELECT COUNT(*) FROM users WHERE role = 'superadmin'");
+$stmt = $db->prepare("SELECT COUNT(*) FROM users WHERE email = 'admin@farodeouro.com'");
 $stmt->execute();
 if ($stmt->fetchColumn() == 0) {
     $password = password_hash('admin123', PASSWORD_DEFAULT);
