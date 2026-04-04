@@ -9,7 +9,7 @@ const Landing = () => {
       <header className="bg-brand-gray-light text-brand-dark p-4 sticky top-0 z-50 shadow-md">
         <div className="container mx-auto flex justify-between items-center max-w-6xl">
           <Link to="/" className="flex items-center gap-3">
-            <img src="/logo.png" alt="Faro de Ouro" className="h-16" />
+            <img src="/logo.png" alt="Faro de Ouro" className="h-28 object-contain" />
           </Link>
           <div className="flex items-center gap-4">
             <Link to="/login" className="text-gray-500 hover:text-brand-dark transition">Entrar</Link>
@@ -130,7 +130,7 @@ const Landing = () => {
       <footer className="bg-brand-gray-light text-gray-500 py-12 border-t border-gray-200">
         <div className="container mx-auto px-4 max-w-6xl flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
-            <img src="/logo.png" alt="Faro de Ouro" className="h-12 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition" />
+            <img src="/logo.png" alt="Faro de Ouro" className="h-20 object-contain grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition" />
           </div>
           <p className="text-sm">© {new Date().getFullYear()} Faro de Ouro. Todos os direitos reservados.</p>
         </div>
