@@ -26,15 +26,16 @@ cat << 'HTACCESS' > hostinger_deploy/.htaccess
   # API routing
   RewriteRule ^api/(.*)$ api/index.php?route=$1 [QSA,L]
 
+  # Anti-scraping and copy protection
+  RewriteCond %{HTTP_USER_AGENT} ^.*(HTTrack|Wget|curl|Python-urllib|libwww-perl|HttpClient|Java|Go-http-client|Scrapy|Bot|Spider).*$ [NC]
+  RewriteRule .* - [F,L]
+
   # Redirect to SPA router if not a real file
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]
 
-  # Anti-scraping and copy protection
-  RewriteCond %{HTTP_USER_AGENT} ^.*(HTTrack|Wget|curl|Python-urllib|libwww-perl|HttpClient|Java|Go-http-client|Scrapy|Bot|Spider).*$ [NC]
-  RewriteRule .* - [F,L]
 </IfModule>
 
 # Disable directory listing

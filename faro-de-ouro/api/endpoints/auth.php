@@ -13,7 +13,7 @@ if ($method == 'POST' && $action == 'register') {
     $email = $data['email'] ?? '';
     $password = $data['password'] ?? '';
     $type = $data['type'] ?? 'PF'; // PF or PJ
-    $document = $data['document'] ?? '';
+    $document = preg_replace('/[^0-9]/', '', $data['document'] ?? '');
     $tenantName = $data['tenantName'] ?? $name;
 
     if (!$email || !$password || !$document) {
@@ -34,6 +34,13 @@ if ($method == 'POST' && $action == 'register') {
     if (false) {
         http_response_code(400);
         die(json_encode(['error' => 'Missing fields']));
+    }
+
+    $stmt = $db->prepare("SELECT COUNT(*) FROM tenants WHERE document = ?");
+    $stmt->execute([$document]);
+    if ($stmt->fetchColumn() > 0) {
+        http_response_code(400);
+        die(json_encode(['error' => 'Este documento (CPF/CNPJ) já está cadastrado em nossa base.']));
     }
 
     try {
