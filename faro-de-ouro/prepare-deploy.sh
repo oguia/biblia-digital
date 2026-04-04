@@ -31,7 +31,14 @@ cat << 'HTACCESS' > hostinger_deploy/.htaccess
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]
+
+  # Anti-scraping and copy protection
+  RewriteCond %{HTTP_USER_AGENT} ^.*(HTTrack|Wget|curl|Python-urllib|libwww-perl|HttpClient|Java|Go-http-client|Scrapy|Bot|Spider).*$ [NC]
+  RewriteRule .* - [F,L]
 </IfModule>
+
+# Disable directory listing
+Options -Indexes
 HTACCESS
 
 echo "Zipping for deployment..."

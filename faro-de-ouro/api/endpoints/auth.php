@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/validators.php';
 
 $db = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
@@ -16,6 +17,21 @@ if ($method == 'POST' && $action == 'register') {
     $tenantName = $data['tenantName'] ?? $name;
 
     if (!$email || !$password || !$document) {
+        http_response_code(400);
+        die(json_encode(['error' => 'Missing fields']));
+    }
+
+    if ($type === 'PF' && !validateCPF($document)) {
+        http_response_code(400);
+        die(json_encode(['error' => 'CPF inválido fornecido.']));
+    }
+    if ($type === 'PJ' && !validateCNPJ($document)) {
+        http_response_code(400);
+        die(json_encode(['error' => 'CNPJ inválido fornecido.']));
+    }
+
+    // Remove old check to prevent double error response
+    if (false) {
         http_response_code(400);
         die(json_encode(['error' => 'Missing fields']));
     }

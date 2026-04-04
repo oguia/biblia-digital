@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
+import { validateCPF, validateCNPJ } from '../utils/validators';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,15 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (formData.type === 'PF' && !validateCPF(formData.document)) {
+      setError('CPF inválido. Verifique os números.');
+      return;
+    }
+    if (formData.type === 'PJ' && !validateCNPJ(formData.document)) {
+      setError('CNPJ inválido. Verifique os números.');
+      return;
+    }
     try {
       await api.post('auth&action=register', formData);
       // Auto login after register
