@@ -3,7 +3,11 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 
 const BarcodeScanner = ({ onScan, onClose }) => {
   useEffect(() => {
-    const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
+    const scanner = new Html5QrcodeScanner("reader", {
+      fps: 10,
+      qrbox: {width: 250, height: 250},
+      supportedScanTypes: [0] // 0 = Camera default, restrains local file.
+    }, false);
 
     scanner.render((decodedText) => {
       onScan(decodedText);

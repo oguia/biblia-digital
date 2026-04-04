@@ -50,6 +50,12 @@ const Sidebar = ({ user, isOpen, setIsOpen }) => {
             <MessageSquare size={20} />
             Sugestões
           </Link>
+          {user?.role === 'owner' && (
+            <Link to="/app/users" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${location === '/app/users' ? 'bg-brand-orange text-brand-dark font-bold' : 'text-gray-300 hover:bg-gray-800'}`}>
+              <Users size={20} />
+              Usuários
+            </Link>
+          )}
 
           {user?.role === 'superadmin' && (
             <div className="pt-6 mt-6 border-t border-gray-800 space-y-2">

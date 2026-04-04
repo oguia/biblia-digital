@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import api from './api';
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Kardex from './pages/Kardex';
 import Suggestions from './pages/Suggestions';
+import Users from './pages/Users';
 import SuperAdmin from './pages/SuperAdmin';
 import AdminPlans from './pages/AdminPlans';
 import AdminSettings from './pages/AdminSettings';
@@ -63,7 +65,7 @@ function App() {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/subscribe" element={<Subscribe />} />
@@ -73,6 +75,7 @@ function App() {
         <Route path="/app/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
         <Route path="/app/kardex" element={<ProtectedRoute><Kardex /></ProtectedRoute>} />
         <Route path="/app/suggestions" element={<ProtectedRoute><Suggestions /></ProtectedRoute>} />
+        <Route path="/app/users" element={<ProtectedRoute requireRole="owner"><Users /></ProtectedRoute>} />
 
         <Route path="/admin" element={<ProtectedRoute requireRole="superadmin"><SuperAdmin /></ProtectedRoute>} />
         <Route path="/admin/plans" element={<ProtectedRoute requireRole="superadmin"><AdminPlans /></ProtectedRoute>} />
