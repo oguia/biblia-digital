@@ -15,6 +15,7 @@ import AdminSettings from './pages/AdminSettings';
 import AdminCoupons from './pages/AdminCoupons';
 
 import Subscribe from './pages/Subscribe';
+import MySubscription from './pages/MySubscription';
 import Categories from './pages/Categories';
 
 const ProtectedRoute = ({ children, requireRole }) => {
@@ -76,6 +77,7 @@ function App() {
         <Route path="/app/kardex" element={<ProtectedRoute><Kardex /></ProtectedRoute>} />
         <Route path="/app/suggestions" element={<ProtectedRoute><Suggestions /></ProtectedRoute>} />
         <Route path="/app/users" element={<ProtectedRoute requireRole="owner"><Users /></ProtectedRoute>} />
+        <Route path="/app/subscription" element={<ProtectedRoute requireRole="owner"><MySubscription /></ProtectedRoute>} />
 
         <Route path="/admin" element={<ProtectedRoute requireRole="superadmin"><SuperAdmin /></ProtectedRoute>} />
         <Route path="/admin/plans" element={<ProtectedRoute requireRole="superadmin"><AdminPlans /></ProtectedRoute>} />

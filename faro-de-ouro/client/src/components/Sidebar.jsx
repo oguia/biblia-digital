@@ -51,10 +51,16 @@ const Sidebar = ({ user, isOpen, setIsOpen }) => {
             Sugestões
           </Link>
           {user?.role === 'owner' && (
-            <Link to="/app/users" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${location === '/app/users' ? 'bg-brand-orange text-brand-dark font-bold' : 'text-gray-300 hover:bg-gray-800'}`}>
-              <Users size={20} />
-              Usuários
-            </Link>
+            <>
+              <Link to="/app/users" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${location === '/app/users' ? 'bg-brand-orange text-brand-dark font-bold' : 'text-gray-300 hover:bg-gray-800'}`}>
+                <Users size={20} />
+                Usuários
+              </Link>
+              <Link to="/app/subscription" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${location === '/app/subscription' ? 'bg-brand-orange text-brand-dark font-bold' : 'text-gray-300 hover:bg-gray-800'}`}>
+                <Ticket size={20} />
+                Meu Plano
+              </Link>
+            </>
           )}
 
           {user?.role === 'superadmin' && (

@@ -136,8 +136,13 @@ if ($method == 'POST' && $action == 'register') {
         $plan = $tenant['plan_expires_at'] ? strtotime($tenant['plan_expires_at']) : 0;
 
         $user['access_status'] = ($now > $trial && $now > $plan) ? 'expired' : 'active';
+
+        // Return whichever is greater (furthest in the future)
+        $expires_at = ($plan > $trial) ? $tenant['plan_expires_at'] : $tenant['trial_ends_at'];
+        $user['plan_expires_at'] = $expires_at;
     } else {
          $user['access_status'] = 'active';
+         $user['plan_expires_at'] = null;
     }
     echo json_encode(['user' => $user]);
 }
