@@ -9,7 +9,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'logo.png'],
+      includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'logo.png', 'icon-faro.png'],
       manifest: {
         name: 'Faro de Ouro',
         short_name: 'Faro de Ouro',
@@ -20,12 +20,12 @@ export default defineConfig({
         orientation: 'portrait',
         icons: [
           {
-            src: '/favicon.png',
+            src: '/icon-faro.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/favicon.png',
+            src: '/icon-faro.png',
             sizes: '512x512',
             type: 'image/png'
           }
