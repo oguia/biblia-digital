@@ -5,7 +5,7 @@ import { usePWAInstall } from '../hooks/usePWAInstall';
 
 const Sidebar = ({ user, isOpen, setIsOpen }) => {
   const location = useLocation().pathname;
-  const { supportsPWA, promptInstall } = usePWAInstall();
+  const { shouldShowInstallButton, promptInstall } = usePWAInstall();
 
   const handleLogout = () => {
     localStorage.removeItem('faro_token');
@@ -89,7 +89,7 @@ const Sidebar = ({ user, isOpen, setIsOpen }) => {
         </nav>
 
         <div className="p-4 border-t border-gray-800">
-          {supportsPWA && (
+          {shouldShowInstallButton && (
             <div className="mb-4">
               <button
                 onClick={promptInstall}

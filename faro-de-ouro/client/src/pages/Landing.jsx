@@ -4,7 +4,7 @@ import { Package, Shield, BarChart3, Smartphone, Camera, Users, Download } from 
 import { usePWAInstall } from '../hooks/usePWAInstall';
 
 const Landing = () => {
-  const { supportsPWA, promptInstall } = usePWAInstall();
+  const { shouldShowInstallButton, promptInstall } = usePWAInstall();
 
   return (
     <div className="min-h-screen bg-brand-gray-light font-sans selection:bg-brand-orange selection:text-white">
@@ -15,7 +15,7 @@ const Landing = () => {
             <img src="/logo.png" alt="Faro de Ouro" className="h-28 object-contain" />
           </Link>
           <div className="flex items-center gap-4">
-            {supportsPWA && (
+            {shouldShowInstallButton && (
               <button
                 onClick={promptInstall}
                 className="flex items-center gap-2 text-brand-dark border border-gray-300 px-4 py-2 rounded-lg font-semibold hover:bg-white transition"
