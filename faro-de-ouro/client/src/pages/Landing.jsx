@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Shield, BarChart3, Smartphone, Camera, Users } from 'lucide-react';
+import { Package, Shield, BarChart3, Smartphone, Camera, Users, Download } from 'lucide-react';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 
 const Landing = () => {
+  const { supportsPWA, promptInstall } = usePWAInstall();
+
   return (
     <div className="min-h-screen bg-brand-gray-light font-sans selection:bg-brand-orange selection:text-white">
       {/* Header */}
@@ -12,6 +15,15 @@ const Landing = () => {
             <img src="/logo.png" alt="Faro de Ouro" className="h-28 object-contain" />
           </Link>
           <div className="flex items-center gap-4">
+            {supportsPWA && (
+              <button
+                onClick={promptInstall}
+                className="hidden md:flex items-center gap-2 text-brand-dark border border-gray-300 px-4 py-2 rounded-lg font-semibold hover:bg-white transition"
+              >
+                <Download size={18} />
+                Instalar App
+              </button>
+            )}
             <Link to="/login" className="text-gray-500 hover:text-brand-dark transition">Entrar</Link>
             <Link to="/register" className="bg-brand-orange text-white px-5 py-2 rounded-lg font-semibold hover:bg-[#a68a57] transition shadow-lg shadow-orange-500/30">
               Teste Grátis

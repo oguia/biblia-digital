@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, RefreshCw, Tags, Users, LogOut, MessageSquare, ShoppingBag, Settings, Ticket, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Package, RefreshCw, Tags, Users, LogOut, MessageSquare, ShoppingBag, Settings, Ticket, Menu, X, Download } from 'lucide-react';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 
 const Sidebar = ({ user, isOpen, setIsOpen }) => {
   const location = useLocation().pathname;
+  const { supportsPWA, promptInstall } = usePWAInstall();
 
   const handleLogout = () => {
     localStorage.removeItem('faro_token');
@@ -87,6 +89,17 @@ const Sidebar = ({ user, isOpen, setIsOpen }) => {
         </nav>
 
         <div className="p-4 border-t border-gray-800">
+          {supportsPWA && (
+            <div className="mb-4">
+              <button
+                onClick={promptInstall}
+                className="flex items-center gap-3 px-4 py-3 w-full text-left bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors font-semibold"
+              >
+                <Download size={20} className="text-brand-orange" />
+                Instalar App
+              </button>
+            </div>
+          )}
           <div className="mb-4 px-4">
             <div className="text-sm font-bold text-white">{user?.name}</div>
             <div className="text-xs text-brand-orange capitalize">{user?.role}</div>
