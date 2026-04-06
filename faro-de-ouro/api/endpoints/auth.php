@@ -117,7 +117,17 @@ if ($method == 'POST' && $action == 'register') {
     if ($coupon) {
         $months = $coupon['free_months'];
         $days = $months * 30;
-        $stmt = $db->prepare("UPDATE tenants SET plan_expires_at = datetime('now', '+$days days') WHERE id = ?");
+
+        // Add days to the current expiration date if it exists and is in the future, otherwise add to 'now'
+        $stmt = $db->prepare("
+            UPDATE tenants
+            SET plan_expires_at = CASE
+                WHEN plan_expires_at IS NOT NULL AND plan_expires_at > CURRENT_TIMESTAMP
+                THEN datetime(plan_expires_at, '+$days days')
+                ELSE datetime('now', '+$days days')
+            END
+            WHERE id = ?
+        ");
         $stmt->execute([$user['tenant_id']]);
         echo json_encode(['success' => true]);
     } else {

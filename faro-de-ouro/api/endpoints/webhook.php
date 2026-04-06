@@ -54,7 +54,16 @@ if (isset($data['action']) && $data['action'] == 'payment.created') {
                           }
                      }
                      $days = $months * 31;
-                     $stmt = $db->prepare("UPDATE tenants SET plan_expires_at = datetime('now', '+$days days') WHERE id = ?");
+
+                     $stmt = $db->prepare("
+                         UPDATE tenants
+                         SET plan_expires_at = CASE
+                             WHEN plan_expires_at IS NOT NULL AND plan_expires_at > CURRENT_TIMESTAMP
+                             THEN datetime(plan_expires_at, '+$days days')
+                             ELSE datetime('now', '+$days days')
+                         END
+                         WHERE id = ?
+                     ");
                      $stmt->execute([$user['tenant_id']]);
                 }
             }
