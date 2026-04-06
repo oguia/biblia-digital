@@ -18,10 +18,10 @@ const Landing = () => {
             {supportsPWA && (
               <button
                 onClick={promptInstall}
-                className="hidden md:flex items-center gap-2 text-brand-dark border border-gray-300 px-4 py-2 rounded-lg font-semibold hover:bg-white transition"
+                className="flex items-center gap-2 text-brand-dark border border-gray-300 px-4 py-2 rounded-lg font-semibold hover:bg-white transition"
               >
                 <Download size={18} />
-                Instalar App
+                <span className="hidden sm:inline">Instalar App</span>
               </button>
             )}
             <Link to="/login" className="text-gray-500 hover:text-brand-dark transition">Entrar</Link>

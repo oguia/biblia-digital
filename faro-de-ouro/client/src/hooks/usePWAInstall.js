@@ -1,42 +1,44 @@
 import { useState, useEffect } from 'react';
 
 export const usePWAInstall = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [supportsPWA, setSupportsPWA] = useState(false);
 
   useEffect(() => {
-    const handler = (e) => {
-      // Prevent the mini-infobar from appearing on mobile
-      e.preventDefault();
-      // Stash the event so it can be triggered later.
-      setDeferredPrompt(e);
-      // Update UI notify the user they can install the PWA
+    // Check if the event was already captured by index.html before React loaded
+    if (window.deferredPWAInstallPrompt) {
+      setSupportsPWA(true);
+    }
+
+    const handleReady = () => {
       setSupportsPWA(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
-
-    window.addEventListener('appinstalled', () => {
-      setDeferredPrompt(null);
+    const handleInstalled = () => {
+      window.deferredPWAInstallPrompt = null;
       setSupportsPWA(false);
-    });
+    };
+
+    window.addEventListener('pwa-install-ready', handleReady);
+    window.addEventListener('appinstalled', handleInstalled);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('pwa-install-ready', handleReady);
+      window.removeEventListener('appinstalled', handleInstalled);
     };
   }, []);
 
   const promptInstall = async () => {
-    if (!deferredPrompt) return;
+    const promptEvent = window.deferredPWAInstallPrompt;
+    if (!promptEvent) return;
+
     // Show the install prompt
-    deferredPrompt.prompt();
+    promptEvent.prompt();
     // Wait for the user to respond to the prompt
-    const { outcome } = await deferredPrompt.userChoice;
+    const { outcome } = await promptEvent.userChoice;
     if (outcome === 'accepted') {
       setSupportsPWA(false);
+      window.deferredPWAInstallPrompt = null;
     }
-    // We've used the prompt, and can't use it again, throw it away
-    setDeferredPrompt(null);
   };
 
   return { supportsPWA, promptInstall };

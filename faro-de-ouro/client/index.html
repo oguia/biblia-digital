@@ -8,6 +8,16 @@
     <link rel="apple-touch-icon" href="/favicon.png">
     <link rel="manifest" href="/manifest.webmanifest">
     <title>Faro de Ouro</title>
+    <script>
+      // Capture the PWA install event globally as early as possible
+      window.deferredPWAInstallPrompt = null;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        window.deferredPWAInstallPrompt = e;
+        // Dispatch a custom event so React components can pick it up immediately
+        window.dispatchEvent(new Event('pwa-install-ready'));
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
