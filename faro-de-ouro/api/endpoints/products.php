@@ -116,6 +116,102 @@ if ($method == 'GET') {
             http_response_code(400);
             echo json_encode(['error' => $e->getMessage()]);
         }
+    } elseif ($action == 'import_csv') {
+        if (!isset($_FILES['file']) || $_FILES['file']['error'] != UPLOAD_ERR_OK) {
+            http_response_code(400);
+            die(json_encode(['error' => 'Nenhum arquivo recebido ou erro no upload.']));
+        }
+
+        $fileTmpPath = $_FILES['file']['tmp_name'];
+        $fileName = $_FILES['file']['name'];
+        $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+        if ($fileExtension != 'csv') {
+            http_response_code(400);
+            die(json_encode(['error' => 'Por favor, envie apenas arquivos .csv']));
+        }
+
+        if (($handle = fopen($fileTmpPath, "r")) !== FALSE) {
+            $importedCount = 0;
+            $updatedCount = 0;
+            $skippedCount = 0;
+
+            // Assume the first row is the header: Nome, Código, Preço, Estoque Atual, Estoque Mínimo
+            $header = fgetcsv($handle, 1000, ",");
+
+            if ($header === false) {
+                 http_response_code(400); die(json_encode(['error' => 'Arquivo CSV vazio']));
+            }
+
+            $db->beginTransaction();
+            try {
+                while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                    $name = trim($data[0] ?? '');
+                    if (empty($name)) {
+                        $skippedCount++;
+                        continue;
+                    }
+
+                    $code = trim($data[1] ?? '');
+                    $price = floatval(str_replace(['R$', ' ', ','], ['', '', '.'], $data[2] ?? 0));
+                    $current_stock = (int)($data[3] ?? 0);
+                    $min_stock = (int)($data[4] ?? 0);
+
+                    $existingId = null;
+                    if (!empty($code)) {
+                        $stmtCheck = $db->prepare("SELECT id FROM products WHERE code = ? AND tenant_id = ?");
+                        $stmtCheck->execute([$code, $tenant_id]);
+                        $existingId = $stmtCheck->fetchColumn();
+                    }
+
+                    if ($existingId) {
+                        // Update existing product
+                        $stmtUp = $db->prepare("UPDATE products SET name = ?, price = ?, min_stock = ? WHERE id = ?");
+                        $stmtUp->execute([$name, $price, $min_stock, $existingId]);
+
+                        if ($data[3] !== '' && isset($data[3])) {
+                            $stmtStk = $db->prepare("SELECT current_stock FROM products WHERE id = ?");
+                            $stmtStk->execute([$existingId]);
+                            $oldStk = $stmtStk->fetchColumn();
+
+                            $diff = $current_stock - $oldStk;
+                            if ($diff != 0) {
+                                $stmtUpStk = $db->prepare("UPDATE products SET current_stock = ? WHERE id = ?");
+                                $stmtUpStk->execute([$current_stock, $existingId]);
+
+                                $movType = $diff > 0 ? 'in' : 'out';
+                                $qty = abs($diff);
+                                $stmtMov = $db->prepare("INSERT INTO movements (tenant_id, product_id, user_id, type, quantity, reason) VALUES (?, ?, ?, ?, ?, 'Importação de Planilha')");
+                                $stmtMov->execute([$tenant_id, $existingId, $user['id'], $movType, $qty]);
+                            }
+                        }
+                        $updatedCount++;
+                    } else {
+                        // Insert new product
+                        $stmtIn = $db->prepare("INSERT INTO products (tenant_id, code, name, price, min_stock, current_stock) VALUES (?, ?, ?, ?, ?, ?)");
+                        $stmtIn->execute([$tenant_id, $code, $name, $price, $min_stock, $current_stock]);
+                        $newId = $db->lastInsertId();
+
+                        if ($current_stock > 0) {
+                            $stmtMov = $db->prepare("INSERT INTO movements (tenant_id, product_id, user_id, type, quantity, reason) VALUES (?, ?, ?, 'in', ?, 'Faro inicial (Importação)')");
+                            $stmtMov->execute([$tenant_id, $newId, $user['id'], $current_stock]);
+                        }
+                        $importedCount++;
+                    }
+                }
+                $db->commit();
+                fclose($handle);
+                echo json_encode(['success' => true, 'imported' => $importedCount, 'updated' => $updatedCount, 'skipped' => $skippedCount]);
+            } catch (Exception $e) {
+                $db->rollBack();
+                fclose($handle);
+                http_response_code(500);
+                echo json_encode(['error' => 'Erro ao importar dados: ' . $e->getMessage()]);
+            }
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Não foi possível ler o arquivo.']);
+        }
     }
 } elseif ($method == 'PUT') {
      $data = json_decode(file_get_contents('php://input'), true);

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import api from '../api';
-import { Plus, Trash2, Camera, Download } from 'lucide-react';
+import { Plus, Trash2, Camera, Download, Upload } from 'lucide-react';
 import BarcodeScanner from '../components/BarcodeScanner';
 import { exportToCSV } from '../utils/export';
 
@@ -12,6 +12,9 @@ const Products = ({ user }) => {
 
   const [showModal, setShowModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importing, setImporting] = useState(false);
 
   const [formData, setFormData] = useState({ code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '' });
 
@@ -29,6 +32,42 @@ const Products = ({ user }) => {
     setShowModal(false);
     loadData();
     setFormData({ code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '' });
+  };
+
+  const handleImportSubmit = async (e) => {
+    e.preventDefault();
+    if (!importFile) return;
+
+    setImporting(true);
+    const formDataObj = new FormData();
+    formDataObj.append('file', importFile);
+
+    try {
+      // Create a specific fetch request since we are sending FormData (not JSON)
+      const token = localStorage.getItem('faro_token');
+      const response = await fetch('./api/index.php?route=products&action=import_csv', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formDataObj
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao importar planilha');
+      }
+
+      alert(`Importação concluída!\n\nNovos: ${result.imported}\nAtualizados: ${result.updated}\nIgnorados (sem nome): ${result.skipped}`);
+      setShowImportModal(false);
+      setImportFile(null);
+      loadData();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setImporting(false);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -54,9 +93,12 @@ const Products = ({ user }) => {
 
   return (
     <Layout user={user}>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
         <h1 className="text-2xl font-bold text-brand-dark">Produtos</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <button onClick={() => setShowImportModal(true)} className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-50">
+            <Upload size={20} /> Importar Planilha
+          </button>
             <button onClick={handleExport} className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-300 transition">
               <Download size={20} /> Exportar
             </button>
@@ -136,6 +178,44 @@ const Products = ({ user }) => {
       )}
 
       {showScanner && <BarcodeScanner onScan={(code) => setFormData({...formData, code})} onClose={() => setShowScanner(false)} />}
+
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full">
+            <h2 className="text-xl font-bold mb-4 text-brand-dark">Importar Planilha (CSV)</h2>
+            <div className="text-sm text-gray-600 mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
+              <p className="mb-2 font-semibold">Instruções:</p>
+              <ul className="list-disc pl-5 space-y-1 mb-4">
+                <li>Salve sua planilha no formato <strong>.CSV</strong></li>
+                <li>A primeira linha deve conter os cabeçalhos.</li>
+                <li>As colunas devem estar <strong>exatamente</strong> nesta ordem:</li>
+              </ul>
+              <div className="bg-white p-2 text-xs font-mono rounded border border-gray-200 overflow-x-auto whitespace-nowrap">
+                Nome, Código, Preço, Estoque Atual, Estoque Mínimo
+              </div>
+              <p className="mt-4 text-xs text-blue-800">
+                Dica: Se o sistema encontrar um Código já existente, ele apenas atualizará o estoque e preço.
+              </p>
+            </div>
+
+            <form onSubmit={handleImportSubmit} className="space-y-4">
+              <input
+                type="file"
+                accept=".csv"
+                required
+                onChange={e => setImportFile(e.target.files[0])}
+                className="w-full px-3 py-2 border rounded focus:ring-brand-orange bg-gray-50 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-orange file:text-white hover:file:bg-orange-600 cursor-pointer"
+              />
+              <div className="flex justify-end gap-2 mt-6">
+                <button type="button" onClick={() => setShowImportModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded transition" disabled={importing}>Cancelar</button>
+                <button type="submit" className="px-4 py-2 bg-brand-dark text-white rounded hover:bg-gray-800 transition flex items-center gap-2" disabled={importing}>
+                  {importing ? 'Importando...' : 'Enviar Planilha'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };
