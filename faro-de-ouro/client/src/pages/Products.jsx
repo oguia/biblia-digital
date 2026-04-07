@@ -137,9 +137,53 @@ const Products = ({ user }) => {
     }
   };
 
+  const handleQuickStockEdit = async (product) => {
+    const newStock = window.prompt(`Ajuste rápido do Faro (Estoque) do item:\n${product.name}\n\nQuantidade Atual: ${product.current_stock}\nDigite o novo estoque total:`, product.current_stock);
+
+    if (newStock !== null && newStock.trim() !== '') {
+      const parsedStock = parseInt(newStock, 10);
+      if (!isNaN(parsedStock) && parsedStock !== product.current_stock) {
+        try {
+          await api.post('products&action=movement', {
+            product_id: product.id,
+            type: 'adjustment',
+            quantity: parsedStock,
+            reason: 'Ajuste rápido (Tabela)'
+          });
+          loadData();
+        } catch (err) {
+          alert('Erro ao atualizar o estoque: ' + (err.response?.data?.error || err.message));
+        }
+      }
+    }
+  };
+
+  const handleQuickPriceEdit = async (product) => {
+    const newPrice = window.prompt(`Ajuste rápido do Preço do item:\n${product.name}\n\nPreço Atual: R$ ${Number(product.price).toFixed(2)}\nDigite o novo preço:`, product.price);
+
+    if (newPrice !== null && newPrice.trim() !== '') {
+      let parsedPrice = parseFloat(newPrice.replace(',', '.'));
+      if (!isNaN(parsedPrice) && parsedPrice !== parseFloat(product.price)) {
+        try {
+          await api.put('products&action=update', {
+            ...product,
+            price: parsedPrice
+          });
+          loadData();
+        } catch (err) {
+          alert('Erro ao atualizar o preço: ' + (err.response?.data?.error || err.message));
+        }
+      }
+    }
+  };
+
+  const totalProducts = products.length;
+  const totalStock = products.reduce((acc, p) => acc + (parseInt(p.current_stock) || 0), 0);
+  const totalValue = products.reduce((acc, p) => acc + ((parseInt(p.current_stock) || 0) * (parseFloat(p.price) || 0)), 0);
+
   return (
     <Layout user={user}>
-      <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
         <h1 className="text-2xl font-bold text-brand-dark">Produtos</h1>
         <div className="flex gap-2 flex-wrap">
           <button onClick={() => setShowImportModal(true)} className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-50">
@@ -154,6 +198,30 @@ const Products = ({ user }) => {
             <button onClick={() => { setEditMode(false); setFormData({ id: '', code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '' }); setShowModal(true); }} className="bg-brand-orange text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-600 transition">
               <Plus size={20} /> Novo
             </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500 font-medium">Cadastros</p>
+            <p className="text-2xl font-bold text-brand-dark">{totalProducts}</p>
+          </div>
+          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">🏷️</div>
+        </div>
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500 font-medium">Faro Físico Total</p>
+            <p className="text-2xl font-bold text-brand-dark">{totalStock} un.</p>
+          </div>
+          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">📦</div>
+        </div>
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500 font-medium">Valor Total Estimado</p>
+            <p className="text-2xl font-bold text-brand-dark">R$ {totalValue.toFixed(2)}</p>
+          </div>
+          <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-brand-orange">💰</div>
         </div>
       </div>
 
@@ -173,14 +241,22 @@ const Products = ({ user }) => {
             {products.map(p => (
               <tr key={p.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.code || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{p.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.category_name || '-'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 max-w-xs truncate" title={p.name}>{p.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-[150px] truncate" title={p.category_name}>{p.category_name || '-'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${p.current_stock <= p.min_stock ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-                    {p.current_stock}
-                  </span>
+                  <button onClick={() => handleQuickStockEdit(p)} className="hover:bg-gray-100 p-1 rounded transition group flex items-center gap-1" title="Clique para ajustar o Faro (Estoque)">
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${p.current_stock <= p.min_stock ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                      {p.current_stock}
+                    </span>
+                    <Edit3 size={12} className="text-gray-400 opacity-0 group-hover:opacity-100" />
+                  </button>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ {Number(p.price).toFixed(2)}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <button onClick={() => handleQuickPriceEdit(p)} className="hover:bg-gray-100 p-1 rounded transition group flex items-center gap-1" title="Clique para ajustar o Preço">
+                    R$ {Number(p.price).toFixed(2)}
+                    <Edit3 size={12} className="text-gray-400 opacity-0 group-hover:opacity-100" />
+                  </button>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button onClick={() => handleEdit(p)} className="text-blue-600 hover:text-blue-900 ml-4"><Edit3 size={18} /></button>
                   <button onClick={() => handleDelete(p.id)} className="text-red-600 hover:text-red-900 ml-4"><Trash2 size={18} /></button>
