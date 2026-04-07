@@ -91,6 +91,15 @@ const Products = ({ user }) => {
     exportToCSV('produtos.csv', exportData);
   };
 
+  const handleDeleteAll = async () => {
+    if(window.confirm('TEM CERTEZA ABSOLUTA? Isso irá apagar TODOS os produtos e todo o histórico de movimentações (Kardex). Esta ação não pode ser desfeita.')) {
+      if(window.confirm('Confirme novamente: Deseja realmente APAGAR TUDO?')) {
+        await api.delete('/products.php?action=delete_all');
+        loadData();
+      }
+    }
+  };
+
   return (
     <Layout user={user}>
       <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
@@ -101,6 +110,9 @@ const Products = ({ user }) => {
           </button>
             <button onClick={handleExport} className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-300 transition">
               <Download size={20} /> Exportar
+            </button>
+            <button onClick={handleDeleteAll} className="bg-red-100 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-200 transition" title="Apagar todos os produtos e histórico">
+              <Trash2 size={20} /> Limpar Tudo
             </button>
             <button onClick={() => setShowModal(true)} className="bg-brand-orange text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-600 transition">
               <Plus size={20} /> Novo

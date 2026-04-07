@@ -149,23 +149,23 @@ if ($method == 'GET') {
                 $isGpcFormat = false;
 
                 while (($data = fgetcsv($handle, 4000, $separator)) !== FALSE) {
-                    $rowStr = implode("", $data);
-                    if (stripos($rowStr, 'CONTROLE DE ESTOQUE') !== false || empty(trim(implode("", $data)))) {
-                         // Skip initial garbage lines
-                         continue;
-                    }
+                    // Check all columns in this row to detect header
+                    foreach($data as $col) {
+                        $cleanCol = trim($col);
+                        // Clean BOM if exists
+                        if (substr($cleanCol, 0, 3) == "\xEF\xBB\xBF") {
+                            $cleanCol = substr($cleanCol, 3);
+                        }
 
-                    if (stripos($data[0] ?? '', 'SEQU') !== false) {
-                        $isGpcFormat = true;
-                        // Skip the second header row in GPC format
-                        fgetcsv($handle, 4000, $separator);
-                        break;
-                    } elseif (stripos($data[0] ?? '', 'Nome') !== false || stripos($data[0] ?? '', 'Name') !== false) {
-                        break;
+                        if (stripos($cleanCol, 'SEQU') !== false) {
+                            $isGpcFormat = true;
+                            // Skip the second header row in GPC format
+                            fgetcsv($handle, 4000, $separator);
+                            break 2;
+                        } elseif (stripos($cleanCol, 'Nome') !== false || stripos($cleanCol, 'Name') !== false) {
+                            break 2;
+                        }
                     }
-
-                    // Attempt to parse data immediately if no header found
-                    break;
                 }
 
                 if (!$isGpcFormat) {
@@ -173,6 +173,8 @@ if ($method == 'GET') {
                     fgetcsv($handle, 4000, $separator); // Skip header of standard format
                 }
 
+
+                $catCache = [];
 
                 while (($data = fgetcsv($handle, 4000, $separator)) !== FALSE) {
                     if (empty(trim(implode("", $data)))) continue;
@@ -182,15 +184,18 @@ if ($method == 'GET') {
                     $price = 0;
                     $current_stock = 0;
                     $min_stock = 0;
+                    $category_name = '';
 
                     if ($isGpcFormat) {
                         // GPC format mapping
-                        // 0: SEQUENCIA, 2: DESCRIÇÃO COMPLETA, 5: CÓDIGO CONTÁBIL (sku), 10: CUSTO UNIT, 11: ESTOQUE MINIMO
+                        // 0: SEQUENCIA, 2: DESCRIÇÃO COMPLETA, 5: CÓDIGO CONTÁBIL (sku), 7: CLASSIFICAÇÃO, 10: CUSTO UNIT, 11: ESTOQUE MINIMO
                         $name = trim($data[2] ?? '');
                         $code = trim($data[5] ?? '');
                         if (empty($code) || $code === 'NÃO POSSUI') {
                             $code = trim($data[0] ?? ''); // Fallback to Sequence as SKU
                         }
+
+                        $category_name = trim($data[7] ?? '');
 
                         $priceStr = trim($data[10] ?? '0');
                         // Clean price format "R$ 1.250,00" -> "1250.00"
@@ -215,6 +220,24 @@ if ($method == 'GET') {
                         continue;
                     }
 
+                    $category_id = null;
+                    if (!empty($category_name)) {
+                        if (isset($catCache[$category_name])) {
+                            $category_id = $catCache[$category_name];
+                        } else {
+                            $stmtCat = $db->prepare("SELECT id FROM categories WHERE name = ? AND tenant_id = ?");
+                            $stmtCat->execute([$category_name, $tenant_id]);
+                            $category_id = $stmtCat->fetchColumn();
+
+                            if (!$category_id) {
+                                $stmtInsCat = $db->prepare("INSERT INTO categories (tenant_id, name) VALUES (?, ?)");
+                                $stmtInsCat->execute([$tenant_id, $category_name]);
+                                $category_id = $db->lastInsertId();
+                            }
+                            $catCache[$category_name] = $category_id;
+                        }
+                    }
+
                     $existingId = null;
                     if (!empty($code)) {
                         $stmtCheck = $db->prepare("SELECT id FROM products WHERE code = ? AND tenant_id = ?");
@@ -224,8 +247,13 @@ if ($method == 'GET') {
 
                     if ($existingId) {
                         // Update existing product
-                        $stmtUp = $db->prepare("UPDATE products SET name = ?, price = ?, min_stock = ? WHERE id = ?");
-                        $stmtUp->execute([$name, $price, $min_stock, $existingId]);
+                        if ($category_id !== null) {
+                            $stmtUp = $db->prepare("UPDATE products SET name = ?, price = ?, min_stock = ?, category_id = ? WHERE id = ?");
+                            $stmtUp->execute([$name, $price, $min_stock, $category_id, $existingId]);
+                        } else {
+                            $stmtUp = $db->prepare("UPDATE products SET name = ?, price = ?, min_stock = ? WHERE id = ?");
+                            $stmtUp->execute([$name, $price, $min_stock, $existingId]);
+                        }
 
                         if (!$isGpcFormat && isset($data[3]) && $data[3] !== '') {
                             $stmtStk = $db->prepare("SELECT current_stock FROM products WHERE id = ?");
@@ -246,8 +274,13 @@ if ($method == 'GET') {
                         $updatedCount++;
                     } else {
                         // Insert new product
-                        $stmtIn = $db->prepare("INSERT INTO products (tenant_id, code, name, price, min_stock, current_stock) VALUES (?, ?, ?, ?, ?, ?)");
-                        $stmtIn->execute([$tenant_id, $code, $name, $price, $min_stock, $current_stock]);
+                        if ($category_id !== null) {
+                            $stmtIn = $db->prepare("INSERT INTO products (tenant_id, code, name, price, min_stock, current_stock, category_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                            $stmtIn->execute([$tenant_id, $code, $name, $price, $min_stock, $current_stock, $category_id]);
+                        } else {
+                            $stmtIn = $db->prepare("INSERT INTO products (tenant_id, code, name, price, min_stock, current_stock) VALUES (?, ?, ?, ?, ?, ?)");
+                            $stmtIn->execute([$tenant_id, $code, $name, $price, $min_stock, $current_stock]);
+                        }
                         $newId = $db->lastInsertId();
 
                         if ($current_stock > 0) {
@@ -290,7 +323,21 @@ if ($method == 'GET') {
      }
 } elseif ($method == 'DELETE') {
      $id = $_GET['id'] ?? null;
-     if($id) {
+     $action = $_GET['action'] ?? '';
+
+     if ($action == 'delete_all') {
+         // Clear all movements first due to FK constraints or logical cleanup
+         $stmt = $db->prepare("DELETE FROM movements WHERE tenant_id=?");
+         $stmt->execute([$tenant_id]);
+
+         $stmt = $db->prepare("DELETE FROM products WHERE tenant_id=?");
+         $stmt->execute([$tenant_id]);
+         echo json_encode(['success' => true]);
+     } elseif($id) {
+         // Also delete associated movements
+         $stmt = $db->prepare("DELETE FROM movements WHERE product_id=? AND tenant_id=?");
+         $stmt->execute([$id, $tenant_id]);
+
          $stmt = $db->prepare("DELETE FROM products WHERE id=? AND tenant_id=?");
          $stmt->execute([$id, $tenant_id]);
          echo json_encode(['success' => true]);
