@@ -52,7 +52,7 @@ if ($method == 'GET') {
     $data = json_decode(file_get_contents('php://input'), true);
 
     if ($action == 'create') {
-        $stmt = $db->prepare("INSERT INTO products (tenant_id, code, name, category_id, supplier_id, price, min_stock, current_stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $db->prepare("INSERT INTO products (tenant_id, code, name, category_id, supplier_id, price, min_stock, current_stock, unit, location, observation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([
             $tenant_id,
             $data['code'] ?? null,
@@ -61,7 +61,10 @@ if ($method == 'GET') {
             $data['supplier_id'] ?? null,
             $data['price'] ?? 0,
             $data['min_stock'] ?? 0,
-            $data['current_stock'] ?? 0
+            $data['current_stock'] ?? 0,
+            $data['unit'] ?? null,
+            $data['location'] ?? null,
+            $data['observation'] ?? null
         ]);
 
         $product_id = $db->lastInsertId();
@@ -185,10 +188,13 @@ if ($method == 'GET') {
                     $current_stock = 0;
                     $min_stock = 0;
                     $category_name = '';
+                    $unit = '';
+                    $location = '';
+                    $observation = '';
 
                     if ($isGpcFormat) {
                         // GPC format mapping
-                        // 0: SEQUENCIA, 2: DESCRIÇÃO COMPLETA, 5: CÓDIGO CONTÁBIL (sku), 7: CLASSIFICAÇÃO, 10: CUSTO UNIT, 11: ESTOQUE MINIMO
+                        // 0: SEQUENCIA, 2: DESCRIÇÃO COMPLETA, 5: CÓDIGO CONTÁBIL (sku), 7: CLASSIFICAÇÃO, 9: UNIDADE MEDIDA, 10: CUSTO UNIT, 11: ESTOQUE MINIMO, 18: ENDEREÇO FINAL, 19: OBSERVAÇÃO
                         $name = trim($data[2] ?? '');
                         $code = trim($data[5] ?? '');
                         if (empty($code) || $code === 'NÃO POSSUI') {
@@ -196,6 +202,9 @@ if ($method == 'GET') {
                         }
 
                         $category_name = trim($data[7] ?? '');
+                        $unit = trim($data[9] ?? '');
+                        $location = trim($data[18] ?? '');
+                        $observation = trim($data[19] ?? '');
 
                         $priceStr = trim($data[10] ?? '0');
                         // Clean price format "R$ 1.250,00" -> "1250.00"
@@ -248,11 +257,11 @@ if ($method == 'GET') {
                     if ($existingId) {
                         // Update existing product
                         if ($category_id !== null) {
-                            $stmtUp = $db->prepare("UPDATE products SET name = ?, price = ?, min_stock = ?, category_id = ? WHERE id = ?");
-                            $stmtUp->execute([$name, $price, $min_stock, $category_id, $existingId]);
+                            $stmtUp = $db->prepare("UPDATE products SET name = ?, price = ?, min_stock = ?, category_id = ?, unit = ?, location = ?, observation = ? WHERE id = ?");
+                            $stmtUp->execute([$name, $price, $min_stock, $category_id, $unit, $location, $observation, $existingId]);
                         } else {
-                            $stmtUp = $db->prepare("UPDATE products SET name = ?, price = ?, min_stock = ? WHERE id = ?");
-                            $stmtUp->execute([$name, $price, $min_stock, $existingId]);
+                            $stmtUp = $db->prepare("UPDATE products SET name = ?, price = ?, min_stock = ?, unit = ?, location = ?, observation = ? WHERE id = ?");
+                            $stmtUp->execute([$name, $price, $min_stock, $unit, $location, $observation, $existingId]);
                         }
 
                         if (!$isGpcFormat && isset($data[3]) && $data[3] !== '') {
@@ -275,11 +284,11 @@ if ($method == 'GET') {
                     } else {
                         // Insert new product
                         if ($category_id !== null) {
-                            $stmtIn = $db->prepare("INSERT INTO products (tenant_id, code, name, price, min_stock, current_stock, category_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                            $stmtIn->execute([$tenant_id, $code, $name, $price, $min_stock, $current_stock, $category_id]);
+                            $stmtIn = $db->prepare("INSERT INTO products (tenant_id, code, name, price, min_stock, current_stock, category_id, unit, location, observation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            $stmtIn->execute([$tenant_id, $code, $name, $price, $min_stock, $current_stock, $category_id, $unit, $location, $observation]);
                         } else {
-                            $stmtIn = $db->prepare("INSERT INTO products (tenant_id, code, name, price, min_stock, current_stock) VALUES (?, ?, ?, ?, ?, ?)");
-                            $stmtIn->execute([$tenant_id, $code, $name, $price, $min_stock, $current_stock]);
+                            $stmtIn = $db->prepare("INSERT INTO products (tenant_id, code, name, price, min_stock, current_stock, unit, location, observation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            $stmtIn->execute([$tenant_id, $code, $name, $price, $min_stock, $current_stock, $unit, $location, $observation]);
                         }
                         $newId = $db->lastInsertId();
 
@@ -308,7 +317,7 @@ if ($method == 'GET') {
      $data = json_decode(file_get_contents('php://input'), true);
      if($action == 'update') {
          $id = $data['id'];
-         $stmt = $db->prepare("UPDATE products SET code=?, name=?, category_id=?, supplier_id=?, price=?, min_stock=? WHERE id=? AND tenant_id=?");
+         $stmt = $db->prepare("UPDATE products SET code=?, name=?, category_id=?, supplier_id=?, price=?, min_stock=?, unit=?, location=?, observation=? WHERE id=? AND tenant_id=?");
          $stmt->execute([
             $data['code'] ?? null,
             $data['name'],
@@ -316,6 +325,9 @@ if ($method == 'GET') {
             $data['supplier_id'] ?? null,
             $data['price'] ?? 0,
             $data['min_stock'] ?? 0,
+            $data['unit'] ?? null,
+            $data['location'] ?? null,
+            $data['observation'] ?? null,
             $id,
             $tenant_id
          ]);

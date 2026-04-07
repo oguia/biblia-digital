@@ -51,6 +51,9 @@ CREATE TABLE IF NOT EXISTS products (
     price REAL DEFAULT 0,
     min_stock INTEGER DEFAULT 0,
     current_stock INTEGER DEFAULT 0,
+    unit TEXT,
+    location TEXT,
+    observation TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(tenant_id) REFERENCES tenants(id),
     FOREIGN KEY(category_id) REFERENCES categories(id),
@@ -100,6 +103,14 @@ CREATE TABLE IF NOT EXISTS suggestions (
     FOREIGN KEY(user_id) REFERENCES users(id)
 );
 ");
+
+try {
+    $db->exec("ALTER TABLE products ADD COLUMN unit TEXT");
+    $db->exec("ALTER TABLE products ADD COLUMN location TEXT");
+    $db->exec("ALTER TABLE products ADD COLUMN observation TEXT");
+} catch (Exception $e) {
+    // Colunas já existem, ignorar
+}
 
 // Inserir superadmin se nao existir
 $stmt = $db->prepare("SELECT COUNT(*) FROM users WHERE email = 'admin@farodeouro.com'");

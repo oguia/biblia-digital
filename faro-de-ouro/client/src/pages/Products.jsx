@@ -16,7 +16,7 @@ const Products = ({ user }) => {
   const [importFile, setImportFile] = useState(null);
   const [importing, setImporting] = useState(false);
 
-  const [formData, setFormData] = useState({ id: '', code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '' });
+  const [formData, setFormData] = useState({ id: '', code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '', unit: '', location: '', observation: '' });
   const [editMode, setEditMode] = useState(false);
 
   const loadData = () => {
@@ -46,7 +46,7 @@ const Products = ({ user }) => {
     setShowModal(false);
     setEditMode(false);
     loadData();
-    setFormData({ id: '', code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '' });
+    setFormData({ id: '', code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '', unit: '', location: '', observation: '' });
   };
 
   const handleEdit = (product) => {
@@ -59,7 +59,10 @@ const Products = ({ user }) => {
       price: product.price,
       min_stock: product.min_stock,
       current_stock: product.current_stock,
-      original_stock: product.current_stock
+      original_stock: product.current_stock,
+      unit: product.unit || '',
+      location: product.location || '',
+      observation: product.observation || ''
     });
     setEditMode(true);
     setShowModal(true);
@@ -117,7 +120,10 @@ const Products = ({ user }) => {
       Fornecedor: p.supplier_name,
       Preço: p.price,
       Faro_Atual: p.current_stock,
-      Faro_Min: p.min_stock
+      Unidade: p.unit,
+      Faro_Min: p.min_stock,
+      Localização: p.location,
+      Observação: p.observation
     }));
     exportToCSV('produtos.csv', exportData);
   };
@@ -195,7 +201,7 @@ const Products = ({ user }) => {
             <button onClick={handleDeleteAll} className="bg-red-100 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-200 transition" title="Apagar todos os produtos e histórico">
               <Trash2 size={20} /> Limpar Tudo
             </button>
-            <button onClick={() => { setEditMode(false); setFormData({ id: '', code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '' }); setShowModal(true); }} className="bg-brand-orange text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-600 transition">
+            <button onClick={() => { setEditMode(false); setFormData({ id: '', code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '', unit: '', location: '', observation: '' }); setShowModal(true); }} className="bg-brand-orange text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-600 transition">
               <Plus size={20} /> Novo
             </button>
         </div>
@@ -233,6 +239,7 @@ const Products = ({ user }) => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Faro</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Localização</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Preço</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
             </tr>
@@ -246,11 +253,12 @@ const Products = ({ user }) => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button onClick={() => handleQuickStockEdit(p)} className="hover:bg-gray-100 p-1 rounded transition group flex items-center gap-1" title="Clique para ajustar o Faro (Estoque)">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${p.current_stock <= p.min_stock ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-                      {p.current_stock}
+                      {p.current_stock} {p.unit && <span className="ml-1 text-gray-600 opacity-80">{p.unit}</span>}
                     </span>
                     <Edit3 size={12} className="text-gray-400 opacity-0 group-hover:opacity-100" />
                   </button>
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-[120px] truncate" title={p.location}>{p.location || '-'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <button onClick={() => handleQuickPriceEdit(p)} className="hover:bg-gray-100 p-1 rounded transition group flex items-center gap-1" title="Clique para ajustar o Preço">
                     R$ {Number(p.price).toFixed(2)}
@@ -289,16 +297,32 @@ const Products = ({ user }) => {
                 {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <input type="number" step="0.01" placeholder="Preço (R$)" className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
                 <div>
                   <label className="text-xs text-gray-500 mb-1 block">{editMode ? 'Faro (Estoque Atual)' : 'Estoque Inicial'}</label>
                   <input type="number" placeholder="Estoque Atual" required className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.current_stock} onChange={e => setFormData({...formData, current_stock: e.target.value})} />
                 </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Unidade de Medida</label>
+                  <input type="text" placeholder="Ex: un, kg, cx" className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} />
+                </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Estoque Mínimo (Alerta)</label>
+                  <input type="number" placeholder="Estoque Mínimo" required className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.min_stock} onChange={e => setFormData({...formData, min_stock: e.target.value})} />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Localização / Endereço</label>
+                  <input type="text" placeholder="Ex: Bloco A, Estante 3" className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />
+                </div>
+              </div>
+
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Estoque Mínimo (Alerta)</label>
-                <input type="number" placeholder="Estoque Mínimo" required className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.min_stock} onChange={e => setFormData({...formData, min_stock: e.target.value})} />
+                <label className="text-xs text-gray-500 mb-1 block">Observação</label>
+                <textarea placeholder="Observações adicionais..." className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.observation} onChange={e => setFormData({...formData, observation: e.target.value})}></textarea>
               </div>
               <div className="flex justify-end gap-2 mt-6">
                 <button type="button" onClick={() => {setShowModal(false); setEditMode(false);}} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button>
