@@ -184,17 +184,13 @@ const Products = ({ user }) => {
           <div className="bg-white rounded-xl p-6 max-w-md w-full">
             <h2 className="text-xl font-bold mb-4 text-brand-dark">Importar Planilha (CSV)</h2>
             <div className="text-sm text-gray-600 mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
-              <p className="mb-2 font-semibold">Instruções:</p>
+              <p className="mb-2 font-semibold">Formatos Aceitos (.CSV):</p>
               <ul className="list-disc pl-5 space-y-1 mb-4">
-                <li>Salve sua planilha no formato <strong>.CSV</strong></li>
-                <li>A primeira linha deve conter os cabeçalhos.</li>
-                <li>As colunas devem estar <strong>exatamente</strong> nesta ordem:</li>
+                <li><strong>Planilha Faro:</strong> Nome, Código, Preço, Estoque Atual, Estoque Mín.</li>
+                <li><strong>Planilha GPC-ARA:</strong> O sistema detecta e importa a sua planilha original de Controle de Estoque Oficial automaticamente, usando a SEQUÊNCIA ou CÓDIGO CONTÁBIL.</li>
               </ul>
-              <div className="bg-white p-2 text-xs font-mono rounded border border-gray-200 overflow-x-auto whitespace-nowrap">
-                Nome, Código, Preço, Estoque Atual, Estoque Mínimo
-              </div>
               <p className="mt-4 text-xs text-blue-800">
-                Dica: Se o sistema encontrar um Código já existente, ele apenas atualizará o estoque e preço.
+                Dica: Se o sistema encontrar um Código já existente, ele apenas atualizará o estoque e preço. O estoque atual de novos produtos do GPC iniciará zerado para conferência.
               </p>
             </div>
 

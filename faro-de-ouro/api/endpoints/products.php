@@ -136,26 +136,84 @@ if ($method == 'GET') {
             $updatedCount = 0;
             $skippedCount = 0;
 
-            // Assume the first row is the header: Nome, Código, Preço, Estoque Atual, Estoque Mínimo
-            $header = fgetcsv($handle, 1000, ",");
-
-            if ($header === false) {
-                 http_response_code(400); die(json_encode(['error' => 'Arquivo CSV vazio']));
-            }
+            // Detect separator (try semicolon first, then comma)
+            $firstLine = fgets($handle);
+            $separator = strpos($firstLine, ';') !== false ? ';' : ',';
+            rewind($handle);
 
             $db->beginTransaction();
             try {
-                while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-                    $name = trim($data[0] ?? '');
+                // Read all lines to detect header offset (skip until "SEQUÊNCIA" or "NOME")
+                $headerOffset = 0;
+                $colMap = [];
+                $isGpcFormat = false;
+
+                while (($data = fgetcsv($handle, 4000, $separator)) !== FALSE) {
+                    $rowStr = implode("", $data);
+                    if (stripos($rowStr, 'CONTROLE DE ESTOQUE') !== false || empty(trim(implode("", $data)))) {
+                         // Skip initial garbage lines
+                         continue;
+                    }
+
+                    if (stripos($data[0] ?? '', 'SEQU') !== false) {
+                        $isGpcFormat = true;
+                        // Skip the second header row in GPC format
+                        fgetcsv($handle, 4000, $separator);
+                        break;
+                    } elseif (stripos($data[0] ?? '', 'Nome') !== false || stripos($data[0] ?? '', 'Name') !== false) {
+                        break;
+                    }
+
+                    // Attempt to parse data immediately if no header found
+                    break;
+                }
+
+                if (!$isGpcFormat) {
+                    rewind($handle);
+                    fgetcsv($handle, 4000, $separator); // Skip header of standard format
+                }
+
+
+                while (($data = fgetcsv($handle, 4000, $separator)) !== FALSE) {
+                    if (empty(trim(implode("", $data)))) continue;
+
+                    $name = '';
+                    $code = '';
+                    $price = 0;
+                    $current_stock = 0;
+                    $min_stock = 0;
+
+                    if ($isGpcFormat) {
+                        // GPC format mapping
+                        // 0: SEQUENCIA, 2: DESCRIÇÃO COMPLETA, 5: CÓDIGO CONTÁBIL (sku), 10: CUSTO UNIT, 11: ESTOQUE MINIMO
+                        $name = trim($data[2] ?? '');
+                        $code = trim($data[5] ?? '');
+                        if (empty($code) || $code === 'NÃO POSSUI') {
+                            $code = trim($data[0] ?? ''); // Fallback to Sequence as SKU
+                        }
+
+                        $priceStr = trim($data[10] ?? '0');
+                        // Clean price format "R$ 1.250,00" -> "1250.00"
+                        $priceStr = str_replace(['R$', ' ', '.'], '', $priceStr);
+                        $priceStr = str_replace(',', '.', $priceStr);
+                        $price = floatval($priceStr);
+
+                        $min_stock = (int)($data[11] ?? 0);
+                        $current_stock = 0; // Assume 0 as GPC CSV does not seem to have current stock clearly
+                    } else {
+                        // Standard Faro de Ouro format
+                        // 0: Nome, 1: Código, 2: Preço, 3: Estoque Atual, 4: Estoque Mínimo
+                        $name = trim($data[0] ?? '');
+                        $code = trim($data[1] ?? '');
+                        $price = floatval(str_replace(['R$', ' ', ','], ['', '', '.'], $data[2] ?? 0));
+                        $current_stock = (int)($data[3] ?? 0);
+                        $min_stock = (int)($data[4] ?? 0);
+                    }
+
                     if (empty($name)) {
                         $skippedCount++;
                         continue;
                     }
-
-                    $code = trim($data[1] ?? '');
-                    $price = floatval(str_replace(['R$', ' ', ','], ['', '', '.'], $data[2] ?? 0));
-                    $current_stock = (int)($data[3] ?? 0);
-                    $min_stock = (int)($data[4] ?? 0);
 
                     $existingId = null;
                     if (!empty($code)) {
@@ -169,7 +227,7 @@ if ($method == 'GET') {
                         $stmtUp = $db->prepare("UPDATE products SET name = ?, price = ?, min_stock = ? WHERE id = ?");
                         $stmtUp->execute([$name, $price, $min_stock, $existingId]);
 
-                        if ($data[3] !== '' && isset($data[3])) {
+                        if (!$isGpcFormat && isset($data[3]) && $data[3] !== '') {
                             $stmtStk = $db->prepare("SELECT current_stock FROM products WHERE id = ?");
                             $stmtStk->execute([$existingId]);
                             $oldStk = $stmtStk->fetchColumn();
