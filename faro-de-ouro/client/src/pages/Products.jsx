@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import api from '../api';
-import { Plus, Trash2, Camera, Download, Upload } from 'lucide-react';
+import { Plus, Trash2, Camera, Download, Upload, Edit3 } from 'lucide-react';
 import BarcodeScanner from '../components/BarcodeScanner';
 import { exportToCSV } from '../utils/export';
 
@@ -16,7 +16,8 @@ const Products = ({ user }) => {
   const [importFile, setImportFile] = useState(null);
   const [importing, setImporting] = useState(false);
 
-  const [formData, setFormData] = useState({ code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '' });
+  const [formData, setFormData] = useState({ id: '', code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '' });
+  const [editMode, setEditMode] = useState(false);
 
   const loadData = () => {
     api.get('products&action=list').then(res => setProducts(res.data));
@@ -28,10 +29,40 @@ const Products = ({ user }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await api.post('products&action=create', formData);
+    if (editMode) {
+      await api.put('products&action=update', formData);
+      // Se alterou estoque atual durante a edição, vamos lançar como ajuste de estoque:
+      if (formData.original_stock !== formData.current_stock) {
+        await api.post('products&action=movement', {
+          product_id: formData.id,
+          type: 'adjustment',
+          quantity: formData.current_stock,
+          reason: 'Ajuste manual pela tela de Produtos'
+        });
+      }
+    } else {
+      await api.post('products&action=create', formData);
+    }
     setShowModal(false);
+    setEditMode(false);
     loadData();
-    setFormData({ code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '' });
+    setFormData({ id: '', code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '' });
+  };
+
+  const handleEdit = (product) => {
+    setFormData({
+      id: product.id,
+      code: product.code || '',
+      name: product.name,
+      category_id: product.category_id || '',
+      supplier_id: product.supplier_id || '',
+      price: product.price,
+      min_stock: product.min_stock,
+      current_stock: product.current_stock,
+      original_stock: product.current_stock
+    });
+    setEditMode(true);
+    setShowModal(true);
   };
 
   const handleImportSubmit = async (e) => {
@@ -120,7 +151,7 @@ const Products = ({ user }) => {
             <button onClick={handleDeleteAll} className="bg-red-100 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-200 transition" title="Apagar todos os produtos e histórico">
               <Trash2 size={20} /> Limpar Tudo
             </button>
-            <button onClick={() => setShowModal(true)} className="bg-brand-orange text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-600 transition">
+            <button onClick={() => { setEditMode(false); setFormData({ id: '', code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '' }); setShowModal(true); }} className="bg-brand-orange text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-600 transition">
               <Plus size={20} /> Novo
             </button>
         </div>
@@ -151,6 +182,7 @@ const Products = ({ user }) => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ {Number(p.price).toFixed(2)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <button onClick={() => handleEdit(p)} className="text-blue-600 hover:text-blue-900 ml-4"><Edit3 size={18} /></button>
                   <button onClick={() => handleDelete(p.id)} className="text-red-600 hover:text-red-900 ml-4"><Trash2 size={18} /></button>
                 </td>
               </tr>
@@ -162,7 +194,7 @@ const Products = ({ user }) => {
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-screen overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">Novo Produto</h2>
+            <h2 className="text-xl font-bold mb-4">{editMode ? 'Editar Produto / Ajustar Faro' : 'Novo Produto'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <input type="text" placeholder="Nome do Produto" required className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
 
@@ -183,11 +215,17 @@ const Products = ({ user }) => {
 
               <div className="grid grid-cols-2 gap-4">
                 <input type="number" step="0.01" placeholder="Preço (R$)" className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
-                <input type="number" placeholder="Estoque Inicial" required className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.current_stock} onChange={e => setFormData({...formData, current_stock: e.target.value})} />
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">{editMode ? 'Faro (Estoque Atual)' : 'Estoque Inicial'}</label>
+                  <input type="number" placeholder="Estoque Atual" required className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.current_stock} onChange={e => setFormData({...formData, current_stock: e.target.value})} />
+                </div>
               </div>
-              <input type="number" placeholder="Estoque Mínimo (Alerta)" required className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.min_stock} onChange={e => setFormData({...formData, min_stock: e.target.value})} />
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Estoque Mínimo (Alerta)</label>
+                <input type="number" placeholder="Estoque Mínimo" required className="w-full px-3 py-2 border rounded focus:ring-brand-orange" value={formData.min_stock} onChange={e => setFormData({...formData, min_stock: e.target.value})} />
+              </div>
               <div className="flex justify-end gap-2 mt-6">
-                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button>
+                <button type="button" onClick={() => {setShowModal(false); setEditMode(false);}} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button>
                 <button type="submit" className="px-4 py-2 bg-brand-orange text-white rounded hover:bg-orange-600">Salvar</button>
               </div>
             </form>
