@@ -94,8 +94,14 @@ const Products = ({ user }) => {
   const handleDeleteAll = async () => {
     if(window.confirm('TEM CERTEZA ABSOLUTA? Isso irá apagar TODOS os produtos e todo o histórico de movimentações (Kardex). Esta ação não pode ser desfeita.')) {
       if(window.confirm('Confirme novamente: Deseja realmente APAGAR TUDO?')) {
-        await api.delete('/products.php?action=delete_all');
-        loadData();
+        try {
+          await api.delete('products&action=delete_all');
+          loadData();
+          alert('Todos os produtos foram apagados com sucesso.');
+        } catch (error) {
+          console.error("Erro ao apagar tudo:", error);
+          alert('Ocorreu um erro ao apagar. Verifique o console.');
+        }
       }
     }
   };
