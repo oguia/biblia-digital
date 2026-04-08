@@ -43,6 +43,7 @@ Options -Indexes
 HTACCESS
 
 echo "Zipping for deployment..."
+rm -f faro-de-ouro-hostinger.zip
 cd hostinger_deploy
 zip -r ../faro-de-ouro-hostinger.zip .
 cd ..
