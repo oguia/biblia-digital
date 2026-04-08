@@ -9,15 +9,25 @@ $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
 // Auto-migrate schema on access if needed
+$migration_happened = false;
 try {
     $db->exec("ALTER TABLE products ADD COLUMN unit TEXT");
+    $migration_happened = true;
 } catch (Exception $e) {}
 try {
     $db->exec("ALTER TABLE products ADD COLUMN location TEXT");
+    $migration_happened = true;
 } catch (Exception $e) {}
 try {
     $db->exec("ALTER TABLE products ADD COLUMN observation TEXT");
+    $migration_happened = true;
 } catch (Exception $e) {}
+
+// Force schema reload in PDO SQLite if a migration happened
+if ($migration_happened) {
+    // A simple query to a dummy table or just re-opening the connection forces SQLite to flush its schema cache
+    $db = getDB();
+}
 
 // Basic tenant access check
 if ($user['role'] !== 'superadmin' && $user['role'] !== 'owner' && $user['role'] !== 'operator') {
