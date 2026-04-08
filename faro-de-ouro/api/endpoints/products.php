@@ -110,20 +110,38 @@ if ($method == 'GET') {
     $data = json_decode(file_get_contents('php://input'), true);
 
     if ($action == 'create') {
-        $stmt = $db->prepare("INSERT INTO products (tenant_id, code, name, category_id, supplier_id, price, min_stock, current_stock, unit, location, observation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([
-            $tenant_id,
-            $data['code'] ?? null,
-            $data['name'],
-            $data['category_id'] ?? null,
-            $data['supplier_id'] ?? null,
-            $data['price'] ?? 0,
-            $data['min_stock'] ?? 0,
-            $data['current_stock'] ?? 0,
-            $data['unit'] ?? null,
-            $data['location'] ?? null,
-            $data['observation'] ?? null
-        ]);
+        try {
+            $stmt = $db->prepare("INSERT INTO products (tenant_id, code, name, category_id, supplier_id, price, min_stock, current_stock, unit, location, observation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([
+                $tenant_id,
+                $data['code'] ?? null,
+                $data['name'],
+                $data['category_id'] ?? null,
+                $data['supplier_id'] ?? null,
+                $data['price'] ?? 0,
+                $data['min_stock'] ?? 0,
+                $data['current_stock'] ?? 0,
+                $data['unit'] ?? null,
+                $data['location'] ?? null,
+                $data['observation'] ?? null
+            ]);
+        } catch (PDOException $ex) {
+            if (strpos($ex->getMessage(), 'has no column named') !== false) {
+                $stmt = $db->prepare("INSERT INTO products (tenant_id, code, name, category_id, supplier_id, price, min_stock, current_stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([
+                    $tenant_id,
+                    $data['code'] ?? null,
+                    $data['name'],
+                    $data['category_id'] ?? null,
+                    $data['supplier_id'] ?? null,
+                    $data['price'] ?? 0,
+                    $data['min_stock'] ?? 0,
+                    $data['current_stock'] ?? 0
+                ]);
+            } else {
+                throw $ex;
+            }
+        }
 
         $product_id = $db->lastInsertId();
 
@@ -314,12 +332,27 @@ if ($method == 'GET') {
 
                     if ($existingId) {
                         // Update existing product
-                        if ($category_id !== null) {
-                            $stmtUp = $db->prepare("UPDATE products SET name = ?, price = ?, min_stock = ?, category_id = ?, unit = ?, location = ?, observation = ? WHERE id = ?");
-                            $stmtUp->execute([$name, $price, $min_stock, $category_id, $unit, $location, $observation, $existingId]);
-                        } else {
-                            $stmtUp = $db->prepare("UPDATE products SET name = ?, price = ?, min_stock = ?, unit = ?, location = ?, observation = ? WHERE id = ?");
-                            $stmtUp->execute([$name, $price, $min_stock, $unit, $location, $observation, $existingId]);
+                        try {
+                            if ($category_id !== null) {
+                                $stmtUp = $db->prepare("UPDATE products SET name = ?, price = ?, min_stock = ?, category_id = ?, unit = ?, location = ?, observation = ? WHERE id = ?");
+                                $stmtUp->execute([$name, $price, $min_stock, $category_id, $unit, $location, $observation, $existingId]);
+                            } else {
+                                $stmtUp = $db->prepare("UPDATE products SET name = ?, price = ?, min_stock = ?, unit = ?, location = ?, observation = ? WHERE id = ?");
+                                $stmtUp->execute([$name, $price, $min_stock, $unit, $location, $observation, $existingId]);
+                            }
+                        } catch (PDOException $ex) {
+                            // Fallback if columns don't exist
+                            if (strpos($ex->getMessage(), 'has no column named') !== false) {
+                                if ($category_id !== null) {
+                                    $stmtUp = $db->prepare("UPDATE products SET name = ?, price = ?, min_stock = ?, category_id = ? WHERE id = ?");
+                                    $stmtUp->execute([$name, $price, $min_stock, $category_id, $existingId]);
+                                } else {
+                                    $stmtUp = $db->prepare("UPDATE products SET name = ?, price = ?, min_stock = ? WHERE id = ?");
+                                    $stmtUp->execute([$name, $price, $min_stock, $existingId]);
+                                }
+                            } else {
+                                throw $ex;
+                            }
                         }
 
                         if (!$isGpcFormat && isset($data[3]) && $data[3] !== '') {
@@ -341,12 +374,27 @@ if ($method == 'GET') {
                         $updatedCount++;
                     } else {
                         // Insert new product
-                        if ($category_id !== null) {
-                            $stmtIn = $db->prepare("INSERT INTO products (tenant_id, code, name, price, min_stock, current_stock, category_id, unit, location, observation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                            $stmtIn->execute([$tenant_id, $code, $name, $price, $min_stock, $current_stock, $category_id, $unit, $location, $observation]);
-                        } else {
-                            $stmtIn = $db->prepare("INSERT INTO products (tenant_id, code, name, price, min_stock, current_stock, unit, location, observation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                            $stmtIn->execute([$tenant_id, $code, $name, $price, $min_stock, $current_stock, $unit, $location, $observation]);
+                        try {
+                            if ($category_id !== null) {
+                                $stmtIn = $db->prepare("INSERT INTO products (tenant_id, code, name, price, min_stock, current_stock, category_id, unit, location, observation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                                $stmtIn->execute([$tenant_id, $code, $name, $price, $min_stock, $current_stock, $category_id, $unit, $location, $observation]);
+                            } else {
+                                $stmtIn = $db->prepare("INSERT INTO products (tenant_id, code, name, price, min_stock, current_stock, unit, location, observation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                                $stmtIn->execute([$tenant_id, $code, $name, $price, $min_stock, $current_stock, $unit, $location, $observation]);
+                            }
+                        } catch (PDOException $ex) {
+                            // Fallback if columns don't exist
+                            if (strpos($ex->getMessage(), 'has no column named') !== false) {
+                                if ($category_id !== null) {
+                                    $stmtIn = $db->prepare("INSERT INTO products (tenant_id, code, name, price, min_stock, current_stock, category_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                                    $stmtIn->execute([$tenant_id, $code, $name, $price, $min_stock, $current_stock, $category_id]);
+                                } else {
+                                    $stmtIn = $db->prepare("INSERT INTO products (tenant_id, code, name, price, min_stock, current_stock) VALUES (?, ?, ?, ?, ?, ?)");
+                                    $stmtIn->execute([$tenant_id, $code, $name, $price, $min_stock, $current_stock]);
+                                }
+                            } else {
+                                throw $ex;
+                            }
                         }
                         $newId = $db->lastInsertId();
 
@@ -375,20 +423,38 @@ if ($method == 'GET') {
      $data = json_decode(file_get_contents('php://input'), true);
      if($action == 'update') {
          $id = $data['id'];
-         $stmt = $db->prepare("UPDATE products SET code=?, name=?, category_id=?, supplier_id=?, price=?, min_stock=?, unit=?, location=?, observation=? WHERE id=? AND tenant_id=?");
-         $stmt->execute([
-            $data['code'] ?? null,
-            $data['name'],
-            $data['category_id'] ?? null,
-            $data['supplier_id'] ?? null,
-            $data['price'] ?? 0,
-            $data['min_stock'] ?? 0,
-            $data['unit'] ?? null,
-            $data['location'] ?? null,
-            $data['observation'] ?? null,
-            $id,
-            $tenant_id
-         ]);
+         try {
+             $stmt = $db->prepare("UPDATE products SET code=?, name=?, category_id=?, supplier_id=?, price=?, min_stock=?, unit=?, location=?, observation=? WHERE id=? AND tenant_id=?");
+             $stmt->execute([
+                $data['code'] ?? null,
+                $data['name'],
+                $data['category_id'] ?? null,
+                $data['supplier_id'] ?? null,
+                $data['price'] ?? 0,
+                $data['min_stock'] ?? 0,
+                $data['unit'] ?? null,
+                $data['location'] ?? null,
+                $data['observation'] ?? null,
+                $id,
+                $tenant_id
+             ]);
+         } catch (PDOException $ex) {
+             if (strpos($ex->getMessage(), 'has no column named') !== false) {
+                 $stmt = $db->prepare("UPDATE products SET code=?, name=?, category_id=?, supplier_id=?, price=?, min_stock=? WHERE id=? AND tenant_id=?");
+                 $stmt->execute([
+                    $data['code'] ?? null,
+                    $data['name'],
+                    $data['category_id'] ?? null,
+                    $data['supplier_id'] ?? null,
+                    $data['price'] ?? 0,
+                    $data['min_stock'] ?? 0,
+                    $id,
+                    $tenant_id
+                 ]);
+             } else {
+                 throw $ex;
+             }
+         }
          echo json_encode(['success' => true]);
      }
 } elseif ($method == 'DELETE') {
