@@ -8,6 +8,17 @@ $db = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
+// Auto-migrate schema on access if needed
+try {
+    $db->exec("ALTER TABLE products ADD COLUMN unit TEXT");
+} catch (Exception $e) {}
+try {
+    $db->exec("ALTER TABLE products ADD COLUMN location TEXT");
+} catch (Exception $e) {}
+try {
+    $db->exec("ALTER TABLE products ADD COLUMN observation TEXT");
+} catch (Exception $e) {}
+
 // Basic tenant access check
 if ($user['role'] !== 'superadmin' && $user['role'] !== 'owner' && $user['role'] !== 'operator') {
     http_response_code(403); die(json_encode(['error' => 'Forbidden']));
