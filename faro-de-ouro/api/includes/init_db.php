@@ -106,11 +106,17 @@ CREATE TABLE IF NOT EXISTS suggestions (
 
 try {
     $db->exec("ALTER TABLE products ADD COLUMN unit TEXT");
+} catch (Exception $e) {}
+
+try {
     $db->exec("ALTER TABLE products ADD COLUMN location TEXT");
+} catch (Exception $e) {}
+
+try {
     $db->exec("ALTER TABLE products ADD COLUMN observation TEXT");
-} catch (Exception $e) {
-    // Colunas já existem, ignorar
-}
+} catch (Exception $e) {}
+
+echo json_encode(["status" => "Database schema initialized/migrated successfully"]);
 
 // Inserir superadmin se nao existir
 $stmt = $db->prepare("SELECT COUNT(*) FROM users WHERE email = 'admin@farodeouro.com'");

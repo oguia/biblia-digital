@@ -42,6 +42,9 @@ switch ($route) {
     case 'users':
         require 'endpoints/users.php';
         break;
+    case 'migrate':
+        require 'includes/init_db.php';
+        break;
     default:
         http_response_code(404);
         echo json_encode(['error' => 'Endpoint not found']);
