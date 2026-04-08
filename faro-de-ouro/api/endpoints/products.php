@@ -8,25 +8,62 @@ $db = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
-// Auto-migrate schema on access if needed
-$migration_happened = false;
+// Aggressive Auto-migrate schema using Table Recreation pattern if column doesn't exist
 try {
-    $db->exec("ALTER TABLE products ADD COLUMN unit TEXT");
-    $migration_happened = true;
-} catch (Exception $e) {}
-try {
-    $db->exec("ALTER TABLE products ADD COLUMN location TEXT");
-    $migration_happened = true;
-} catch (Exception $e) {}
-try {
-    $db->exec("ALTER TABLE products ADD COLUMN observation TEXT");
-    $migration_happened = true;
-} catch (Exception $e) {}
+    // Check if column exists
+    $stmt = $db->query("PRAGMA table_info(products)");
+    $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $hasUnit = false;
+    foreach($columns as $col) {
+        if ($col['name'] === 'unit') {
+            $hasUnit = true;
+            break;
+        }
+    }
 
-// Force schema reload in PDO SQLite if a migration happened
-if ($migration_happened) {
-    // A simple query to a dummy table or just re-opening the connection forces SQLite to flush its schema cache
-    $db = getDB();
+    if (!$hasUnit) {
+        $db->beginTransaction();
+
+        // 1. Rename old table
+        $db->exec("ALTER TABLE products RENAME TO products_old");
+
+        // 2. Create new table with new schema
+        $db->exec("CREATE TABLE products (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tenant_id INTEGER NOT NULL,
+            code TEXT,
+            name TEXT NOT NULL,
+            category_id INTEGER,
+            supplier_id INTEGER,
+            price REAL DEFAULT 0,
+            min_stock INTEGER DEFAULT 0,
+            current_stock INTEGER DEFAULT 0,
+            unit TEXT,
+            location TEXT,
+            observation TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(tenant_id) REFERENCES tenants(id),
+            FOREIGN KEY(category_id) REFERENCES categories(id),
+            FOREIGN KEY(supplier_id) REFERENCES suppliers(id)
+        )");
+
+        // 3. Copy old data to new table
+        $db->exec("INSERT INTO products (id, tenant_id, code, name, category_id, supplier_id, price, min_stock, current_stock, created_at)
+                   SELECT id, tenant_id, code, name, category_id, supplier_id, price, min_stock, current_stock, created_at
+                   FROM products_old");
+
+        // 4. Drop old table
+        $db->exec("DROP TABLE products_old");
+
+        $db->commit();
+
+        // Force refresh
+        $db = getDB();
+    }
+} catch (Exception $e) {
+    if ($db->inTransaction()) {
+        $db->rollBack();
+    }
 }
 
 // Basic tenant access check
