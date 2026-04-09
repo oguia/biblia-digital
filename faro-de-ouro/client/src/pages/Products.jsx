@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import api from '../api';
-import { Plus, Trash2, Camera, Download, Upload, Edit3 } from 'lucide-react';
+import { Plus, Trash2, Camera, Download, Upload, Edit3, Filter } from 'lucide-react';
 import BarcodeScanner from '../components/BarcodeScanner';
-import { exportToCSV } from '../utils/export';
+import { exportToCSV, exportToWord } from '../utils/export';
 
 const Products = ({ user }) => {
   const [products, setProducts] = useState([]);
@@ -18,6 +18,8 @@ const Products = ({ user }) => {
 
   const [formData, setFormData] = useState({ id: '', code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '', unit: '', location: '', observation: '' });
   const [editMode, setEditMode] = useState(false);
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
 
   const loadData = () => {
     api.get('products&action=list').then(res => setProducts(res.data));
@@ -111,8 +113,15 @@ const Products = ({ user }) => {
     }
   };
 
-  const handleExport = () => {
-    const exportData = products.map(p => ({
+  const filteredProducts = products.filter(p => {
+    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
+                        (p.code && p.code.toLowerCase().includes(search.toLowerCase()));
+    const matchCategory = selectedCategory === '' || p.category_id == selectedCategory;
+    return matchSearch && matchCategory;
+  });
+
+  const getExportData = () => {
+    return filteredProducts.map(p => ({
       ID: p.id,
       Código: p.code,
       Nome: p.name,
@@ -125,7 +134,14 @@ const Products = ({ user }) => {
       Localização: p.location,
       Observação: p.observation
     }));
-    exportToCSV('produtos.csv', exportData);
+  };
+
+  const handleExportCSV = () => {
+    exportToCSV('produtos.csv', getExportData());
+  };
+
+  const handleExportWord = () => {
+    exportToWord('produtos.doc', getExportData());
   };
 
   const handleDeleteAll = async () => {
@@ -183,9 +199,9 @@ const Products = ({ user }) => {
     }
   };
 
-  const totalProducts = products.length;
-  const totalStock = products.reduce((acc, p) => acc + (parseInt(p.current_stock) || 0), 0);
-  const totalValue = products.reduce((acc, p) => acc + ((parseInt(p.current_stock) || 0) * (parseFloat(p.price) || 0)), 0);
+  const totalProducts = filteredProducts.length;
+  const totalStock = filteredProducts.reduce((acc, p) => acc + (parseInt(p.current_stock) || 0), 0);
+  const totalValue = filteredProducts.reduce((acc, p) => acc + ((parseInt(p.current_stock) || 0) * (parseFloat(p.price) || 0)), 0);
 
   return (
     <Layout user={user}>
@@ -195,15 +211,23 @@ const Products = ({ user }) => {
           <button onClick={() => setShowImportModal(true)} className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-50">
             <Upload size={20} /> Importar Planilha
           </button>
-            <button onClick={handleExport} className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-300 transition">
+
+          <div className="relative group">
+            <button className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-300 transition">
               <Download size={20} /> Exportar
             </button>
-            <button onClick={handleDeleteAll} className="bg-red-100 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-200 transition" title="Apagar todos os produtos e histórico">
-              <Trash2 size={20} /> Limpar Tudo
-            </button>
-            <button onClick={() => { setEditMode(false); setFormData({ id: '', code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '', unit: '', location: '', observation: '' }); setShowModal(true); }} className="bg-brand-orange text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-600 transition">
-              <Plus size={20} /> Novo
-            </button>
+            <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg hidden group-hover:block z-10">
+              <button onClick={handleExportCSV} className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">Excel (CSV)</button>
+              <button onClick={handleExportWord} className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">Word (.doc)</button>
+            </div>
+          </div>
+
+          <button onClick={handleDeleteAll} className="bg-red-100 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-200 transition" title="Apagar todos os produtos e histórico">
+            <Trash2 size={20} /> Limpar Tudo
+          </button>
+          <button onClick={() => { setEditMode(false); setFormData({ id: '', code: '', name: '', category_id: '', supplier_id: '', price: '', min_stock: '', current_stock: '', unit: '', location: '', observation: '' }); setShowModal(true); }} className="bg-brand-orange text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-600 transition">
+            <Plus size={20} /> Novo
+          </button>
         </div>
       </div>
 
@@ -231,6 +255,32 @@ const Products = ({ user }) => {
         </div>
       </div>
 
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+        <div className="p-4 border-b bg-gray-50 flex flex-col md:flex-row gap-4 items-center">
+          <div className="flex-1 w-full relative">
+            <input
+              type="text"
+              placeholder="Buscar por nome ou código..."
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-brand-orange"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <Filter className="absolute left-3 top-2.5 text-gray-400" size={20} />
+          </div>
+          <div className="w-full md:w-64 flex items-center gap-2">
+            <Filter size={18} className="text-gray-400" />
+            <select
+              className="w-full px-3 py-2 border rounded-lg focus:ring-brand-orange text-sm bg-white"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+            >
+              <option value="">Todas as Categorias</option>
+              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white rounded-xl shadow-sm overflow-hidden overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -245,7 +295,7 @@ const Products = ({ user }) => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {products.map(p => (
+            {filteredProducts.map(p => (
               <tr key={p.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.code || '-'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 max-w-xs truncate" title={p.name}>{p.name}</td>
