@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Shield, BarChart3, Smartphone, Camera, Users, Download } from 'lucide-react';
+import { Package, Shield, BarChart3, Smartphone, Camera, Users, Download, Lock, KeyRound, Server, CheckCircle } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 
 const Landing = () => {
@@ -120,6 +120,73 @@ const Landing = () => {
               <p className="text-gray-600 leading-relaxed">
                 Pagamentos mensais via Mercado Pago. Cancele quando quiser, sem burocracia ou multas. 7 dias grátis para você testar.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Security Focus Section */}
+      <section className="py-20 bg-white border-t border-b border-gray-100">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="flex flex-col md:flex-row items-center gap-12">
+            <div className="flex-1 space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-bold mb-4">
+                <Lock size={16} /> Segurança de Nível Bancário
+              </div>
+              <h2 className="text-3xl font-bold text-brand-dark leading-tight">
+                Seus dados empresariais estão protegidos e restritos.
+              </h2>
+              <p className="text-gray-600 text-lg">
+                No Faro de Ouro, a segurança das informações da sua empresa não é um opcional, é a regra. Utilizamos criptografia de ponta e camadas de proteção rígidas para garantir que ninguém além de você acesse seu estoque.
+              </p>
+
+              <ul className="space-y-4 mt-6">
+                <li className="flex gap-4 items-start">
+                  <div className="bg-green-50 p-2 rounded text-green-600 mt-1">
+                    <KeyRound size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900">Sessões Criptografadas (JWT Automático)</h4>
+                    <p className="text-sm text-gray-500">Chaves de acesso geradas e renovadas dinamicamente no servidor, prevenindo invasões e falsificações de login.</p>
+                  </div>
+                </li>
+                <li className="flex gap-4 items-start">
+                  <div className="bg-green-50 p-2 rounded text-green-600 mt-1">
+                    <Shield size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900">Proteção Anti-Sabotagem</h4>
+                    <p className="text-sm text-gray-500">Controle rigoroso de papéis. Exclusão em massa e alterações vitais são estritamente bloqueadas para funcionários, exclusivas para o Dono.</p>
+                  </div>
+                </li>
+                <li className="flex gap-4 items-start">
+                  <div className="bg-green-50 p-2 rounded text-green-600 mt-1">
+                    <Server size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900">Banco de Dados Blindado</h4>
+                    <p className="text-sm text-gray-500">Regras de firewall a nível de servidor bloqueiam robôs, varreduras da internet e acessos diretos não autorizados aos seus dados.</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div className="flex-1 w-full flex justify-center">
+              <div className="relative w-full max-w-sm">
+                <div className="absolute inset-0 bg-brand-orange blur-3xl opacity-20 rounded-full"></div>
+                <div className="relative bg-white p-8 rounded-2xl shadow-xl border border-gray-100 flex flex-col items-center text-center">
+                  <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                    <Shield className="text-green-600 w-12 h-12" />
+                  </div>
+                  <h3 className="text-2xl font-black text-gray-800 mb-2">100% Seguro</h3>
+                  <p className="text-gray-500 mb-6">Seus dados e de seus clientes estão guardados a 7 chaves.</p>
+                  <div className="w-full bg-gray-50 p-4 rounded-lg border border-gray-100 text-left">
+                    <div className="flex items-center gap-2 text-green-600 text-sm font-bold mb-2"><CheckCircle size={16}/> Certificado SSL / HTTPS</div>
+                    <div className="flex items-center gap-2 text-green-600 text-sm font-bold mb-2"><CheckCircle size={16}/> Backup em Nuvem Isolado</div>
+                    <div className="flex items-center gap-2 text-green-600 text-sm font-bold"><CheckCircle size={16}/> Conformidade LGPD</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
