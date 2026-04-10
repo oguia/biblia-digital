@@ -43,7 +43,9 @@ switch ($route) {
         require 'endpoints/users.php';
         break;
     case 'migrate':
-        require 'includes/init_db.php';
+        // Disable public access to db migrations to prevent privilege escalation
+        http_response_code(403);
+        echo json_encode(['error' => 'Migration endpoint is disabled in production for security reasons.']);
         break;
     default:
         http_response_code(404);

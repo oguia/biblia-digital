@@ -462,6 +462,13 @@ if ($method == 'GET') {
      $action = $_GET['action'] ?? '';
 
      if ($action == 'delete_all') {
+         // Security: Only the account owner or superadmin can wipe out the inventory
+         if ($user['role'] !== 'owner' && $user['role'] !== 'superadmin') {
+             http_response_code(403);
+             echo json_encode(['error' => 'Acesso Negado: Apenas o dono da conta pode apagar todos os produtos.']);
+             exit;
+         }
+
          // Clear all movements first due to FK constraints or logical cleanup
          $stmt = $db->prepare("DELETE FROM movements WHERE tenant_id=?");
          $stmt->execute([$tenant_id]);

@@ -1,8 +1,18 @@
 <?php
 define('DB_FILE', __DIR__ . '/../database.sqlite');
-// Read JWT secret from env, or use a default for local development
-$env_secret = getenv('JWT_SECRET');
-define('JWT_SECRET', $env_secret ? $env_secret : 'dev-secret-faro-de-ouro-123!');
+
+function get_jwt_secret() {
+    $secret_file = __DIR__ . '/../jwt_secret.txt';
+    if (!file_exists($secret_file)) {
+        $new_secret = bin2hex(random_bytes(32));
+        file_put_contents($secret_file, $new_secret);
+        chmod($secret_file, 0600);
+    }
+    return trim(file_get_contents($secret_file));
+}
+
+// Read JWT secret from file generated securely on the server
+define('JWT_SECRET', get_jwt_secret());
 
 function getDB() {
     $dsn = "sqlite:" . DB_FILE;
