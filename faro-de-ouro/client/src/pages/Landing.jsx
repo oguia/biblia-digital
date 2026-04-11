@@ -37,10 +37,10 @@ const Landing = () => {
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-orange via-brand-gray-light to-brand-gray-light pointer-events-none"></div>
         <div className="container mx-auto px-4 max-w-6xl text-center relative z-10">
           <h1 className="text-4xl md:text-6xl font-extrabold mb-6 leading-tight text-brand-dark">
-            Controle seu Estoque como um <span className="text-brand-orange">Especialista</span>
+            Sistema de Controle de Estoque Online para <span className="text-brand-orange">Pequenas Empresas</span>
           </h1>
           <p className="text-lg md:text-xl text-gray-500 mb-10 max-w-2xl mx-auto">
-            O Faro de Ouro é o sistema de gestão de estoque ideal para pequenas e médias empresas. Simples, rápido e com tudo que você precisa para não perder vendas por falta de produtos.
+            O Faro de Ouro é o gerenciador de estoque online mais fácil e seguro do mercado. Esqueça planilhas: controle entradas, saídas, precificação e limite mínimo em qualquer dispositivo.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link to="/register" className="bg-brand-orange text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#a68a57] transition transform hover:-translate-y-1 shadow-xl shadow-orange-500/20">
