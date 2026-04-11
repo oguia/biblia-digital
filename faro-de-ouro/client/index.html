@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/icon-faro.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Faro de Ouro é o sistema de gestão de estoque online ideal para pequenas e médias empresas. Controle produtos, preços, entradas e saídas de forma fácil, segura e com acesso multi-usuário." />
+    <meta name="keywords" content="faro de ouro, gerenciador de estoque, controle de estoque online, sistema de estoque, gestão de estoque pme, planilhas de estoque, erp pequeno, inventário fácil" />
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="Faro de Ouro" />
+    <meta property="og:title" content="Faro de Ouro - Controle seu Estoque" />
+    <meta property="og:description" content="O sistema de gestão de estoque definitivo. Pare de usar planilhas complexas, controle tudo online em qualquer dispositivo com segurança." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://farodeouro.com.br/" />
+    <link rel="apple-touch-icon" href="/icon-faro.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <title>Faro de Ouro - Sistema de Controle de Estoque Online</title>
+    <script>
+      // Capture the PWA install event globally as early as possible
+      window.deferredPWAInstallPrompt = null;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        window.deferredPWAInstallPrompt = e;
+        // Dispatch a custom event so React components can pick it up immediately
+        window.dispatchEvent(new Event('pwa-install-ready'));
+      });
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
