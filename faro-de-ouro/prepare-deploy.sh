@@ -17,6 +17,9 @@ cp -r api hostinger_deploy/
 # Move frontend assets to root
 cp -r client/dist/* hostinger_deploy/
 
+echo "Generating static JWT secret for deployment..."
+head -c 32 /dev/urandom | xxd -p -c 32 > hostinger_deploy/api/jwt_secret.txt
+
 echo "Creating .htaccess for SPA routing at root..."
 cat << 'HTACCESS' > hostinger_deploy/.htaccess
 <IfModule mod_rewrite.c>
